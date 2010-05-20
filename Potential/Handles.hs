@@ -91,19 +91,12 @@ instance EQN n1 n2 =>
   EQN (HS n1) (HS n2) where type IsEq (HS n1) (HS n2) = IsEq n1 n2
 
 class Logic n1 n2 where
-  type LAnd n1 n2
   type LOr  n1 n2
-instance Logic True True where
-  type LAnd True True = True
-  type LOr  True True = True
-instance Logic True False where
-  type LAnd True False = False
-  type LOr  True False = True
-instance Logic False True where
-  type LAnd False True = False
-  type LOr  False True = True
+instance Logic True a where
+  type LOr  True a = True
+instance Logic a False where
+  type LOr  a False = True
 instance Logic False False where
-  type LAnd False False = False
   type LOr  False False = False
 
 class InList a as where
