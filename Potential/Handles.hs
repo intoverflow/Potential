@@ -85,25 +85,18 @@ instance Logical False
 --      ) => EQN n1 n2 where type IsEq n1 n2
 class EQN n1 n2 where type IsEq n1 n2
 instance EQN HZ HZ where type IsEq HZ HZ = True
-instance Handle a => EQN HZ (HS a) where type IsEq HZ (HS a) = False
-instance Handle a => EQN (HS a) HZ where type IsEq (HS a) HZ = False
+instance (IsEq HZ a ~ False) => EQN HZ (HS a) where type IsEq HZ (HS a) = False
+instance (IsEq a HZ ~ False) => EQN (HS a) HZ where type IsEq (HS a) HZ = False
 instance EQN n1 n2 =>
   EQN (HS n1) (HS n2) where type IsEq (HS n1) (HS n2) = IsEq n1 n2
 
 class Logic n1 n2 where
-  type LAnd n1 n2
   type LOr  n1 n2
-instance Logic True True where
-  type LAnd True True = True
-  type LOr  True True = True
-instance Logic True False where
-  type LAnd True False = False
-  type LOr  True False = True
-instance Logic False True where
-  type LAnd False True = False
-  type LOr  False True = True
+instance Logic True a where
+  type LOr  True a = True
+instance Logic a True where
+  type LOr  a True = True
 instance Logic False False where
-  type LAnd False False = False
   type LOr  False False = False
 
 class InList a as where
