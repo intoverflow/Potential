@@ -14,6 +14,7 @@ module Potential.MachineState ( Reg(..), MS
 
 import Potential.MachineStateBuilder
 import Potential.Size
+import Potential.Handles
 
 data Reg =
     Rax | Rbx | Rcx | Rdx
@@ -46,7 +47,7 @@ data MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 	, ms_alloc :: alloc -- the memory allocator
 	}
 
-getAlloc' ms = ms_alloc ms
+getAlloc' ms   = ms_alloc ms
 setAlloc' a ms = ms{ ms_alloc = a }
 
 class MSSet field new rax rbx rcx rdx rsi rdi rbp rsp rflags

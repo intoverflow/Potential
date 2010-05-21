@@ -1,4 +1,5 @@
 {-# LANGUAGE
+	NoMonomorphismRestriction,
 	UndecidableInstances,
 	FlexibleContexts,
 	NoImplicitPrelude #-}
@@ -44,8 +45,6 @@ pTell l = PState (\_ s -> ((), s, l))
 get field =
      do ms <- pGet
         let fdata = get' field ms
-        -- let fdata' = undefined :: a
-        -- pPut ( set' field fdata' ms )
         return fdata
 set field new = pModify (\ms -> set' field new ms)
 
@@ -61,7 +60,8 @@ handleIsOpen h =
 
 alloc =
      do a <- getAlloc
-	let (a', h) = alloc' a
+	c <- getConstraints
+	let (a', h) = alloc' c a
 	setAlloc a'
 	return h
 
@@ -73,6 +73,7 @@ free h =
 
 realloc h =
      do alloc <- getAlloc
-	setAlloc $ realloc' alloc h
+	c <- getConstraints
+	setAlloc $ realloc' c alloc h
 	return ()
 
