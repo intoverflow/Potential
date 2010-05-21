@@ -101,10 +101,10 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 				 -> PState l c
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
-					       r13 r14 r15 alloc)
+					       r13 r14 r15 alloc cmp)
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
-					       r13 r14 r15 alloc)
+					       r13 r14 r15 alloc cmp)
 					   currentPackage
 		  , setStruct	 :: ( MaybeHandleIsOpen (Allocator hn hs cs) h c
 				    , MaybeFree (Allocator hn hs cs)
@@ -117,13 +117,15 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 				 -> PState l c
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
-					       r13 r14 r15 (Allocator hn hs cs))
+					       r13 r14 r15
+					       (Allocator hn hs cs) cmp)
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
 					       r13 r14 r15
 					       (Allocator (HS hn)
 							  (C hn hs')
-							  cs'))
+							  cs')
+					       cmp)
 					   (Ptr64 hn updatedStruct)
 		  }
 instance Show (FieldModifier sz base base' shifted currentPackage forgottenPackage isolatedPackage updatedPackage currentStruct updatedStruct) where

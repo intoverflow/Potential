@@ -6,20 +6,20 @@ import Potential.BuildDataStructures
 import Potential.PrimTypes
 
 flags = mkStruct "FlagsRegister"
-		   [ field 1 "cf"	-- carry flag
+		   [ field 1 "cf"	-- carry
 		   , $(constField 1) CB1
-		   , field 1 "pf"
+		   , field 1 "pf"	-- parity
 		   , $(constField 1) CB0
-		   , field 1 "af"
+		   , field 1 "af"	-- adjust
 		   , $(constField 1) CB0
-		   , field 1 "zf"
-		   , field 1 "sf"
+		   , field 1 "zf"	-- zero
+		   , field 1 "sf"	-- sign
 		   , field 1 "tf"	-- trap
 		   , field 1 "if"	-- interrupt enable
-		   , field 1 "df"
-		   , field 1 "of"
+		   , field 1 "df"	-- direction
+		   , field 1 "of"	-- overflow
 		   , field 2 "iopl"	-- current priv level
-		   , $(constField 1) CB0	-- nested task
+		   , $(constField 1) CB0	-- nested task, not in x86-64
 		   , $(constField 1) CB0
 		   , field 1 "rf"	-- resume
 		   , $(constField 1) CB0	-- virtual 8086 (always zero in IA-32e

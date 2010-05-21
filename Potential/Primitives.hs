@@ -8,6 +8,7 @@ module Potential.Primitives
 	, instr
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, assumeType, ptrIsValid
+	, primJmp, assertInt64
 	) where
 
 import Prelude hiding ((>>), (>>=), return, fail)

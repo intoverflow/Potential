@@ -4,7 +4,7 @@
 	FlexibleContexts,
 	NoImplicitPrelude #-}
 module Potential.PMonad ( PMonad(..), PState(..)
-			, get, set, pTell, getAlloc, setAlloc
+			, get, set, pTell, getAlloc, setAlloc, getCmp, setCmp
 			, handleIsOpen, alloc, free, realloc
 			) where
 
@@ -76,4 +76,9 @@ realloc h =
 	c <- getConstraints
 	setAlloc $ realloc' c alloc h
 	return ()
+
+getCmp =
+     do ms <- pGet
+	return $ getCmp' ms
+setCmp a = pModify (setCmp' a)
 

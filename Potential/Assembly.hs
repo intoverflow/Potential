@@ -27,7 +27,7 @@ data Instr =
  |  Push Reg
  |  Pop Reg
  |  Cmp Reg Reg
- |  Je Reg
+ |  forall c assumes returns . SJe (Function c assumes returns)
  |  Jne Reg
  |  Jmp Reg
  |  forall c assumes returns . SJmp (Function c assumes returns)

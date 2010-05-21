@@ -40,10 +40,18 @@ testSetDPL2 = asCode "testSetDPL2" $
 test1 = asCode "test1" $
      do pop rax
 	pop rbx
-	-- # cmp rax rbx
+	pop rcx
+	rabxCmp <- cmp rax rbx
+	sje test2 rabxCmp
+	ret
+
+test11 = asCode "test11" $
+     do pop rax
 	pop rbx
-	-- # je rbx
-	swap rax rbx
+	pop rcx
+	rabxCmp <- cmp rax rbx
+	racxCmp <- cmp rax rcx
+	sje test2 racxCmp
 	ret
 
 test2 = asCode "test2" $

@@ -42,7 +42,7 @@ instance Show Instr where
   show (Push r)    = "push " ++ show r
   show (Pop r)     = "pop " ++ show r
   show (Cmp r1 r2) = "cmp " ++ show r1 ++ " " ++ show r2
-  show (Je r)      = "je " ++ show r
+  show (SJe f)     = "je " ++ fnname f
   show (Jne r)     = "jne " ++ show r
   show (Jmp r)     = "jmp " ++ show r
   show (SJmp f)    = "jmp " ++ fnname f -- ++ " (defined at " ++ filename f ++ ":" ++ show (fileline f) ++ ")"

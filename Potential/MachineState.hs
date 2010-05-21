@@ -9,7 +9,7 @@ module Potential.MachineState ( Reg(..), MS
 			      , rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
 			      , rip, r08, r09, r10, r11, r12, r13, r14, r15
 			      , MSGet(..), MSSet(..), MSArg(..)
-			      , getAlloc', setAlloc'
+			      , getAlloc', setAlloc', getCmp', setCmp'
 			      ) where
 
 import Potential.MachineStateBuilder
@@ -25,7 +25,7 @@ data Reg =
 
 
 data MS rax rbx rcx rdx rsi rdi rbp rsp rflags
-	rip r08 r09 r10 r11 r12 r13 r14 r15 alloc =
+	rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp =
      MS { ms_rax :: rax	-- return value
 	, ms_rbx :: rbx	-- caller
 	, ms_rcx :: rcx	-- arg 3
@@ -45,31 +45,35 @@ data MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 	, ms_r14 :: r14	-- caller
 	, ms_r15 :: r15	-- caller
 	, ms_alloc :: alloc -- the memory allocator
+	, ms_cmp :: cmp -- the last cmp
 	}
 
 getAlloc' ms   = ms_alloc ms
 setAlloc' a ms = ms{ ms_alloc = a }
 
+getCmp' ms   = ms_cmp ms
+setCmp' c ms = ms{ ms_cmp = c }
+
 class MSSet field new rax rbx rcx rdx rsi rdi rbp rsp rflags
-		      rip r08 r09 r10 r11 r12 r13 r14 r15 alloc where
+		      rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp where
   type Set field new rax rbx rcx rdx rsi rdi rbp rsp rflags
-		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc
+		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
   set' :: field
 	 -> new
 	 -> (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
-		rip r08 r09 r10 r11 r12 r13 r14 r15 alloc)
+		rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
 	 -> Set field new rax rbx rcx rdx rsi rdi rbp rsp rflags
-			  rip r08 r09 r10 r11 r12 r13 r14 r15 alloc
+			  rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
 
 class MSGet field rax rbx rcx rdx rsi rdi rbp rsp rflags
-		  rip r08 r09 r10 r11 r12 r13 r14 r15 alloc where
+		  rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp where
   type Get field rax rbx rcx rdx rsi rdi rbp rsp rflags
-		 rip r08 r09 r10 r11 r12 r13 r14 r15 alloc
+		 rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
   get' :: field
 	-> (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
-	       rip r08 r09 r10 r11 r12 r13 r14 r15 alloc)
+	       rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
 	-> Get field rax rbx rcx rdx rsi rdi rbp rsp rflags
-		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc
+		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
 
 class MSArg field where
   arg :: field -> Reg

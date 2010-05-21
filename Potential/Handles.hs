@@ -48,7 +48,7 @@ instance MaybeInList hn hs t ConstraintsOff
 
 class MaybeRemove h cs cs' c
 instance (RemoveFromList h cs cs') => MaybeRemove h cs cs' ConstraintsOn
-instance MaybeRemove h cs cs ConstraintsOff
+instance MaybeRemove h cs cs' ConstraintsOff
 
 class HandleIsOpen alloc h
 instance (InList h hs True, InList h cs False) => HandleIsOpen (Allocator hn hs cs) h

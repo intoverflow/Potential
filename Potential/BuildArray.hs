@@ -43,21 +43,21 @@ data Cell cell cell' t t' sz =
 			-> PState l c
 				  (MS rax rbx rcx rdx rsi rdi rbp rsp
                                       rflags rip r08 r09 r10 r11 r12
-                                      r13 r14 r15 (Allocator hn hs cs))
+                                      r13 r14 r15 (Allocator hn hs cs) cmp)
                                   (MS rax rbx rcx rdx rsi rdi rbp rsp
                                       rflags rip r08 r09 r10 r11 r12
                                       r13 r14 r15
-				      (Allocator (HS hn) (C hn hs') cs'))
+				      (Allocator (HS hn) (C hn hs') cs') cmp)
 				  (Ptr64 hn t')
 	, getCell    :: (MaybeHandleIsOpen alloc h c)
 		     => Ptr64 h t
 		     -> PState l c
 			       (MS rax rbx rcx rdx rsi rdi rbp rsp
 				   rflags rip r08 r09 r10 r11 r12
-				   r13 r14 r15 alloc)
+				   r13 r14 r15 alloc cmp)
 			       (MS rax rbx rcx rdx rsi rdi rbp rsp
 				   rflags rip r08 r09 r10 r11 r12
-				   r13 r14 r15 alloc)
+				   r13 r14 r15 alloc cmp)
 			       (Ptr64 h cell)
 	}
      

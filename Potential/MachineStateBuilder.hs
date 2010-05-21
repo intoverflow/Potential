@@ -44,21 +44,22 @@ defMSSetInstance regs name =
      ms' = foldl AppT (ConT $ mkName "MS")
 		 (map VarT (replace (argName name)
 				    (argName' name)
-				    ((map argName regs) ++ [mkName "alloc"])))
+				    ((map argName regs) ++
+				     [mkName "alloc", mkName "cmp"])))
  in [ InstanceD []
 		(foldl AppT (ConT $ mkName "MSSet") $
 			[ ConT $ dataName name
 			, VarT $ argName' name
 			] ++
 			(map (VarT . argName) regs) ++
-			[ VarT $ mkName "alloc" ]
+			[ VarT $ mkName "alloc", VarT $ mkName "cmp" ]
 		)
 		[ TySynInstD (mkName "Set")
 				([ ConT $ dataName name
 				 , VarT $ argName' name
 				 ] ++
 				 (map (VarT . argName) regs) ++
-				 [ VarT $ mkName "alloc" ]
+				 [ VarT $ mkName "alloc", VarT $ mkName "cmp" ]
 				)
 				ms'
 		, FunD (mkName "set'")
@@ -83,12 +84,12 @@ defMSGetInstance regs name =
 		(foldl AppT (ConT $ mkName "MSGet") $
 			[ ConT $ dataName name ] ++
 			(map (VarT . argName) regs) ++
-			[ VarT $ mkName "alloc" ]
+			[ VarT $ mkName "alloc", VarT $ mkName "cmp" ]
 		)
 		[ TySynInstD (mkName "Get")
 				([ ConT $ dataName name ] ++
 				 (map (VarT . argName) regs) ++
-				 [ VarT $ mkName "alloc" ]
+				 [ VarT $ mkName "alloc", VarT $ mkName "cmp" ]
 				)
 				(VarT $ argName name)
 		, FunD (mkName "get'")

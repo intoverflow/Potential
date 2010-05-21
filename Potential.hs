@@ -8,6 +8,7 @@ module Potential
 	, asm, renderFn, getType, getTypeOf
 	, asCode, Function
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
+	, cmp, sje
 	, setField, getField, setFieldInArray, getFieldInArray
 	, assumeType, ptrIsValid
 	, defineDataSize, dataSize, dataSizeT
@@ -15,7 +16,7 @@ module Potential
 	, mkStruct, defineStruct
 	, HS, HZ, C, N, Allocator, HandleIsOpen, Free
 	, T1, T2, T16, T32, T64, T128, SZ, S, Z, (:<=), (:==), (:<)
-	, (>>), (>>=), return, PState
+	, (>>), (>>=), return, fail, PState
 	, Instr, ConstraintsOn, ConstraintsOff, MS
 	) where
 
@@ -35,4 +36,6 @@ import Potential.Stack
 import Potential.PrimTypes
 import Potential.Printing
 import Potential.PMonad
+
+import Potential.Machine.Flags
 
