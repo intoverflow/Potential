@@ -1,16 +1,40 @@
 {-# LANGUAGE
-	ExistentialQuantification #-}
+	EmptyDataDecls,
+	ExistentialQuantification
+	#-}
 module Potential.Assembly
 	( Reg(..)
 	, Instr(..)
 	, Deref(..)
-	, Function(..)
+	, PState(..), Function(..), isFn
+	, Composable, Terminal, Failed, composable, terminal
 	) where
 
 import Data.Word
 
 import Potential.MachineState( Reg )
-import Potential.PMonad( PState )
+
+data Composable
+composable :: PState l c Composable s1 s2 a -> PState l c Composable s1 s2 a
+composable p = p
+
+data Terminal
+terminal :: PState l c Terminal s1 s2 a -> PState l c Terminal s1 s2 a
+terminal p = p
+
+data Failed
+
+data PState l c ct s1 s2 a =
+    PState  { runPState :: c -> s1 -> (a, s2, [l]) }
+  | PFailed { getPFailure :: String }
+
+data Function c assumes returns =
+     Fn { fnname   :: String
+	, body     :: PState Instr c Terminal assumes returns ()
+	}
+isFn :: Function c assumes returns -> Function c assumes returns
+isFn f = f
+
 
 -- deref mem_location (%ebx, %ecx, 4) means [ebx + ecx*4 + mem_location]
 -- i.e., this is at&t syntax
@@ -41,10 +65,5 @@ data Instr =
  |  Or Reg Reg
  |  Enter Word16
  |  Leave
-
-data Function c assumes returns =
-     Fn { fnname   :: String
-        , body     :: PState Instr c assumes returns ()
-        }
 
 

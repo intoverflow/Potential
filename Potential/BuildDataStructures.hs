@@ -15,19 +15,17 @@ module Potential.BuildDataStructures
 	, FieldModifier(..)
 	) where
 
--- -fcontext-stack=160
-
 import Data.Word
 import Data.Bits
 import Numeric
 import Language.Haskell.TH
 
+import Potential.Core hiding (return, (>>), (>>=), fail)
+import qualified Potential.Core as Core
+
 import Potential.Size
-import Potential.MachineState
-import Potential.Primitives
-import Potential.PMonadc
-import Potential.PrimTypes
-import Potential.Handles
+import Potential.Bit
+import Potential.Pointer
 
 
 -- example: $(defineDataSize type size)
@@ -91,14 +89,14 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 		  , forgetMask   :: Word64
 		  , displacement :: Int
 		  , shiftTyp     :: ((SZ base' :==? sz) c)
-				 => base' -> PState l c x x shifted
+				 => base' -> PState l c Composable x x shifted
 		  , shiftDownTyp :: isolatedPackage -> base
 		  , forgetTyp    :: currentPackage -> forgottenPackage
 		  , isolateTyp   :: currentPackage -> isolatedPackage
 		  , orTyp        :: shifted -> forgottenPackage -> updatedPackage
 		  , getStruct	 :: MaybeHandleIsOpen alloc h c
 				 => Ptr64 h currentStruct
-				 -> PState l c
+				 -> PState l c Composable
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
 					       r13 r14 r15 alloc cmp)
@@ -114,7 +112,7 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 				    )
 				 => updatedPackage
 				 -> Ptr64 h currentStruct
-				 -> PState l c
+				 -> PState l c Composable
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
 					       r13 r14 r15
@@ -218,12 +216,12 @@ defineAccessors nameStruct fields displacement group = defineAccessors' group 0
 				, forgetMask   = forgetMask
 					-- number of bytes into the struct
 				, displacement = displacement * 8
-				, shiftTyp     = \_ -> pReturn undefined
+				, shiftTyp     = \_ -> Core.return undefined
 				, shiftDownTyp = \_ -> undefined
 				, forgetTyp    = \_ -> undefined
 				, isolateTyp   = \_ -> undefined
 				, orTyp        = \_ _ -> undefined
-				, getStruct    = \_ -> pReturn undefined
+				, getStruct    = \_ -> Core.return undefined
 				, setStruct    = \_ _ -> mixedReturn undefined
 				}
 		      |]

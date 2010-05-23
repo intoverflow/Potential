@@ -7,12 +7,11 @@ module Potential.Array
 
 import Prelude( Show(..), (++), ($), (+) )
 
+import Potential.Core
+
 import Potential.Size
 import Potential.MachineState
-import Potential.PMonad
 import Potential.Assembly
-import Potential.Primitives
-import Potential.PrimTypes
 import Potential.Printing
 
 import Potential.BuildArray

@@ -9,7 +9,7 @@ module Potential.MachineState ( Reg(..), MS
 			      , rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
 			      , rip, r08, r09, r10, r11, r12, r13, r14, r15
 			      , MSGet(..), MSSet(..), MSArg(..)
-			      , getAlloc', setAlloc', getCmp', setCmp'
+			      , MSCmp(..), Alloc(..)
 			      ) where
 
 import Potential.MachineStateBuilder
@@ -76,8 +76,41 @@ class MSGet field rax rbx rcx rdx rsi rdi rbp rsp rflags
 		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
 
 class MSArg field where
-  arg :: field -> Reg
+  arg   :: field -> Reg
+  isArg :: field -> ()
 
 defineRegisters ["ax", "bx", "cx", "dx", "si", "di", "bp", "sp", "flags",
 		 "ip", "08", "09", "10", "11", "12", "13", "14", "15"]
+
+data MSCmp = MSCmp
+data Alloc = Alloc
+
+instance MSSet MSCmp cmp' rax rbx rcx rdx rsi rdi rbp rsp rflags
+			  rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp where
+  type Set MSCmp cmp' rax rbx rcx rdx rsi rdi rbp rsp rflags
+		      rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
+	= MS rax rbx rcx rdx rsi rdi rbp rsp rflags
+	     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp'
+  set' MSCmp cmp' ms = ms{ ms_cmp = cmp' }
+
+instance MSGet MSCmp  rax rbx rcx rdx rsi rdi rbp rsp rflags
+		      rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp where
+  type Get MSCmp  rax rbx rcx rdx rsi rdi rbp rsp rflags
+		  rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp = cmp
+  get' MSCmp ms = ms_cmp ms
+
+instance MSSet Alloc alloc' rax rbx rcx rdx rsi rdi rbp rsp rflags
+			    rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp where
+  type Set Alloc alloc' rax rbx rcx rdx rsi rdi rbp rsp rflags
+			rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
+	= MS rax rbx rcx rdx rsi rdi rbp rsp rflags
+	     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc' cmp
+  set' Alloc alloc' ms = ms{ ms_alloc = alloc' }
+
+instance MSGet Alloc rax rbx rcx rdx rsi rdi rbp rsp rflags
+		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp where
+  type Get Alloc rax rbx rcx rdx rsi rdi rbp rsp rflags
+		 rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp = alloc
+  get' Alloc ms = ms_alloc ms
+
 

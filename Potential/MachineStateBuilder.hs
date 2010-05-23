@@ -32,6 +32,11 @@ defArgInstance name =
 				(NormalB (ConE $ regName name))
 				[]
 		       ]
+		, FunD (mkName "isArg")
+		       [ Clause [ConP (dataName name) []]
+				(NormalB (ConE $ mkName "()"))
+				[]
+		       ]
 		]
     ]
 

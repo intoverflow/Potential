@@ -9,13 +9,11 @@ module Potential.DataStructures
 import Prelude( Show(..), (++), ($) )
 
 import Potential.Size
-import Potential.PrimTypes
 import Potential.MachineState
-import Potential.PMonad
 import Potential.Assembly
-import Potential.Primitives
 import Potential.Printing
 import Potential.BuildDataStructures
+import Potential.Core
 
 
 loadPackage field structPtr into =

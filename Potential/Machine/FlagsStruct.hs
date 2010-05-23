@@ -3,7 +3,7 @@
 module Potential.Machine.FlagsStruct where
 
 import Potential.BuildDataStructures
-import Potential.PrimTypes
+import Potential.Bit
 
 flags = mkStruct "FlagsRegister"
 		   [ field 1 "cf"	-- carry

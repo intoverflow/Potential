@@ -10,14 +10,15 @@ module Potential.Machine.IntGate where
 import Prelude ( ($), (++), show, fromInteger )
 
 import Potential.Size
-import Potential.MachineState
-import Potential.Primitives
-import Potential.PrimTypes
-import Potential.Functions
-import Potential.PMonad
+import Potential.Core
+import Potential.Stack
+import Potential.Flow
+import Potential.Mov
 
 import Potential.BuildDataStructures
 import Potential.DataStructures
+
+import Potential.Functions
 
 import Potential.Machine.IntGateStruct
 
@@ -27,8 +28,8 @@ defineStruct intGate
 
 data Present    = Present
 data NotPresent = NotPresent
-$(defineDataSize ''Present    1)
-$(defineDataSize ''NotPresent 1)
+defineDataSize ''Present    1
+defineDataSize ''NotPresent 1
 
 
 -- rax contains Ptr64 to interrupt gate

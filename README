@@ -1,0 +1,24 @@
+Potential is an embedding of x86-64 assembly into Haskell as a domain specific
+language.
+
+Requires GHC 6.12 and the Haskell Platform.  Download from:
+	http://hackage.haskell.org/platform/
+
+Key features:
+* Automatically manages pointer aliases, invalidating aliases when changes are
+  made to data that have an effect on the underlying type
+* Automatically tracks the evolution of machine state as instructions sequence
+  together
+* Haskell's type inference eliminates the need for type annotations, while ghci
+  provides the ability to inspect the types of functions to ensure that the code
+  you write has the effect you want
+* Easy to extend and modify the language to suit your application's needs
+
+To get a feel, launch ghci -fcontext-stack=160 TestCode.hs.
+* Potential code can be rendered to assembly by the renderFn command
+* Inspect types using :t getType <function name>
+
+For more information, visit us:
+http://intoverflow.wordpress.com/category/haskell/potential/
+http://github.com/intoverflow/Potential
+

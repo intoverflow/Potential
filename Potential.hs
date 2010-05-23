@@ -10,32 +10,34 @@ module Potential
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, cmp, sje
 	, setField, getField, setFieldInArray, getFieldInArray
-	, assumeType, ptrIsValid
+	, assertType, assertRegisterType, assertPtrIsValid
 	, defineDataSize, dataSize, dataSizeT
 	, constField, reservedField, field
 	, mkStruct, defineStruct
-	, HS, HZ, C, N, Allocator, HandleIsOpen, Free
-	, T1, T2, T16, T32, T64, T128, SZ, S, Z, (:<=), (:==), (:<)
-	, (>>), (>>=), return, fail, PState
-	, Instr, ConstraintsOn, ConstraintsOff, MS
+	, HandleIsOpen, Free
+	, (:<=), (:==), (:<)
+	, (>>), (>>=), return, fail
+	, C, HS, Allocator
 	) where
 
-import Potential.Assembly
-import Potential.Handles
-import Potential.Printing
-import Potential.Constraints
-import Potential.Size
-import Potential.MachineState
-import Potential.Primitives
-import Potential.Functions
-import Potential.BuildDataStructures
-import Potential.DataStructures
-import Potential.BuildArray
 import Potential.Array
-import Potential.Stack
-import Potential.PrimTypes
+import Potential.Assembly
+import Potential.Bit
+import Potential.BuildArray
+import Potential.BuildDataStructures
+import Potential.Constraints
+import Potential.Core
+import Potential.DataStructures
+import Potential.Flow
+import Potential.Functions
+import Potential.Handles
+import Potential.Integer
+import Potential.MachineState
+import Potential.Mov
+import Potential.Pointer
 import Potential.Printing
-import Potential.PMonad
+import Potential.Size
+import Potential.Stack
 
 import Potential.Machine.Flags
 

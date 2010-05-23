@@ -13,13 +13,13 @@ module Potential.BuildArray
 
 import Language.Haskell.TH
 
+import Potential.Core hiding (return, (>>), (>>=), fail)
+import qualified Potential.Core as Core
+
 import Potential.Size
-import Potential.Handles
-import Potential.PMonadc
-import Potential.MachineState
-import Potential.Primitives
-import Potential.PrimTypes
 import Potential.DataStructures
+import Potential.Bit
+import Potential.Pointer
 
 data Array t s =
      Ar { arname   :: String
@@ -40,7 +40,7 @@ data Cell cell cell' t t' sz =
 			)
 		     => Ptr64 h t
 			-> Ptr64 h' cell'
-			-> PState l c
+			-> PState l c Composable
 				  (MS rax rbx rcx rdx rsi rdi rbp rsp
                                       rflags rip r08 r09 r10 r11 r12
                                       r13 r14 r15 (Allocator hn hs cs) cmp)
@@ -51,7 +51,7 @@ data Cell cell cell' t t' sz =
 				  (Ptr64 hn t')
 	, getCell    :: (MaybeHandleIsOpen alloc h c)
 		     => Ptr64 h t
-		     -> PState l c
+		     -> PState l c Composable
 			       (MS rax rbx rcx rdx rsi rdi rbp rsp
 				   rflags rip r08 r09 r10 r11 r12
 				   r13 r14 r15 alloc cmp)
@@ -101,7 +101,7 @@ defineCell ai name pos =
 	cell <- [| Cell { cellName   = name
 			, offset     = offset
 			, updateCell = \_ _ -> mixedReturn undefined
-			, getCell    = \_ -> pReturn undefined
+			, getCell    = \_ -> Core.return undefined
 			}
 		|]
 	let cellType  = VarT $ mkName name

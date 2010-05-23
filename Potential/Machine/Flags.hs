@@ -9,12 +9,13 @@ module Potential.Machine.Flags where
 
 import Prelude ( fromInteger, undefined, ($) )
 
-import Potential.BuildDataStructures
-import Potential.MachineState
-import Potential.Primitives
 import Potential.Size
-import Potential.PMonad
 import Potential.Assembly
+import Potential.Core
+import Potential.Integer
+import Potential.Flow
+
+import Potential.BuildDataStructures
 
 import Potential.Machine.FlagsStruct
 
@@ -51,7 +52,7 @@ defineDataSize ''PrivLevelKernel 2
 
 assertPrivLevelKernel =
      do fl <- get rflags
-	assertSameType (proj_iopl fl) PrivLevelKernel
+	assertType (proj_iopl fl) PrivLevelKernel
 
 cmp r1 r2 =
      do instr $ Cmp (arg r1) (arg r2)
@@ -61,9 +62,9 @@ cmp r1 r2 =
 	assertInt64 dr1
 	assertInt64 dr2
 	-- increment the machine state's cmp
-	c <- getCmp
+	c <- get MSCmp
 	let c' = incCmp c
-	setCmp c'
+	set MSCmp c'
 	-- update the flags register to reflect this
 	f <- get rflags
 	let f' =  applyCmp c' f

@@ -3,7 +3,7 @@
 module Potential.Machine.IntGateStruct where
 
 import Potential.BuildDataStructures
-import Potential.PrimTypes
+import Potential.Bit
 
 intGate = mkStruct "InterruptGate"
 		   [ (field 16 "offset_lo")

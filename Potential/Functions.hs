@@ -4,22 +4,14 @@
 	Rank2Types,
 	FlexibleContexts #-}
 module Potential.Functions
-	( asCode
-	, renderFn
-	, asm
-	, getType
-	, getTypeOf
+	( asCode , renderFn , asm
+	, getType , getTypeOf
 	) where
 
 import Control.Monad.Writer
 import Language.Haskell.TH
 
-import Potential.Constraints
-import Potential.Handles
-import Potential.Primitives
-import Potential.PMonadc
-import Potential.MachineState
-import Potential.Assembly
+import Potential.Core hiding (return, (>>), (>>=), fail)
 import Potential.Printing
 
 pos = do loc <- location
@@ -29,7 +21,7 @@ pos = do loc <- location
 	 return p
 
 asCode :: String
-       -> PState Instr c assumes returns ()
+       -> PState Instr c Terminal assumes returns ()
        -> Function c assumes returns
 asCode fnname c =
      Fn { fnname    = fnname
