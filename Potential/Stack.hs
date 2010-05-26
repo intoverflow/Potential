@@ -25,24 +25,25 @@ data Stack a b = Stack a b
 assertStack :: Stack a b -> Stack a b
 assertStack = id
 
-splitStack :: Stack a (Stack a' b') -> (a, Stack a' b')
+splitStack :: Stack a (Ptr64 h (Stack a' b')) -> (a, Ptr64 h (Stack a' b'))
 splitStack _ = (undefined, undefined)
 
 asStack :: a -> b -> Stack a b
 asStack _ _ = undefined
 
-assertPushableSize :: (SZ a' :<=? T64) c => a' -> PState l c Composable x x ()
+assertPushableSize :: (SZ a' :<=? T64) c => a' -> PState l c Composable x x x' ()
 assertPushableSize _ = return ()
 
 primPush a' sp =
      do assertPushableSize a'
-	stack <- fromPtr64 sp
-	updatePtr64 sp $ asStack a' stack
+	updatePtr64 sp $ asStack a' sp
 
 primPop sp =
      do stack <- fromPtr64 sp
-	let (a, stack') = splitStack stack
-	sp' <- updatePtr64 sp stack'
+	let (a, sp') = splitStack stack
+	-- sp' <- updatePtr64 sp stack'
+	free (getPtrHandle sp)
+	realloc $ getPtrHandle sp'
 	return (a, sp')
 
 
@@ -84,23 +85,23 @@ push src =
 pop dst =
      do assertRegister dst
 	instr ( Pop (arg dst) )
-        stack <- get rsp
-        (a', stack') <- primPop stack
+        sp <- get rsp
+        (a', sp') <- primPop sp
         set dst a'
-        set rsp stack'
+        set rsp sp'
 
 enter frame =
      do let l = fromIntegral $ toInt $ sz frame
-	instr (Enter l)
+	instr $ Enter l
 	baseptr <- get rbp
 	stack   <- get rsp
-	stack' <- primPush baseptr stack
+	stack'  <- primPush baseptr stack
 	(baseptr', stack'') <- makeFramePtr64 stack' frame
 	set rbp baseptr'
 	set rsp stack''
 
 leave =
-     do instr (Leave)
+     do instr Leave
 	baseptr <- get rbp
 	stack <- getStackFromFramePtr64 baseptr
 	(baseptr', stack') <- primPop stack

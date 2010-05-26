@@ -5,24 +5,30 @@
 module Potential.Core
 	(
 	-- useful things from the prelude
-	  ($), undefined, (++), Show(..), id, fromIntegral
+	  ($), undefined, (++), Show(..), id, fromIntegral, Bool(..)
+
 	-- stuff from Core
 	, comment
-	, instr, get, set
+	, instr, get, set, getConstraints, withConstraints
 	, handleIsOpen, alloc, free, realloc
-	, assertType, assertRegisterType, assertRegister, assertFunction
+	, assertType, assertRegister, assertFunction
+
 	-- stuff from PotentialMonad
 	, PotentialMonad, mixedReturn, return, (>>), (>>=), fail
+
 	-- stuff that comes from Potential.Assembly
 	, Reg(..), Instr(..), Deref(..), PState(..), Function(..)
-	, Composable, Terminal, Failed, composable, terminal
+	, Composable, Terminal, composable, terminal
+
 	-- stuff that comes from MachineState
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
 	, rip, r08, r09, r10, r11, r12, r13, r14, r15
 	, arg, MS, Get
 	, MSCmp(..)
+
 	-- stuff that comes from Constraints
 	, ConstraintsOn(..), ConstraintsOff(..)
+
 	-- stuff that comes from Handles
 	, Allocator, MaybeFree, MaybeHandleIsOpen, HS, C
 	) where
@@ -44,11 +50,15 @@ get field =
         return fdata
 set field new = pModify (\ms -> set' field new ms)
 
-getConstraints :: PState l c Composable x x c
+getConstraints :: PState l c Composable x x y' c
 getConstraints = return undefined
 
+withConstraints :: PState l ConstraintsOn ct x y z b
+		-> PState l ConstraintsOn ct x y z b
+withConstraints p = p
+
 -- For logging instructions
-instr :: Instr -> PState Instr c ct x x ()
+instr :: Instr -> PState Instr c ct x x y' ()
 instr i = pTell [i]
 
 
@@ -91,13 +101,8 @@ realloc h =
 
 
 -- Asserting the type of an entry in the machine state
-assertType :: a -> a -> PState Instr c Composable s s ()
+assertType :: a -> a -> PState Instr c Composable s s s' ()
 assertType _ _ = return ()
-
-assertRegisterType v t =
-     do assertRegister v
-	dv <- get v
-	assertType t dv
 
 
 -- Forgetting the type of an entry in the machine state

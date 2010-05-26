@@ -20,19 +20,22 @@ swap r1 r2 =
 	comment ("swap complete")
 
 testSetDPL = asCode "testSetDPL" $
-     do assertRegisterType rbx (undefined :: PrivLevelUser)
+     do inRbx <- get rbx
+	assertType inRbx (undefined :: PrivLevelUser)
 	scall setDPL
 	ret
 
 testSetDPL2 = asCode "testSetDPL2" $
-     do assertRegisterType rbx (undefined :: PrivLevelUser)
+     do inRbx <- get rbx
+	assertType inRbx (undefined :: PrivLevelUser)
 	mov rax r10
 	scall setDPL
 	comment "Now rax has PrivLevelUser, r10 has unknown dpl"
 	swap rax r10
 	comment "Now rax has unknown dpl, r10 has PrivLevelUser"
 	pop rbx
-	assertRegisterType rbx (undefined :: PrivLevelKernel)
+	inRbx <- get rbx
+	assertType inRbx (undefined :: PrivLevelKernel)
 	scall setDPL
 	comment "Now rax has PrivLevelKernel, r10 has PrivLevelUser, but it's the same ptr"
 	ret
@@ -42,8 +45,8 @@ test1 = asCode "test1" $
 	pop rbx
 	pop rcx
 	rabxCmp <- cmp rax rbx
-	sje test2 rabxCmp
-	-- ret -- TODO !!!
+	-- sje test2 rabxCmp
+	ret
 
 test11 = asCode "test11" $
      do pop rax
@@ -51,12 +54,26 @@ test11 = asCode "test11" $
 	pop rcx
 	rabxCmp <- cmp rax rbx
 	racxCmp <- cmp rax rcx
-	sje test2 racxCmp
-	-- ret -- TODO!!!
+	-- sje test2 racxCmp
+	ret
 
 test2 = asCode "test2" $
-     do enter (undefined :: InterruptGate offset_lo segsel ist dpl p offset_mid offset_hi)
+     do enter (undefined :: InterruptGate offset_lo segsel ist dpl p
+					  offset_mid offset_hi)
 	leave
+	ret
+
+testJeFail = asCode "testJeFail" $
+     do inRax <- get rax
+	inRbx <- get rbx
+	assertType inRax (undefined :: Int64)
+	assertType inRbx (undefined :: Int64)
+	myCmp <- cmp rax rbx
+	-- sje testJeFailHelp myCmp
+	ret
+
+testJeFailHelp = asCode "testJeFail" $
+     do pop rax
 	ret
 
 {- Fails with unable to match types PrivLevelKernel and Ptr64 (InterruptGate ...)
@@ -97,7 +114,8 @@ testIDT2 = asCode "testIDT2" $
 
 -- the only way to know that this isn't failing is to try executing getType
 testTypeFailure = asCode "testTypeFailure" $
-     do assertRegisterType rax (undefined :: InterruptGate a1 a2 a3 a4 a5 a6 a7)
+     do inRax <- get rax
+	assertType inRax (undefined :: InterruptGate a1 a2 a3 a4 a5 a6 a7)
 	push rax
 	pop rax
 	ret

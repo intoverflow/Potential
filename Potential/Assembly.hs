@@ -7,7 +7,7 @@ module Potential.Assembly
 	, Instr(..)
 	, Deref(..)
 	, PState(..), Function(..), isFn
-	, Composable, Terminal, Failed, composable, terminal
+	, Composable, Terminal, composable, terminal, getFailure
 	) where
 
 import Data.Word
@@ -15,22 +15,24 @@ import Data.Word
 import Potential.MachineState( Reg )
 
 data Composable
-composable :: PState l c Composable s1 s2 a -> PState l c Composable s1 s2 a
+composable :: PState l c Composable s1 s2 s3 a -> PState l c Composable s1 s2 s3 a
 composable p = p
 
 data Terminal
-terminal :: PState l c Terminal s1 s2 a -> PState l c Terminal s1 s2 a
+terminal :: PState l c Terminal s1 s2 s3 a -> PState l c Terminal s1 s2 s3 a
 terminal p = p
 
-data Failed
-
-data PState l c ct s1 s2 a =
+data PState l c ct s1 s2 s3 a =
     PState  { runPState :: c -> s1 -> (a, s2, [l]) }
   | PFailed { getPFailure :: String }
 
+getFailure :: PState l c ct s1 s2 s3 a -> Maybe String
+getFailure (PState _)  = Nothing
+getFailure (PFailed f) = Just f
+
 data Function c assumes returns =
      Fn { fnname   :: String
-	, body     :: PState Instr c Terminal assumes returns ()
+	, body     :: PState Instr c Terminal assumes returns returns ()
 	}
 isFn :: Function c assumes returns -> Function c assumes returns
 isFn f = f
@@ -65,5 +67,6 @@ data Instr =
  |  Or Reg Reg
  |  Enter Word16
  |  Leave
+ |  Label String
 
 

@@ -19,51 +19,55 @@ import Potential.Constraints
 -- The allocator
 data Allocator hn hs cs = Allocator hn hs cs
 
-alloc' :: ( MaybeAddToList hn hs hs' c
-	  , MaybeInList hn hs False c
-	  , MaybeInList (HS hn) hs' False c )
-       => c -> Allocator hn hs cs -> (Allocator (HS hn) hs' cs, hnext)
+alloc' :: MaybeAlloc (Allocator hn hs cs) hn (Allocator hn' hs' cs) c
+       => c -> Allocator hn hs cs -> (Allocator hn' hs' cs, hn)
 alloc' _ = undefined
 
-handleIsOpen' :: (MaybeHandleIsOpen alloc h c) => c -> alloc -> h -> ()
+handleIsOpen' :: MaybeHandleIsOpen alloc h c
+	      => c -> alloc -> h -> ()
 handleIsOpen' _ _ _ = ()
 
 free' :: MaybeFree (Allocator hn hs cs) h (Allocator hn hs' cs') c =>
 	c -> (Allocator hn hs cs) -> h -> Allocator hn hs' cs'
 free' _ _ _ = undefined
 
-realloc' :: ( MaybeAddToList h hs hs' c
-	    , MaybeInList h cs True c
-	    , MaybeRemove h cs cs' c)
-	 => c -> Allocator hnext hs cs -> h -> Allocator hnext hs' cs'
+realloc' :: MaybeRealloc (Allocator hn hs cs) h (Allocator hn hs' cs') c
+	 => c -> Allocator hn hs cs -> h -> Allocator hn hs' cs'
 realloc' _ _ = undefined
 
-class MaybeAddToList hn hs hs' c | hn hs c -> hs'
-instance (AddToList hn hs hs') => MaybeAddToList hn hs hs' ConstraintsOn
-instance MaybeAddToList hn hs hs ConstraintsOff
 
-class MaybeInList hn hs t c
-instance (InList hn hs t) => MaybeInList hn hs t ConstraintsOn
-instance MaybeInList hn hs t ConstraintsOff
-
-class MaybeRemove h cs cs' c
-instance (RemoveFromList h cs cs') => MaybeRemove h cs cs' ConstraintsOn
-instance MaybeRemove h cs cs' ConstraintsOff
-
-class HandleIsOpen alloc h
-instance (InList h hs True, InList h cs False) => HandleIsOpen (Allocator hn hs cs) h
+class MaybeAlloc alloc h alloc' c | alloc c -> h alloc'
+instance Alloc alloc h alloc' => MaybeAlloc alloc h alloc' ConstraintsOn
+instance MaybeAlloc alloc h alloc' ConstraintsOff
 
 class MaybeHandleIsOpen alloc h c
 instance (HandleIsOpen alloc h) => MaybeHandleIsOpen alloc h ConstraintsOn
 instance MaybeHandleIsOpen alloc h ConstraintsOff
 
-class Free alloc h alloc' | alloc h -> alloc'
-instance (InList h hs' False, RemoveFromList h hs hs', AddToList h cs cs')
-  => Free (Allocator hn hs cs) h (Allocator hn hs' cs')
-
 class MaybeFree alloc h alloc' c | alloc h c -> alloc'
 instance Free alloc h alloc' => MaybeFree alloc h alloc' ConstraintsOn
 instance MaybeFree alloc h alloc' ConstraintsOff
+
+class MaybeRealloc alloc h alloc' c | alloc h c -> alloc'
+instance Realloc alloc h alloc' => MaybeRealloc alloc h alloc' ConstraintsOn
+instance MaybeRealloc alloc h alloc' ConstraintsOff
+
+
+class Alloc alloc h alloc' | alloc -> h alloc'
+instance ( AddToList hn hs hs', InList hn hs False, InList (HS hn) hs' False )
+  => Alloc (Allocator hn hs cs) hn (Allocator (HS hn) hs' cs)
+
+class HandleIsOpen alloc h
+instance (InList h hs True, InList h cs False)
+  => HandleIsOpen (Allocator hn hs cs) h
+
+class Free alloc h alloc' | alloc h -> alloc'
+instance (RemoveFromList h hs hs', AddToList h cs cs')
+  => Free (Allocator hn hs cs) h (Allocator hn hs' cs')
+
+class Realloc alloc h alloc' | alloc h -> alloc'
+instance (RemoveFromList h cs cs', AddToList h hs hs')
+  => Realloc (Allocator hn hs cs) h (Allocator hn hs' cs')
 
 
 -- Things used to manage the list of open handles
@@ -95,6 +99,7 @@ instance (EQN HZ a False) => EQN HZ (HS a) False
 instance (EQN a HZ False) => EQN (HS a) HZ False
 instance (EQN n1 n2 t) => EQN (HS n1) (HS n2) t
 instance EQN n1 n1 True
+instance (EQN a b t) => EQN b a t
 
 class LOr n1 n2 t | n1 n2 -> t
 instance LOr True n2 True
@@ -106,19 +111,21 @@ instance LAnd True True True
 instance LAnd False a False
 instance LAnd a False False
 
+
 class InList a as t | a as -> t
 instance InList a N False
 instance (EQN a a' t, InList a r t', LOr t t' t'') => InList a (C a' r) t''
 
-class Decide a b c t | a b t -> c
-instance Decide a b a True
-instance Decide a b b False
+class Decide th el c t | th el t -> c
+instance Decide th el th True
+instance Decide th el el False
 
-class (InList a as False, InList a as' True)
-  => AddToList a as as' | a as -> as'
+class ( InList a as False, InList a as' True )
+ => AddToList a as as' | a as -> as'
 instance (InList a as False) => AddToList a as (C a as)
 
-class (InList a as True, InList a as' False) => RemoveFromList a as as'
+class (InList a as True, InList a as' False)
+  => RemoveFromList a as as' | a as -> as'
 instance ( InList a (C a' r) True
 	 , EQN a a' eq
 	 , Decide r (C a' r) c eq

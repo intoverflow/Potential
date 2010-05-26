@@ -76,5 +76,5 @@ sje fn c =
 	fl <- get rflags
 	let zf = proj_zf fl
 	    _  = assertZF c zf
-	primJmp (body fn)
+	primCondJmp (body fn)
 

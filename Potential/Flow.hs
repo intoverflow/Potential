@@ -3,7 +3,7 @@
 	NoImplicitPrelude
 	#-}
 module Potential.Flow
-	( primJmp, primCall, primRet
+	( primJmp, primCondJmp, primCall, primRet
 	, sjmp, scall, ret
 	) where
 
@@ -12,14 +12,30 @@ import Potential.Assembly
 import Potential.Stack
 import Potential.Pointer
 
-primJmp :: (PState Instr c Terminal x y b) -> PState Instr c Terminal x y ()
+-- Pass in the type of the function we're jumping to.  We take on its
+-- post-conditions.
+primJmp :: (PState Instr c Terminal x y y' ())
+	-> PState Instr c Terminal x y y' ()
 primJmp _ = terminal $ mixedReturn ()
 
-primCall :: (PState Instr c Terminal x y b) -> PState Instr c Composable x y ()
+primCondJmp :: (PState Instr c Terminal x y y ())
+	    -> PState Instr c Composable x x y ()
+primCondJmp _ = composable $ mixedReturn ()
+
+-- Pass in the function we're calling.  Note that it ret's to post-condition y,
+-- so we must also leave the call instruction in that post-condition.  Note also
+-- that it assumes condition x, so we must be in condition x just prior to the
+-- call.
+primCall :: (PState Instr c Terminal x y y ())
+	 -> PState Instr c Composable x y y' ()
 primCall _ = composable $ mixedReturn ()
 
-primRet :: (PState Instr c Terminal x y b) -> PState Instr c Terminal x x ()
-primRet _ = terminal $ mixedReturn ()
+-- Pass in the type of the return function on the stack.  We'll assure that
+-- the function which invokes ret leaves the machine in the proper state for
+-- the ret to be safe.
+primRet :: (PState Instr c Terminal x y y ())
+	-> PState Instr c Terminal x x y' ()
+primRet _ = terminal $ return ()
 
 
 -- we do a forget to avoid an infinite type error
