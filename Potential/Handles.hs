@@ -105,30 +105,38 @@ class LOr n1 n2 t | n1 n2 -> t
 instance LOr True n2 True
 instance LOr n1 True True
 instance LOr False False False
+instance LOr a b t => LOr b a t
+
+class IsFalse a
+instance (LOr a b False) => IsFalse a
 
 class LAnd n1 n2 t | n1 n2 -> t
 instance LAnd True True True
 instance LAnd False a False
 instance LAnd a False False
 
+class IsTrue a
+instance (LAnd a b True) => IsTrue a
+
 
 class InList a as t | a as -> t
 instance InList a N False
 instance (EQN a a' t, InList a r t', LOr t t' t'') => InList a (C a' r) t''
 
-class Decide th el c t | th el t -> c
-instance Decide th el th True
-instance Decide th el el False
-
 class ( InList a as False, InList a as' True )
  => AddToList a as as' | a as -> as'
-instance (InList a as False) => AddToList a as (C a as)
+instance (InList a as False, InList a (C a as) True) => AddToList a as (C a as)
+
+
+class Decide i th el choice | i th el -> choice
+instance Decide True  th el th
+instance Decide False th el el
+
 
 class (InList a as True, InList a as' False)
   => RemoveFromList a as as' | a as -> as'
-instance ( InList a (C a' r) True
-	 , EQN a a' eq
-	 , Decide r (C a' r) c eq
-	 , InList a c False)
-  => RemoveFromList a (C a' r) c
+instance RemoveFromList a (C a N) N
+instance ( EQN a b t, Decide t as' (C b as') choice, RemoveFromList a as as'
+	 , InList a (C b as) True, InList a choice False )
+  => RemoveFromList a (C b as) choice
 

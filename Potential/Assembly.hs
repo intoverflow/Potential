@@ -1,38 +1,56 @@
 {-# LANGUAGE
-	EmptyDataDecls,
+	NoImplicitPrelude,
 	ExistentialQuantification
 	#-}
 module Potential.Assembly
 	( Reg(..)
 	, Instr(..)
 	, Deref(..)
-	, PState(..), Function(..), isFn
-	, Composable, Terminal, composable, terminal, getFailure
+	, PState(..), pGet, pPut, pModify, pTell
+	, Function(..), isFn
+	, composable, terminal, getFailure
 	) where
 
+import Prelude( String, Int, undefined, (++) )
+
+import Data.Maybe
 import Data.Word
 
 import Potential.MachineState( Reg )
+import Potential.IxMonad.IxMonad
 
-data Composable
-composable :: PState l c Composable s1 s2 s3 a -> PState l c Composable s1 s2 s3 a
+composable :: PState l c s1 s2 s3 Composable a -> PState l c s1 s2 s3 Composable a
 composable p = p
 
-data Terminal
-terminal :: PState l c Terminal s1 s2 s3 a -> PState l c Terminal s1 s2 s3 a
+terminal :: PState l c s1 s2 s3 Terminal a -> PState l c s1 s2 s3 Terminal a
 terminal p = p
 
-data PState l c ct s1 s2 s3 a =
+data PState l c s1 s2 s3 ct a =
     PState  { runPState :: c -> s1 -> (a, s2, [l]) }
   | PFailed { getPFailure :: String }
 
-getFailure :: PState l c ct s1 s2 s3 a -> Maybe String
+getFailure :: PState l c s1 s2 s3 ct a -> Maybe String
 getFailure (PState _)  = Nothing
 getFailure (PFailed f) = Just f
 
+instance IxMonad (PState l c) where
+  mixedReturn a = PState (\_ s -> (a, undefined, []))
+  return a = PState (\_ s -> (a, s, []))
+  f >>= m  = maybe (PState (\c s1 -> let (a, s2, l)   = runPState f c s1
+					 (a', s3, l') = runPState (m a) c s2
+				     in (a', s3, l ++ l')))
+                    (PFailed) (getFailure f)
+  m1 >> m2 = m1 >>= \_ -> m2
+  fail e = PFailed { getPFailure = e }
+
+pGet      = PState (\_ s -> (s, s, []))
+pPut s    = PState (\_ _ -> ((), s, []))
+pModify f = pGet >>= \x -> pPut (f x)
+pTell l   = PState (\_ s -> ((), s, l))
+
 data Function c assumes returns =
      Fn { fnname   :: String
-	, body     :: PState Instr c Terminal assumes returns returns ()
+	, body     :: PState Instr c assumes returns returns Terminal ()
 	}
 isFn :: Function c assumes returns -> Function c assumes returns
 isFn f = f

@@ -89,14 +89,14 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 		  , forgetMask   :: Word64
 		  , displacement :: Int
 		  , shiftTyp     :: ((SZ base' :==? sz) c)
-				 => base' -> PState l c Composable x x y' shifted
+				 => base' -> PState l c x x y' Composable shifted
 		  , shiftDownTyp :: isolatedPackage -> base
 		  , forgetTyp    :: currentPackage -> forgottenPackage
 		  , isolateTyp   :: currentPackage -> isolatedPackage
 		  , orTyp        :: shifted -> forgottenPackage -> updatedPackage
 		  , getStruct	 :: MaybeHandleIsOpen alloc h c
 				 => Ptr64 h currentStruct
-				 -> PState l c Composable
+				 -> PState l c
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
 					       r13 r14 r15 alloc cmp)
@@ -104,6 +104,7 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 					       rflags rip r08 r09 r10 r11 r12
 					       r13 r14 r15 alloc cmp)
 					   y'
+					   Composable
 					   currentPackage
 		  , setStruct	 :: ( MaybeHandleIsOpen (Allocator hn hs cs) h c
 				    , MaybeFree (Allocator hn hs cs)
@@ -113,7 +114,7 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 				    )
 				 => updatedPackage
 				 -> Ptr64 h currentStruct
-				 -> PState l c Composable
+				 -> PState l c
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
 					       r13 r14 r15
@@ -126,6 +127,7 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 							  cs')
 					       cmp)
 					   y'
+					   Composable
 					   (Ptr64 hn updatedStruct)
 		  }
 instance Show (FieldModifier sz base base' shifted currentPackage forgottenPackage isolatedPackage updatedPackage currentStruct updatedStruct) where

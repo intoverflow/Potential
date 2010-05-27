@@ -21,7 +21,7 @@ pos = do loc <- location
 	 return p
 
 asCode :: String
-       -> PState Instr c Terminal assumes returns returns ()
+       -> PState Instr c assumes returns returns Terminal ()
        -> Function c assumes returns
 asCode fnname c =
      Fn { fnname    = fnname

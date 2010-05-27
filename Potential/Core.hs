@@ -13,12 +13,12 @@ module Potential.Core
 	, handleIsOpen, alloc, free, realloc
 	, assertType, assertRegister, assertFunction
 
-	-- stuff from PotentialMonad
-	, PotentialMonad, mixedReturn, return, (>>), (>>=), fail
-
 	-- stuff that comes from Potential.Assembly
 	, Reg(..), Instr(..), Deref(..), PState(..), Function(..)
 	, Composable, Terminal, composable, terminal
+
+	-- stuff that comes from IxMonad
+	, IxMonad(..)
 
 	-- stuff that comes from MachineState
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
@@ -35,8 +35,8 @@ module Potential.Core
 
 import Prelude hiding ( return, fail, (>>), (>>=) )
 
+import Potential.IxMonad.IxMonad
 import Potential.Size
-import Potential.PotentialMonad
 import Potential.Constraints
 import Potential.MachineState
 import Potential.Assembly
@@ -50,15 +50,15 @@ get field =
         return fdata
 set field new = pModify (\ms -> set' field new ms)
 
-getConstraints :: PState l c Composable x x y' c
+getConstraints :: PState l c x x y' Composable c
 getConstraints = return undefined
 
-withConstraints :: PState l ConstraintsOn ct x y z b
-		-> PState l ConstraintsOn ct x y z b
+withConstraints :: PState l ConstraintsOn x y z ct b
+		-> PState l ConstraintsOn x y z ct b
 withConstraints p = p
 
 -- For logging instructions
-instr :: Instr -> PState Instr c ct x x y' ()
+instr :: Instr -> PState Instr c x x y' ct ()
 instr i = pTell [i]
 
 
@@ -101,7 +101,7 @@ realloc h =
 
 
 -- Asserting the type of an entry in the machine state
-assertType :: a -> a -> PState Instr c Composable s s s' ()
+assertType :: a -> a -> PState Instr c s s s' Composable ()
 assertType _ _ = return ()
 
 
