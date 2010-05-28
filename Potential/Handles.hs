@@ -118,17 +118,23 @@ class LOr n1 n2 t | n1 n2 -> t
 instance LOr True n2 True
 instance LOr n1 True True
 instance LOr False False False
+
 instance LOr a b t => LOr b a t
+instance LOr a False True => LOr True True a
+instance LOr a False False => LOr False False a
 
 class LAnd n1 n2 t | n1 n2 -> t
 instance LAnd True True True
 instance LAnd False a False
 instance LAnd a False False
+
 instance LAnd a b t => LAnd b a t
+instance LAnd a True False => LAnd False False a
+
 
 class LNot a b | a -> b
 instance LNot True False
-instance LNot False True
+instance LNot a b => LNot b a
 
 
 class (Handle a, List as) => InList a as t | a as -> t
