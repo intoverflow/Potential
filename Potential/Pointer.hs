@@ -25,8 +25,8 @@ fromPtr64 ptr =
         return $ getPtrData ptr
 
 updatePtr64 ptr t' =
-     do _ <- handleIsOpen (getPtrHandle ptr)
-        free (getPtrHandle ptr)
+     do _ <- handleIsOpen $ getPtrHandle ptr
+        free $ getPtrHandle ptr
         h <- alloc
         return $ Ptr64 h t'
 

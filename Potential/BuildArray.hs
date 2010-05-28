@@ -31,23 +31,27 @@ data Cell cell cell' t t' sz =
    Cell { cellName   :: String
 	, offset     :: Int
 	, updateCell :: ( (SZ cell' :==? sz) c
-			, MaybeHandleIsOpen (Allocator hn hs cs) h c
-			, MaybeHandleIsOpen (Allocator hn hs cs) h' c
-			, MaybeFree (Allocator hn hs cs)
+			, MaybeHandleIsOpen (Allocator hn hs) h c
+			, MaybeHandleIsOpen (Allocator hn hs) h' c
+			, MaybeFree (Allocator hn hs)
 				    h
-				    (Allocator hn hs' cs')
+				    (Allocator hn hs')
 				    c
+			, MaybeAlloc (Allocator hn hs')
+				     hn
+				     (Allocator hn' hs'')
+				     c
 			)
 		     => Ptr64 h t
 			-> Ptr64 h' cell'
 			-> PState l c
 				  (MS rax rbx rcx rdx rsi rdi rbp rsp
                                       rflags rip r08 r09 r10 r11 r12
-                                      r13 r14 r15 (Allocator hn hs cs) cmp)
+                                      r13 r14 r15 (Allocator hn hs) cmp)
                                   (MS rax rbx rcx rdx rsi rdi rbp rsp
                                       rflags rip r08 r09 r10 r11 r12
                                       r13 r14 r15
-				      (Allocator (HS hn) (C hn hs') cs') cmp)
+				      (Allocator hn' hs'') cmp)
 				  y'
 				  Composable
 				  (Ptr64 hn t')

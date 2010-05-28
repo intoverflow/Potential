@@ -19,6 +19,9 @@ swap r1 r2 =
 	pop r2
 	comment ("swap complete")
 
+testRet = asCode "testRet" $
+	ret
+
 testSetDPL = asCode "testSetDPL" $
      do inRbx <- get rbx
 	assertType inRbx (undefined :: PrivLevelUser)

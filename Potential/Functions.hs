@@ -43,17 +43,17 @@ asm pstate = let (_, _, asmcode) = runPState pstate ConstraintsOff undefined
 getType :: Function ConstraintsOn
 		    (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 			rip r08 r09 r10 r11 r12 r13 r14 r15
-			(Allocator hn hs cs) cmp)
+			alloc cmp)
 		    (MS rax' rbx' rcx' rdx' rsi' rdi' rbp' rsp' rflags'
 			rip' r08' r09' r10' r11' r12' r13' r14' r15'
-			(Allocator hn' hs' cs') cmp')
+			alloc' cmp')
 	-> Function ConstraintsOn
 		    (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 			rip r08 r09 r10 r11 r12 r13 r14 r15
-			(Allocator hn hs cs) cmp)
+			alloc cmp)
 		    (MS rax' rbx' rcx' rdx' rsi' rdi' rbp' rsp' rflags'
 			rip' r08' r09' r10' r11' r12' r13' r14' r15'
-			(Allocator hn' hs' cs') cmp')
+			alloc' cmp')
 getType = id
 
 getTypeOf

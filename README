@@ -19,6 +19,6 @@ To get a feel, launch ghci -fcontext-stack=160 TestCode.hs.
 * Inspect types using :t getType <function name>
 
 For more information, visit us:
-http://intoverflow.wordpress.com/category/haskell/potential/
+http://potential-lang.org
 http://github.com/intoverflow/Potential
 

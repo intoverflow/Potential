@@ -106,11 +106,9 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 					   y'
 					   Composable
 					   currentPackage
-		  , setStruct	 :: ( MaybeHandleIsOpen (Allocator hn hs cs) h c
-				    , MaybeFree (Allocator hn hs cs)
-						h
-						(Allocator hn hs' cs')
-						c
+		  , setStruct	 :: ( MaybeHandleIsOpen (Allocator hn hs) h c
+				    , MaybeFree  (Allocator hn hs)  h  (Allocator hn  hs') c
+				    , MaybeAlloc (Allocator hn hs') hn (Allocator hn' hs'') c
 				    )
 				 => updatedPackage
 				 -> Ptr64 h currentStruct
@@ -118,14 +116,11 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
 					       r13 r14 r15
-					       (Allocator hn hs cs) cmp)
+					       (Allocator hn hs) cmp)
 					   (MS rax rbx rcx rdx rsi rdi rbp rsp
 					       rflags rip r08 r09 r10 r11 r12
 					       r13 r14 r15
-					       (Allocator (HS hn)
-							  (C hn hs')
-							  cs')
-					       cmp)
+					       (Allocator hn' hs'') cmp)
 					   y'
 					   Composable
 					   (Ptr64 hn updatedStruct)

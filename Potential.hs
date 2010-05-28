@@ -1,7 +1,7 @@
 {-# LANGUAGE
 	NoImplicitPrelude #-}
 module Potential
-	( arg, get, getConstraints
+	( arg, forget, get, getConstraints, withConstraints
 	, rax, rbx, rcx, rdx, rsi, rdi
 	, r08, r09, r10, r11, r12, r13, r14, r15
 	, CB0(..), CB1(..), Ptr64, FrameBasePtr64, Int64, Stack
@@ -14,7 +14,6 @@ module Potential
 	, defineDataSize, dataSize, dataSizeT
 	, constField, reservedField, field
 	, mkStruct, defineStruct
-	, HandleIsOpen, Free
 	, (:<=), (:==), (:<)
 	, (>>), (>>=), return, fail
 	, C, HS, Allocator

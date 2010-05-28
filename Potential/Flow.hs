@@ -75,6 +75,6 @@ ret =
 	stack <- get rsp
 	(a', stack') <- primPop stack
 	set rsp stack'
-	primRet (fromPtr64 a')
-
+	retTo <- fromPtr64 a'
+	primRet retTo
 

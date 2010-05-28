@@ -9,7 +9,7 @@ module Potential.Core
 
 	-- stuff from Core
 	, comment
-	, instr, get, set, getConstraints, withConstraints
+	, instr, forget, get, set, getConstraints, withConstraints
 	, handleIsOpen, alloc, free, realloc
 	, assertType, assertRegister, assertFunction
 
@@ -30,7 +30,7 @@ module Potential.Core
 	, ConstraintsOn(..), ConstraintsOff(..)
 
 	-- stuff that comes from Handles
-	, Allocator, MaybeFree, MaybeHandleIsOpen, HS, C
+	, Allocator, MaybeFree, MaybeAlloc, MaybeHandleIsOpen, HS, C
 	) where
 
 import Prelude hiding ( return, fail, (>>), (>>=) )
@@ -72,6 +72,13 @@ assertRegister r = let _ = isArg r
 
 assertFunction fn = let _ = isFn fn
 		    in composable $ return ()
+
+
+-- Forgetting
+
+forget dst =
+     do assertRegister dst
+	set dst (undefined :: a)
 
 
 -- Managing handles

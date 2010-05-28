@@ -42,7 +42,7 @@ primPop sp =
      do stack <- fromPtr64 sp
 	let (a, sp') = splitStack stack
 	-- sp' <- updatePtr64 sp stack'
-	free (getPtrHandle sp)
+	free $ getPtrHandle sp
 	realloc $ getPtrHandle sp'
 	return (a, sp')
 
@@ -76,15 +76,15 @@ getStackFromFramePtr64 bp =
 -- Instructions
 push src =
      do assertRegister src
-	instr ( Push (arg src) )
+	instr $ Push (arg src)
         stack <- get rsp
-        a' <- get src
+        a'    <- get src
         stack' <- primPush a' stack
         set rsp stack'
 
 pop dst =
      do assertRegister dst
-	instr ( Pop (arg dst) )
+	instr $ Pop (arg dst)
         sp <- get rsp
         (a', sp') <- primPop sp
         set dst a'
