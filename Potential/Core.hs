@@ -14,7 +14,7 @@ module Potential.Core
 	, assertType, assertRegister, assertFunction
 
 	-- stuff that comes from Potential.Assembly
-	, Reg(..), Instr(..), Deref(..), PState(..), Function(..)
+	, Reg(..), Instr(..), Deref(..), Code, runCode, Function(..)
 	, Composable, Terminal, composable, terminal
 
 	-- stuff that comes from IxMonad
@@ -35,7 +35,8 @@ module Potential.Core
 
 import Prelude hiding ( return, fail, (>>), (>>=) )
 
-import Potential.IxMonad.IxMonad
+import Potential.IxMonad
+import Potential.IxMonad.Writer
 import Potential.Size
 import Potential.Constraints
 import Potential.MachineState
@@ -44,22 +45,22 @@ import Potential.Handles
 
 -- In order to avoid madness, we don't export pGet, pPut, or pModify,
 -- which have too much of an effect on our Hoare types to be safe to release
-get field =
-     do ms <- pGet
+get field = lift $ lift $
+     do ms <- psGet
         let fdata = get' field ms
         return fdata
-set field new = pModify (\ms -> set' field new ms)
+set field new = lift $ lift $ psModify (\ms -> set' field new ms)
 
-getConstraints :: PState l c x x y' Composable c
+getConstraints :: Code c x x Composable c
 getConstraints = return undefined
 
-withConstraints :: PState l ConstraintsOn x y z ct b
-		-> PState l ConstraintsOn x y z ct b
+withConstraints :: Code ConstraintsOn x y ct b
+		-> Code ConstraintsOn x y ct b
 withConstraints p = p
 
 -- For logging instructions
-instr :: Instr -> PState Instr c x x y' ct ()
-instr i = pTell [i]
+instr :: Instr -> Code c x x ct ()
+instr i = tell [i]
 
 
 -- Code comments in the rendered code
@@ -108,7 +109,7 @@ realloc h =
 
 
 -- Asserting the type of an entry in the machine state
-assertType :: a -> a -> PState Instr c s s s' Composable ()
+assertType :: a -> a -> Code c s s Composable ()
 assertType _ _ = return ()
 
 

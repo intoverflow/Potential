@@ -44,27 +44,23 @@ data Cell cell cell' t t' sz =
 			)
 		     => Ptr64 h t
 			-> Ptr64 h' cell'
-			-> PState l c
-				  (MS rax rbx rcx rdx rsi rdi rbp rsp
+			-> Code c (MS rax rbx rcx rdx rsi rdi rbp rsp
                                       rflags rip r08 r09 r10 r11 r12
                                       r13 r14 r15 (Allocator hn hs) cmp)
                                   (MS rax rbx rcx rdx rsi rdi rbp rsp
                                       rflags rip r08 r09 r10 r11 r12
                                       r13 r14 r15
 				      (Allocator hn' hs'') cmp)
-				  y'
 				  Composable
 				  (Ptr64 hn t')
 	, getCell    :: (MaybeHandleIsOpen alloc h c)
 		     => Ptr64 h t
-		     -> PState l c
-			       (MS rax rbx rcx rdx rsi rdi rbp rsp
+		     -> Code c (MS rax rbx rcx rdx rsi rdi rbp rsp
 				   rflags rip r08 r09 r10 r11 r12
 				   r13 r14 r15 alloc cmp)
 			       (MS rax rbx rcx rdx rsi rdi rbp rsp
 				   rflags rip r08 r09 r10 r11 r12
 				   r13 r14 r15 alloc cmp)
-			       y'
 			       Composable
 			       (Ptr64 h cell)
 	}

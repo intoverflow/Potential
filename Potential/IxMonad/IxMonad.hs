@@ -3,7 +3,7 @@
 	EmptyDataDecls
 	#-}
 module Potential.IxMonad.IxMonad
-	( IxMonad(..)
+	( IxMonad(..), IxMonadTrans(..)
 	, Composable, Terminal
 	) where
 
@@ -13,12 +13,17 @@ data Composable
 data Terminal
 
 class IxMonad m where
-  mixedReturn :: a -> m x y y' ct a
-  return :: a -> m x x y' ct a
+  mixedReturn :: a -> m x y ct a
+  return :: a -> m x x ct a
   return a = mixedReturn a
-  (>>=)  :: m x y z Composable a -> (a -> m y z z' ct b) -> m x z z' ct b
-  (>>)   :: m x y z Composable a ->       m y z z' ct b  -> m x z z' ct b
+  (>>>=) :: m x y ct' a -> (a -> m y z ct b) -> m x z ct b
+  (>>=)  :: m x y Composable a -> (a -> m y z ct b) -> m x z ct b
+  m >>= f = m >>>= f
+  (>>)   :: m x y Composable a -> m y z ct b  -> m x z ct b
   a >> b = a >>= (\_ -> b)
-  fail :: String -> m x x y' Composable ()
+  fail :: String -> m x x Composable ()
   fail = fail
+
+class IxMonadTrans t where
+  lift :: IxMonad m => m x y ct a -> t m x y ct a
 

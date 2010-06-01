@@ -6,51 +6,61 @@ module Potential.Assembly
 	( Reg(..)
 	, Instr(..)
 	, Deref(..)
-	, PState(..), pGet, pPut, pModify, pTell
+	, PState(..), psGet, psPut, psModify
+	, runCode, Code
 	, Function(..), isFn
 	, composable, terminal, getFailure
 	) where
 
-import Prelude( String, Int, undefined, (++) )
+import Prelude( String, Int, undefined, (++), ($) )
 
 import Data.Maybe
 import Data.Word
 
 import Potential.MachineState( Reg )
-import Potential.IxMonad.IxMonad
+import Potential.IxMonad
+import Potential.IxMonad.Constrained
+import Potential.IxMonad.State
+import Potential.IxMonad.Writer
 
-composable :: PState l c s1 s2 s3 Composable a -> PState l c s1 s2 s3 Composable a
-composable p = p
-
-terminal :: PState l c s1 s2 s3 Terminal a -> PState l c s1 s2 s3 Terminal a
-terminal p = p
-
-data PState l c s1 s2 s3 ct a =
-    PState  { runPState :: c -> s1 -> (a, s2, [l]) }
+data PState x y ct a =
+    PState  { runPState :: x -> (a, y) }
   | PFailed { getPFailure :: String }
 
-getFailure :: PState l c s1 s2 s3 ct a -> Maybe String
+psGet   = PState (\s -> (s, s))
+psPut s = PState (\_ -> ((), s))
+psModify f = do a <- psGet
+		psPut $ f a
+
+instance IxMonad PState where
+  mixedReturn a = PState (\s -> (a, undefined))
+  f >>>= m  = maybe (PState (\s1 -> let (a, s2)  = runPState f s1
+					(a', s3) = runPState (m a) s2
+				    in (a', s3)))
+                    (PFailed) (getFailure f)
+  fail e = PFailed { getPFailure = e }
+
+
+getFailure :: PState x y ct a -> Maybe String
 getFailure (PState _)  = Nothing
 getFailure (PFailed f) = Just f
 
-instance IxMonad (PState l c) where
-  mixedReturn a = PState (\_ s -> (a, undefined, []))
-  return a = PState (\_ s -> (a, s, []))
-  f >>= m  = maybe (PState (\c s1 -> let (a, s2, l)   = runPState f c s1
-					 (a', s3, l') = runPState (m a) c s2
-				     in (a', s3, l ++ l')))
-                    (PFailed) (getFailure f)
-  m1 >> m2 = m1 >>= \_ -> m2
-  fail e = PFailed { getPFailure = e }
+composable :: Code c x y Composable a -> Code c x y Composable a
+composable p = p
 
-pGet      = PState (\_ s -> (s, s, []))
-pPut s    = PState (\_ _ -> ((), s, []))
-pModify f = pGet >>= \x -> pPut (f x)
-pTell l   = PState (\_ s -> ((), s, l))
+terminal :: Code c x y Terminal a -> Code c x y Terminal a
+terminal p = p
+
+type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
+runCode :: Code c x y ct a -> c -> x -> (a, [Instr], y)
+runCode code constr input =
+	let ((a, w), y) =
+		runPState (runIxWriterT (runIxConstrainedT code constr)) input
+	in (a, w, y)
 
 data Function c assumes returns =
      Fn { fnname   :: String
-	, body     :: PState Instr c assumes returns returns Terminal ()
+	, body     :: Code c assumes returns Terminal ()
 	}
 isFn :: Function c assumes returns -> Function c assumes returns
 isFn f = f

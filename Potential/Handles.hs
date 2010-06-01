@@ -20,7 +20,6 @@ import Potential.Constraints
 -- The allocator
 data Allocator hn hs = Allocator hn hs
 
--- alloc' :: (AddToList hn hs hs') => c -> Allocator hn hs -> (Allocator (HS hn) hs', hn)
 alloc' :: (MaybeAlloc (Allocator hn hs) hn (Allocator hn' hs') c)
 	=> c -> Allocator hn hs -> (Allocator hn' hs', hn)
 alloc' _ = undefined
@@ -35,7 +34,6 @@ free' :: MaybeFree (Allocator hn hs)
 	c -> (Allocator hn hs) -> h -> Allocator hn hs'
 free' _ _ _ = undefined
 
---realloc' :: (AddToList h hs hs') => c -> Allocator hn hs -> h -> Allocator hn hs'
 realloc' :: (MaybeRealloc (Allocator hn hs) h (Allocator hn hs') c)
 	  => c -> Allocator hn hs -> h -> Allocator hn hs'
 realloc' _ _ = undefined
@@ -59,24 +57,27 @@ instance MaybeRealloc alloc h alloc' ConstraintsOff
 
 
 class Alloc alloc h alloc' | alloc -> h alloc'
-instance ( InList hn hs False
+instance ( Handle hn
+	 , InList hn hs False
 	 , InList (HS hn) hs' False
 	 , AddToList hn hs hs'
 	 ) => Alloc (Allocator hn hs) hn (Allocator (HS hn) hs')
 
 class HandleIsOpen alloc h
-instance ( InList h hs True
+instance ( Handle h
+	 , InList h hs True
 	 ) => HandleIsOpen (Allocator hn hs) h
 
 class Free alloc h alloc' | alloc h -> alloc'
-instance ( InList h hs True
+instance ( Handle h
+	 , InList h hs True
 	 , RemoveFromList h hs hs'
 	 , InList h hs' False
 	 )
   => Free (Allocator hn hs) h (Allocator hn hs')
 
 class Realloc alloc h alloc' | alloc h -> alloc'
-instance (AddToList h hs hs') => Realloc (Allocator hn hs) h (Allocator hn hs')
+instance (InList h hs False, Handle h, AddToList h hs hs') => Realloc (Allocator hn hs) h (Allocator hn hs')
 
 
 -- Things used to manage the list of open handles

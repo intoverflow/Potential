@@ -71,10 +71,12 @@ cmp r1 r2 =
 	set rflags f'
 	return c'
 
+{-
 sje fn c =
      do instr $ SJe fn
 	fl <- get rflags
 	let zf = proj_zf fl
 	    _  = assertZF c zf
 	primCondJmp (body fn)
+-}
 

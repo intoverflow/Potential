@@ -13,6 +13,6 @@ import Potential.Core
 data Int64 = Int64
 instance HasSZ Int64 where type SZ Int64 = T64
 
-assertInt64 :: Int64 -> PState Instr c s s s' Composable ()
+assertInt64 :: Int64 -> Code c s s Composable ()
 assertInt64 _ = composable $ return ()
 
