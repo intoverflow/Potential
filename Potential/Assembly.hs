@@ -96,5 +96,12 @@ data Instr =
  |  Enter Word16
  |  Leave
  |  Label String
+ -- temporary instructions, used by the memory manager
+ |  Alloc
+ |  EnterRegion
+ |  CloseRegion
+ |  GoUpRegion
+ |  ComeDownRegion
+ |  TxOwnership
 
 

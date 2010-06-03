@@ -61,9 +61,9 @@ test11 = asCode "test11" $
 	ret
 
 test2 = asCode "test2" $
-     do enter (undefined :: InterruptGate offset_lo segsel ist dpl p
-					  offset_mid offset_hi)
-	leave
+     do --enter (undefined :: InterruptGate offset_lo segsel ist dpl p
+	--				  offset_mid offset_hi)
+	--leave
 	ret
 
 testJeFail = asCode "testJeFail" $

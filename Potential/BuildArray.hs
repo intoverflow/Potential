@@ -30,39 +30,9 @@ data Array t s =
 data Cell cell cell' t t' sz =
    Cell { cellName   :: String
 	, offset     :: Int
-	, updateCell :: ( (SZ cell' :==? sz) c
-			, MaybeHandleIsOpen (Allocator hn hs) h c
-			, MaybeHandleIsOpen (Allocator hn hs) h' c
-			, MaybeFree (Allocator hn hs)
-				    h
-				    (Allocator hn hs')
-				    c
-			, MaybeAlloc (Allocator hn hs')
-				     hn
-				     (Allocator hn' hs'')
-				     c
-			)
-		     => Ptr64 h t
-			-> Ptr64 h' cell'
-			-> Code c (MS rax rbx rcx rdx rsi rdi rbp rsp
-                                      rflags rip r08 r09 r10 r11 r12
-                                      r13 r14 r15 (Allocator hn hs) cmp)
-                                  (MS rax rbx rcx rdx rsi rdi rbp rsp
-                                      rflags rip r08 r09 r10 r11 r12
-                                      r13 r14 r15
-				      (Allocator hn' hs'') cmp)
-				  Composable
-				  (Ptr64 hn t')
-	, getCell    :: (MaybeHandleIsOpen alloc h c)
-		     => Ptr64 h t
-		     -> Code c (MS rax rbx rcx rdx rsi rdi rbp rsp
-				   rflags rip r08 r09 r10 r11 r12
-				   r13 r14 r15 alloc cmp)
-			       (MS rax rbx rcx rdx rsi rdi rbp rsp
-				   rflags rip r08 r09 r10 r11 r12
-				   r13 r14 r15 alloc cmp)
-			       Composable
-			       (Ptr64 h cell)
+	, updateCell :: forall h c x . (SZ cell' :==? sz) c
+		     => Ptr64 h t -> Ptr64 h cell' -> Code c x x Composable (Ptr64 h t')
+	, getCell    :: forall h x c . Ptr64 h t -> Code c x x Composable (Ptr64 h cell)
 	}
      
 

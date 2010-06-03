@@ -1,6 +1,7 @@
 {-# LANGUAGE
 	NoMonomorphismRestriction,
-	NoImplicitPrelude
+	NoImplicitPrelude,
+	FlexibleContexts
 	#-}
 module Potential.Core
 	(
@@ -10,7 +11,6 @@ module Potential.Core
 	-- stuff from Core
 	, comment
 	, instr, forget, get, set, getConstraints, withConstraints
-	, handleIsOpen, alloc, free, realloc
 	, assertType, assertRegister, assertFunction
 
 	-- stuff that comes from Potential.Assembly
@@ -18,7 +18,7 @@ module Potential.Core
 	, Composable, Terminal, composable, terminal
 
 	-- stuff that comes from IxMonad
-	, IxMonad(..)
+	, IxMonad(..), IxMonadTrans(..)
 
 	-- stuff that comes from MachineState
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
@@ -28,9 +28,6 @@ module Potential.Core
 
 	-- stuff that comes from Constraints
 	, ConstraintsOn(..), ConstraintsOff(..)
-
-	-- stuff that comes from Handles
-	, Allocator, MaybeFree, MaybeAlloc, MaybeHandleIsOpen, HS, C
 	) where
 
 import Prelude hiding ( return, fail, (>>), (>>=) )
@@ -41,7 +38,6 @@ import Potential.Size
 import Potential.Constraints
 import Potential.MachineState
 import Potential.Assembly
-import Potential.Handles
 
 -- In order to avoid madness, we don't export pGet, pPut, or pModify,
 -- which have too much of an effect on our Hoare types to be safe to release
@@ -59,7 +55,7 @@ withConstraints :: Code ConstraintsOn x y ct b
 withConstraints p = p
 
 -- For logging instructions
-instr :: Instr -> Code c x x ct ()
+instr :: (IxMonadWriter [Instr] m) => Instr -> m x x ct ()
 instr i = tell [i]
 
 
@@ -80,32 +76,6 @@ assertFunction fn = let _ = isFn fn
 forget dst =
      do assertRegister dst
 	set dst (undefined :: a)
-
-
--- Managing handles
-handleIsOpen h =
-     do a <- get Alloc
-	c <- getConstraints
-	return $ handleIsOpen' c a h
-
-alloc =
-     do a <- get Alloc
-	c <- getConstraints
-	let (a', h) = alloc' c a
-	set Alloc a'
-	return h
-
-free h =
-     do a <- get Alloc
-	c <- getConstraints
-	set Alloc $ free' c a h
-	return ()
-
-realloc h =
-     do a <- get Alloc
-	c <- getConstraints
-	set Alloc $ realloc' c a h
-	return ()
 
 
 -- Asserting the type of an entry in the machine state

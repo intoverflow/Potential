@@ -10,13 +10,12 @@ module Potential
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, cmp {-, sje-}
 	, setField, getField, setFieldInArray, getFieldInArray
-	, assertType, assertPtrIsValid, handleIsOpen
+	, assertType
 	, defineDataSize, dataSize, dataSizeT
 	, constField, reservedField, field
 	, mkStruct, defineStruct
 	, (:<=), (:==), (:<)
 	, (>>), (>>=), return, fail
-	, C, HS, Allocator
 	) where
 
 import Potential.Array
@@ -29,7 +28,6 @@ import Potential.Core
 import Potential.DataStructures
 import Potential.Flow
 import Potential.Functions
-import Potential.Handles
 import Potential.Integer
 import Potential.MachineState
 import Potential.Mov

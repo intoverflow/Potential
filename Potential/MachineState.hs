@@ -13,8 +13,6 @@ module Potential.MachineState ( Reg(..), MS
 			      ) where
 
 import Potential.MachineStateBuilder
-import Potential.Size
-import Potential.Handles
 
 data Reg =
     Rax | Rbx | Rcx | Rdx

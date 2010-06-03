@@ -55,14 +55,14 @@ instance (IxMonadReader r m) => IxMonadReader r (IxConstrainedT c m) where
 
 
 -- Lift IxRegionT
-instance (IxMonadState s m) => IxMonadState s (IxRegionT r mgr m) where
+instance (IxMonadState s m) => IxMonadState s (IxRegionT typ r m) where
   get   = lift get
   put s = lift $ put s
 
-instance (Monoid w, IxMonadWriter w m) => IxMonadWriter w (IxRegionT r mgr m) where
+instance (Monoid w, IxMonadWriter w m) => IxMonadWriter w (IxRegionT typ r m) where
   tell w = lift $ tell w
 
-instance (IxMonadReader r m) => IxMonadReader r (IxRegionT r mgr m) where
+instance (IxMonadReader r m) => IxMonadReader r (IxRegionT typ s m) where
   ask = lift ask
 
 

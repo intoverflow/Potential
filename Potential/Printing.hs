@@ -57,4 +57,10 @@ instance Show Instr where
   show (Enter l)   = "enter 0x" ++ (showHex l "")
   show (Leave)     = "leave"
   show (Label s)   = s ++ ":"
+  show Alloc       = "[alloc]"
+  show EnterRegion = "[enter]"
+  show CloseRegion = "[close]"
+  show GoUpRegion  = "[goup]"
+  show ComeDownRegion = "[comedown]"
+  show TxOwnership = "[txownership]"
 

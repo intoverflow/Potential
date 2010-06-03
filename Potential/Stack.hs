@@ -38,38 +38,37 @@ primPush a' sp =
      do assertPushableSize a'
 	updatePtr64 sp $ asStack a' sp
 
+primPop :: IxMonad m
+	=> Ptr64 h (Stack t (Ptr64 h' (Stack a' b')))
+	-> m x x Composable (t, Ptr64 h' (Stack a' b'))
 primPop sp =
      do stack <- fromPtr64 sp
 	let (a, sp') = splitStack stack
 	-- sp' <- updatePtr64 sp stack'
-	free $ getPtrHandle sp
-	realloc $ getPtrHandle sp'
+	-- free $ getPtrHandle sp
+	-- realloc $ getPtrHandle sp'
 	return (a, sp')
 
 
 -- Stack frames
-data FrameBasePtr64 h s t = FrameBasePtr64 h s t
+data FrameBasePtr64 h s t = FrameBasePtr64 s t
 instance HasSZ (FrameBasePtr64 h s t) where type SZ (FrameBasePtr64 h s t) = T64
-
-getBPHandle :: FrameBasePtr64 h s t -> h
-getBPHandle _ = undefined
 
 getBPStack :: FrameBasePtr64 h s t -> s
 getBPStack _ = undefined
 
+{-
+makeFramePtr64 :: IxMonad m
+		=> Ptr64 h (Stack a b)
+		-> t
+		-> m x x Composable (FrameBasePtr64 h (Ptr64 h (Stack a b)) t,
+				     Ptr64 h (Stack a' b'))
+-}
 makeFramePtr64 sp frame =
-     do free (getPtrHandle sp)
-        h' <- alloc
-        return ( FrameBasePtr64 (getPtrHandle sp)
-                                (assertStack $ getPtrData sp)
-                                frame
-               , Ptr64 h' (undefined :: Stack a' b')
-               )
+     do sp' <- newPtr64 (undefined :: Stack a' b')
+        return ( FrameBasePtr64 sp frame, sp')
 
-getStackFromFramePtr64 bp =
-     do let h = getBPHandle bp
-        realloc h
-        return $ Ptr64 h (getBPStack bp)
+getStackFromFramePtr64 bp = return $ getBPStack bp
 
 
 
@@ -92,13 +91,13 @@ pop dst =
 
 enter frame =
      do let l = fromIntegral $ toInt $ sz frame
-	instr $ Enter l
-	baseptr <- get rbp
-	stack   <- get rsp
-	stack'  <- primPush baseptr stack
+	lift $ instr $ Enter l
+	baseptr <- lift $ get rbp
+	stack   <- lift $ get rsp
+	stack'  <- lift $ primPush baseptr stack
 	(baseptr', stack'') <- makeFramePtr64 stack' frame
-	set rbp baseptr'
-	set rsp stack''
+	lift $ set rbp baseptr'
+	lift $ set rsp stack''
 
 leave =
      do instr Leave

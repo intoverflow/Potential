@@ -94,32 +94,11 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 		  , forgetTyp    :: currentPackage -> forgottenPackage
 		  , isolateTyp   :: currentPackage -> isolatedPackage
 		  , orTyp        :: shifted -> forgottenPackage -> updatedPackage
-		  , getStruct	 :: MaybeHandleIsOpen alloc h c
-				 => Ptr64 h currentStruct
-				 -> Code c (MS rax rbx rcx rdx rsi rdi rbp rsp
-					       rflags rip r08 r09 r10 r11 r12
-					       r13 r14 r15 alloc cmp)
-					   (MS rax rbx rcx rdx rsi rdi rbp rsp
-					       rflags rip r08 r09 r10 r11 r12
-					       r13 r14 r15 alloc cmp)
-					   Composable
-					   currentPackage
-		  , setStruct	 :: ( MaybeHandleIsOpen (Allocator hn hs) h c
-				    , MaybeFree  (Allocator hn hs)  h  (Allocator hn  hs') c
-				    , MaybeAlloc (Allocator hn hs') hn (Allocator hn' hs'') c
-				    )
-				 => updatedPackage
+		  , getStruct	 :: forall h c x . Ptr64 h currentStruct
+				 -> Code c x x Composable currentPackage
+		  , setStruct	 :: forall h c x . updatedPackage
 				 -> Ptr64 h currentStruct
-				 -> Code c (MS rax rbx rcx rdx rsi rdi rbp rsp
-					       rflags rip r08 r09 r10 r11 r12
-					       r13 r14 r15
-					       (Allocator hn hs) cmp)
-					   (MS rax rbx rcx rdx rsi rdi rbp rsp
-					       rflags rip r08 r09 r10 r11 r12
-					       r13 r14 r15
-					       (Allocator hn' hs'') cmp)
-					   Composable
-					   (Ptr64 hn updatedStruct)
+				 -> Code c x x Composable (Ptr64 h updatedStruct)
 		  }
 instance Show (FieldModifier sz base base' shifted currentPackage forgottenPackage isolatedPackage updatedPackage currentStruct updatedStruct) where
   show bfm = "FieldModifier {fname = \""
