@@ -4,7 +4,7 @@
 	#-}
 module Potential.IxMonad.Region
 	( IxRegionT(..), Region, RegionMgr(..)
-	, SubRegion
+	, SubRegion, inSupRegion
 	, withRegion, nestRegion
 	) where
 
@@ -47,6 +47,11 @@ withRegion region r =
 newtype SubRegion typ r s m x y =
  SubRegion (forall a .
 	     Region typ r m x y Composable a -> Region typ s m x y Composable a)
+
+inSupRegion :: SubRegion typ r s m x y
+	    -> Region typ r m x y Composable a
+	    -> Region typ s m x y Composable a
+inSupRegion (SubRegion sr) r = sr r
 
 nestRegion :: IxMonad m
 	   => (forall s . SubRegion typ r s m x y

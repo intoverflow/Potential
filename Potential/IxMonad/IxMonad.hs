@@ -21,7 +21,7 @@ class IxMonad m where
   m >>= f = m >>>= f
   (>>)   :: m x y Composable a -> m y z ct b  -> m x z ct b
   a >> b = a >>= (\_ -> b)
-  fail :: String -> m x x Composable ()
+  fail :: String -> m x x Composable a
   fail = fail
 
 class IxMonadTrans t where
