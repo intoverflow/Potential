@@ -6,7 +6,7 @@
 	FlexibleContexts
 	#-}
 module Potential.Pointer
-	( Ptr64, newPtr64, fromPtr64, updatePtr64
+	( Ptr64, newPtr64, fromPtr64
 	, MemRegion, MemSubRegion
 	, withMemoryRegion, nestMemoryRegion, smuggleFrom
 	) where
@@ -74,12 +74,6 @@ smuggleFrom :: IxMonadWriter [Instr] m
 	    -> MemRegion s m x y Composable (Ptr64 r t')
 smuggleFrom f r sr =
      do (Ptr64 t) <- r
-	instr TxOwnership
-	inSupRegion sr (return $ Ptr64 $ f t)
-
-
--- An evil function that violates type safety
-updatePtr64 :: IxMonad m => Ptr64 r t -> t' -> m x x Composable (Ptr64 r t')
-updatePtr64 ptr t' =
-     do return $ Ptr64 t'
+	inSupRegion sr $ do instr TxOwnership
+			    return $ Ptr64 $ f t
 
