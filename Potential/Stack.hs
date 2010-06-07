@@ -13,7 +13,6 @@ module Potential.Stack
 import Prelude( ($) )
 
 import Potential.Size
-import Potential.Pointer
 import Potential.Assembly
 
 import Potential.Core
@@ -21,11 +20,12 @@ import Potential.Core
 
 -- Stacks
 data Stack a b = Stack a b
+instance HasSZ (Stack a b) where type SZ (Stack a b) = T64
 
 assertStack :: Stack a b -> Stack a b
 assertStack = id
 
-splitStack :: Stack a (Ptr64 h (Stack a' b')) -> (a, Ptr64 h (Stack a' b'))
+splitStack :: Stack a (Stack a' b') -> (a, Stack a' b')
 splitStack _ = (undefined, undefined)
 
 asStack :: a -> b -> Stack a b
@@ -36,17 +36,13 @@ assertPushableSize _ = return ()
 
 primPush a' sp =
      do assertPushableSize a'
-	updatePtr64 sp $ asStack a' sp
+	return $ asStack a' sp
 
 primPop :: IxMonad m
-	=> Ptr64 h (Stack t (Ptr64 h' (Stack a' b')))
-	-> m x x Composable (t, Ptr64 h' (Stack a' b'))
+	=> Stack t (Stack a' b')
+	-> m x x Composable (t, Stack a' b')
 primPop sp =
-     do stack <- fromPtr64 sp
-	let (a, sp') = splitStack stack
-	-- sp' <- updatePtr64 sp stack'
-	-- free $ getPtrHandle sp
-	-- realloc $ getPtrHandle sp'
+     do let (a, sp') = splitStack sp
 	return (a, sp')
 
 
@@ -65,7 +61,7 @@ makeFramePtr64 :: IxMonad m
 				     Ptr64 h (Stack a' b'))
 -}
 makeFramePtr64 sp frame =
-     do sp' <- newPtr64 (undefined :: Stack a' b')
+     do let sp' = undefined :: Stack a' b'
         return ( FrameBasePtr64 sp frame, sp')
 
 getStackFromFramePtr64 bp = return $ getBPStack bp
