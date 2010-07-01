@@ -30,9 +30,9 @@ data Array t s =
 data Cell cell cell' t t' sz =
    Cell { cellName   :: String
 	, offset     :: Int
-	, updateCell :: forall h c x . (SZ cell' :==? sz) c
-		     => Ptr64 h t -> Ptr64 h cell' -> Code c x x Composable (Ptr64 h t')
-	, getCell    :: forall h x c . Ptr64 h t -> Code c x x Composable (Ptr64 h cell)
+	, updateCell :: forall h c x z . (SZ cell' :==? sz) c
+		     => Ptr64 h t -> Ptr64 h cell' -> Code c x x z Composable (Ptr64 h t')
+	, getCell    :: forall h c x z . Ptr64 h t -> Code c x x z Composable (Ptr64 h cell)
 	}
      
 

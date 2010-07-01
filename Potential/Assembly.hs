@@ -23,7 +23,7 @@ import Potential.IxMonad.Constrained
 import Potential.IxMonad.State
 import Potential.IxMonad.Writer
 
-data PState x y ct a =
+data PState x y z ct a =
     PState  { runPState :: x -> (a, y) }
   | PFailed { getPFailure :: String }
 
@@ -34,25 +34,32 @@ psModify f = do a <- psGet
 
 instance IxMonad PState where
   mixedReturn a = PState (\s -> (a, undefined))
-  f >>>= m  = maybe (PState (\s1 -> let (a, s2)  = runPState f s1
+  ixmNop f m = maybe  (PState (\s1 -> let (a, s2)  = runPState f s1
+					  (a', s3) = runPState (m a) s1
+				      in (a', s3)))
+		      (PFailed)
+		      (getFailure f)
+  f >>= m  = maybe  (PState (\s1 -> let (a, s2)  = runPState f s1
 					(a', s3) = runPState (m a) s2
 				    in (a', s3)))
-                    (PFailed) (getFailure f)
+                    (PFailed)
+		    (getFailure f)
   fail e = PFailed { getPFailure = e }
 
 
-getFailure :: PState x y ct a -> Maybe String
+getFailure :: PState x y z ct a -> Maybe String
 getFailure (PState _)  = Nothing
 getFailure (PFailed f) = Just f
 
-composable :: Code c x y Composable a -> Code c x y Composable a
+type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
+
+composable :: Code c x y z Composable a -> Code c x y z Composable a
 composable p = p
 
-terminal :: Code c x y Terminal a -> Code c x y Terminal a
+terminal :: Code c x y z Terminal a -> Code c x y z Terminal a
 terminal p = p
 
-type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
-runCode :: Code c x y ct a -> c -> x -> (a, [Instr], y)
+runCode :: Code c x y z ct a -> c -> x -> (a, [Instr], y)
 runCode code constr input =
 	let ((a, w), y) =
 		runPState (runIxWriterT (runIxConstrainedT code constr)) input
@@ -60,7 +67,7 @@ runCode code constr input =
 
 data Function c assumes returns =
      Fn { fnname   :: String
-	, body     :: Code c assumes returns Terminal ()
+	, body     :: Code c assumes returns returns Terminal ()
 	}
 isFn :: Function c assumes returns -> Function c assumes returns
 isFn f = f

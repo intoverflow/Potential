@@ -9,7 +9,7 @@ module Potential
 	, asm, renderFn, getType, getTypeOf
 	, asCode, Function
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
-	, cmp {-, sje-}
+	, cmp, sje
 	, setField, getField, setFieldInArray, getFieldInArray
 	, assertType
 	, defineDataSize, dataSize, dataSizeT

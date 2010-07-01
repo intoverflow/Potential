@@ -20,7 +20,7 @@ pos = do loc <- location
 	 return p
 
 asCode :: String
-       -> Code c assumes returns Terminal ()
+       -> Code c assumes returns returns Terminal ()
        -> Function c assumes returns
 asCode fnname c =
      Fn { fnname    = fnname
@@ -36,7 +36,7 @@ renderFn c =
 	; mapM_ (\l -> putStrLn $ "    " ++ show l) asmcode
 	}
 
-asm :: Code ConstraintsOff assumes returns ct a -> [Instr]
+asm :: Code ConstraintsOff assumes returns returns ct a -> [Instr]
 asm code = let (_, asmcode, _) = runCode code ConstraintsOff undefined
            in asmcode
 

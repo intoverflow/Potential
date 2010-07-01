@@ -13,17 +13,18 @@ data Composable
 data Terminal
 
 class IxMonad m where
-  mixedReturn :: a -> m x y ct a
-  return :: a -> m x x ct a
+  -- minimal interface
+  mixedReturn :: a -> m x y z ct a
+  ixmNop :: m x y z ct a -> (a -> m x y z ct b) -> m x y z ct b
+  (>>=)  :: m x y z Composable a -> (a -> m y z z' ct b) -> m x z z' ct b
+  -- stuff for free
+  return :: a -> m x x z ct a
   return a = mixedReturn a
-  (>>>=) :: m x y ct' a -> (a -> m y z ct b) -> m x z ct b
-  (>>=)  :: m x y Composable a -> (a -> m y z ct b) -> m x z ct b
-  m >>= f = m >>>= f
-  (>>)   :: m x y Composable a -> m y z ct b  -> m x z ct b
+  (>>)   :: m x y z Composable a -> m y z z' ct b  -> m x z z' ct b
   a >> b = a >>= (\_ -> b)
-  fail :: String -> m x x Composable a
+  fail :: String -> m x x x Composable a
   fail = fail
 
 class IxMonadTrans t where
-  lift :: IxMonad m => m x y ct a -> t m x y ct a
+  lift :: IxMonad m => m x y z ct a -> t m x y z ct a
 

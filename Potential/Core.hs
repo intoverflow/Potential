@@ -24,7 +24,7 @@ module Potential.Core
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
 	, rip, r08, r09, r10, r11, r12, r13, r14, r15
 	, arg, MS, Get
-	, MSCmp(..)
+	, rcmp
 
 	-- stuff that comes from Constraints
 	, ConstraintsOn(..), ConstraintsOff(..)
@@ -39,23 +39,21 @@ import Potential.Constraints
 import Potential.MachineState
 import Potential.Assembly
 
--- In order to avoid madness, we don't export pGet, pPut, or pModify,
--- which have too much of an effect on our Hoare types to be safe to release
-get field = lift $ lift $
+get field = (comment $ "get " ++ show field) >> (lift $ lift $
      do ms <- psGet
         let fdata = get' field ms
-        return fdata
-set field new = lift $ lift $ psModify (\ms -> set' field new ms)
+        return fdata)
+set field new = (comment $ "set " ++ show field) >> (lift $ lift $ psModify (\ms -> set' field new ms))
 
-getConstraints :: Code c x x Composable c
+getConstraints :: Code c x x z Composable c
 getConstraints = return undefined
 
-withConstraints :: Code ConstraintsOn x y ct b
-		-> Code ConstraintsOn x y ct b
+withConstraints :: Code ConstraintsOn x y z ct b
+		-> Code ConstraintsOn x y z ct b
 withConstraints p = p
 
 -- For logging instructions
-instr :: (IxMonadWriter [Instr] m) => Instr -> m x x ct ()
+instr :: (IxMonadWriter [Instr] m) => Instr -> m x x z ct ()
 instr i = tell [i]
 
 
@@ -79,7 +77,7 @@ forget dst =
 
 
 -- Asserting the type of an entry in the machine state
-assertType :: a -> a -> Code c s s Composable ()
+assertType :: a -> a -> Code c s s z Composable ()
 assertType _ _ = return ()
 
 

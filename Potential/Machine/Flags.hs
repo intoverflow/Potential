@@ -62,21 +62,20 @@ cmp r1 r2 =
 	assertInt64 dr1
 	assertInt64 dr2
 	-- increment the machine state's cmp
-	c <- get MSCmp
+	c <- get rcmp
 	let c' = incCmp c
-	set MSCmp c'
+	set rcmp c'
 	-- update the flags register to reflect this
 	f <- get rflags
-	let f' =  applyCmp c' f
+	let f' = applyCmp c' f
 	set rflags f'
-	return c'
+	get rcmp
+	-- return c' -- for some insane reason, this does not work.
 
-{-
 sje fn c =
      do instr $ SJe fn
 	fl <- get rflags
 	let zf = proj_zf fl
 	    _  = assertZF c zf
 	primCondJmp (body fn)
--}
 

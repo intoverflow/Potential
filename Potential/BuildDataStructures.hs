@@ -89,16 +89,16 @@ data FieldModifier sz base base' shifted currentPackage forgottenPackage isolate
 		  , forgetMask   :: Word64
 		  , displacement :: Int
 		  , shiftTyp     :: ((SZ base' :==? sz) c)
-				 => base' -> Code c x x Composable shifted
+				 => base' -> Code c x x z Composable shifted
 		  , shiftDownTyp :: isolatedPackage -> base
 		  , forgetTyp    :: currentPackage -> forgottenPackage
 		  , isolateTyp   :: currentPackage -> isolatedPackage
 		  , orTyp        :: shifted -> forgottenPackage -> updatedPackage
-		  , getStruct	 :: forall h c x . Ptr64 h currentStruct
-				 -> Code c x x Composable currentPackage
-		  , setStruct	 :: forall h c x . updatedPackage
+		  , getStruct	 :: forall h c x z . Ptr64 h currentStruct
+				 -> Code c x x z Composable currentPackage
+		  , setStruct	 :: forall h c x z . updatedPackage
 				 -> Ptr64 h currentStruct
-				 -> Code c x x Composable (Ptr64 h updatedStruct)
+				 -> Code c x x z Composable (Ptr64 h updatedStruct)
 		  }
 instance Show (FieldModifier sz base base' shifted currentPackage forgottenPackage isolatedPackage updatedPackage currentStruct updatedStruct) where
   show bfm = "FieldModifier {fname = \""

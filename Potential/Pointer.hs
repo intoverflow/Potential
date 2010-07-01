@@ -35,7 +35,7 @@ fromPtr64 ptr = return $ getPtrData ptr
 
 
 -- Allocate a pointer in the current region
-newPtr64 :: t -> MemRegion r (Code c) x x Composable (Ptr64 r t)
+newPtr64 :: t -> MemRegion r (Code c) x x z Composable (Ptr64 r t)
 newPtr64 t =
      do lift $ instr Alloc
 	return $ Ptr64 t
@@ -53,25 +53,25 @@ memRegionMgr =
 
 -- Execute code within a memory region
 withMemoryRegion :: IxMonadWriter [Instr] m
-		 => (forall r . MemRegion r m x y Composable a)
-		 -> m x y Composable a
+		 => (forall r . MemRegion r m x y y Composable a)
+		 -> m x y z Composable a
 withMemoryRegion r = withRegion memRegionMgr r
 
 
 -- Nest a memory region
 nestMemoryRegion :: IxMonad m
-		 => (forall s . MemSubRegion r s m x y
-				-> MemRegion s m x y Composable a)
-		 -> MemRegion r m x y Composable a
+		 => (forall s . MemSubRegion r s m x y y
+				-> MemRegion s m x y y Composable a)
+		 -> MemRegion r m x y z Composable a
 nestMemoryRegion r = nestRegion r
 
 
 -- Modify types while pulling a pointer from a child to a parent memory region
 smuggleFrom :: IxMonadWriter [Instr] m
 	    => (t -> t')
-	    -> MemRegion s m x y Composable (Ptr64 s t)
-	    -> MemSubRegion r s m y y
-	    -> MemRegion s m x y Composable (Ptr64 r t')
+	    -> MemRegion s m x y y Composable (Ptr64 s t)
+	    -> MemSubRegion r s m y y y
+	    -> MemRegion s m x y y Composable (Ptr64 r t')
 smuggleFrom f r sr =
      do (Ptr64 t) <- r
 	inSupRegion sr $ do instr TxOwnership

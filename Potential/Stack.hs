@@ -31,7 +31,7 @@ splitStack _ = (undefined, undefined)
 asStack :: a -> b -> Stack a b
 asStack _ _ = undefined
 
-assertPushableSize :: (SZ a' :<=? T64) c => a' -> Code c x x Composable ()
+assertPushableSize :: (SZ a' :<=? T64) c => a' -> Code c x x z Composable ()
 assertPushableSize _ = return ()
 
 primPush a' sp =
@@ -40,7 +40,7 @@ primPush a' sp =
 
 primPop :: IxMonad m
 	=> Stack t (Stack a' b')
-	-> m x x Composable (t, Stack a' b')
+	-> m x x z Composable (t, Stack a' b')
 primPop sp =
      do let (a, sp') = splitStack sp
 	return (a, sp')

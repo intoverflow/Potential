@@ -43,12 +43,15 @@ testSetDPL2 = asCode "testSetDPL2" $
 	comment "Now rax has PrivLevelKernel, r10 has PrivLevelUser, but it's the same ptr"
 	ret
 
+doesNothing = asCode "doesNothing" $
+     do ret
+
 test1 = asCode "test1" $
      do pop rax
 	pop rbx
 	pop rcx
 	rabxCmp <- cmp rax rbx
-	-- sje test2 rabxCmp
+	sje doesNothing rabxCmp
 	ret
 
 test11 = asCode "test11" $
@@ -57,7 +60,7 @@ test11 = asCode "test11" $
 	pop rcx
 	rabxCmp <- cmp rax rbx
 	racxCmp <- cmp rax rcx
-	-- sje test2 racxCmp
+	-- sje doesNothing rabxCmp -- should fail
 	ret
 
 test2 = asCode "test2" $
@@ -66,7 +69,7 @@ test2 = asCode "test2" $
 	--leave
 	ret
 
-testJeFail = asCode "testJeFail" $
+testJeFail = -- asCode "testJeFail" $
      do inRax <- get rax
 	inRbx <- get rbx
 	assertType inRax (undefined :: Int64)
