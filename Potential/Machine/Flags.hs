@@ -4,7 +4,8 @@
 	MultiParamTypeClasses,
 	FlexibleInstances,
 	TypeFamilies,
-	TemplateHaskell #-}
+	TemplateHaskell,
+	QuasiQuotes #-}
 module Potential.Machine.Flags where
 
 import Prelude ( fromInteger, undefined, ($) )
@@ -15,13 +16,35 @@ import Potential.Core
 import Potential.Integer
 import Potential.Flow
 
-import Potential.BuildDataStructures
-
-import Potential.Machine.FlagsStruct
+import Potential.DataStructures
 
 -- example:
 -- :info FlagsRegister
-defineStruct flags
+[$struct| FlagsRegister where
+    cf :: 1	-- carry
+    const 1
+    pf :: 1	-- parity
+    const 0
+    af :: 1	-- adjust
+    const 0
+    zf :: 1	-- zero
+    sf :: 1	-- sign
+    tf :: 1	-- trap
+    ief :: 1	-- interrupt enable
+    df :: 1	-- direction
+    ovf :: 1	-- overflow
+    iopl :: 2	-- current priv level
+    const 0	-- nested task, not supported in x86-64 so we make it 0
+    const 0
+    rf :: 1	-- resume
+    const 0	-- virtual 8086, always zero in IA-32e
+    ac :: 1	-- alignment check
+    vif :: 1	-- virtual interrupt
+    vip :: 1	-- virtual interrupt pending
+    idf :: 1	-- identification
+    reserved 10
+    reserved 32
+|]
 
 data CS a
 

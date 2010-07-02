@@ -9,7 +9,7 @@ import Potential
 
 import Potential.Machine.Flags
 import Potential.Machine.IntGate
-import Potential.Machine.IDT
+-- import Potential.Machine.IDT
 
 -- a useful macro
 swap r1 r2 =
@@ -105,6 +105,7 @@ test5 = asCode "test5" $
 	ret
 -}
 
+{-
 testIDT = asCode "testIDT" $
      do push rcx
 	push rbx
@@ -112,6 +113,7 @@ testIDT = asCode "testIDT" $
 	pop rbx
 	pop rcx
 	ret
+-}
 
 testIDT2 = asCode "testIDT2" $
      do getFieldInArray intOverflow dpl rax rbx

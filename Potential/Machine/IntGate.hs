@@ -4,7 +4,8 @@
 	FlexibleInstances,
 	MultiParamTypeClasses,
 	TypeFamilies,
-	TemplateHaskell #-}
+	TemplateHaskell,
+	QuasiQuotes #-}
 module Potential.Machine.IntGate where
 
 import Prelude ( ($), (++), show, fromInteger )
@@ -15,16 +16,26 @@ import Potential.Stack
 import Potential.Flow
 import Potential.Mov
 
-import Potential.BuildDataStructures
 import Potential.DataStructures
 
 import Potential.Functions
 
-import Potential.Machine.IntGateStruct
-
 -- example:
 -- :info InterruptGate
-defineStruct intGate
+[$struct| InterruptGate where
+    offset_lo :: 16
+    segsel :: 16
+    ist :: 3
+    const 00
+    const 000
+    const 1110		-- identifies InterruptGate type
+    const 0
+    dpl :: 2
+    p :: 1
+    offset_mid :: 16
+    offset_hi :: 32
+    reserved 32
+|]
 
 data Present    = Present
 data NotPresent = NotPresent

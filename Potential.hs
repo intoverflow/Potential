@@ -10,7 +10,7 @@ module Potential
 	, asCode, Function
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, cmp, sje
-	, setField, getField, setFieldInArray, getFieldInArray
+	, setField, getField
 	, assertType
 	, defineDataSize, dataSize, dataSizeT
 	, constField, reservedField, field
@@ -19,7 +19,7 @@ module Potential
 	, (>>), (>>=), return, fail
 	) where
 
-import Potential.Array
+-- import Potential.Array
 import Potential.Assembly
 import Potential.Bit
 import Potential.BuildArray
