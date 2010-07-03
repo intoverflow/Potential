@@ -20,13 +20,13 @@ newtype IxStateT s m x y z ct a =
     IxStateT { runIxStateT :: s -> m x y z ct (a, s) }
 
 instance IxMonadTrans (IxStateT s) where
-  lift op = IxStateT $ \s -> op `ixmNop` \a -> mixedReturn (a, s)
+  lift op = IxStateT $ \s -> fmap (\a -> (a, s)) op
+
+instance IxFunctor m => IxFunctor (IxStateT s m) where
+  fmap f m = IxStateT $ \s -> fmap (\(a, s') -> (f a, s')) (runIxStateT m s)
 
 instance IxMonad m => IxMonad (IxStateT s m) where
   mixedReturn a = lift $ mixedReturn a
-  ixmNop st f = IxStateT $ \s -> runIxStateT st s `ixmNop` \(a, s') ->
-				 let st' = f a
-				 in runIxStateT st' s'
   st >>= f = IxStateT $ \s -> runIxStateT st s >>= \(a, s') ->
 			      let st' = f a
 			      in runIxStateT st' s'

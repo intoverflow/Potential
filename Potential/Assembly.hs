@@ -32,13 +32,13 @@ psPut s = PState (\_ -> ((), s))
 psModify f = do a <- psGet
 		psPut $ f a
 
+instance IxFunctor PState where
+  fmap f (PFailed s) = PFailed s
+  fmap f ps = PState $ \x -> let (a, y) = runPState ps x
+			     in (f a, y)
+
 instance IxMonad PState where
   mixedReturn a = PState (\s -> (a, undefined))
-  ixmNop f m = maybe  (PState (\s1 -> let (a, s2)  = runPState f s1
-					  (a', s3) = runPState (m a) s1
-				      in (a', s3)))
-		      (PFailed)
-		      (getFailure f)
   f >>= m  = maybe  (PState (\s1 -> let (a, s2)  = runPState f s1
 					(a', s3) = runPState (m a) s2
 				    in (a', s3)))

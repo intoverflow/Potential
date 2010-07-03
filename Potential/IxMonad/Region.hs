@@ -29,10 +29,11 @@ type Region typ r m = IxRegionT typ r m
 instance IxMonadTrans (IxRegionT typ r) where
   lift f = IxRegionT $ lift f
 
+instance IxFunctor m => IxFunctor (IxRegionT typ r m) where
+  fmap f (IxRegionT m) = IxRegionT $ fmap f m
+
 instance IxMonad m => IxMonad (IxRegionT typ r m) where
   mixedReturn a = lift $ mixedReturn a
-  ixmNop fl f = IxRegionT $ let fl' = runIxRegionT fl
-			    in fl' `ixmNop` (runIxRegionT . f)
   fl >>= f = IxRegionT $ let fl' = runIxRegionT fl
 			 in fl' >>= (runIxRegionT . f)
 

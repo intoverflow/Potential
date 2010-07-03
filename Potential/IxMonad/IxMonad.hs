@@ -3,7 +3,7 @@
 	EmptyDataDecls
 	#-}
 module Potential.IxMonad.IxMonad
-	( IxMonad(..), IxMonadTrans(..)
+	( IxFunctor(..), IxMonad(..), IxMonadTrans(..)
 	, Composable, Terminal
 	) where
 
@@ -12,10 +12,12 @@ import Prelude( String )
 data Composable
 data Terminal
 
-class IxMonad m where
+class IxFunctor m where
+  fmap :: (a -> b) -> m x y z ct a -> m x y z ct b
+
+class IxFunctor m => IxMonad m where
   -- minimal interface
   mixedReturn :: a -> m x y z ct a
-  ixmNop :: m x y z ct a -> (a -> m x y z ct b) -> m x y z ct b
   (>>=)  :: m x y z Composable a -> (a -> m y z z' ct b) -> m x z z' ct b
   -- stuff for free
   return :: a -> m x x z ct a

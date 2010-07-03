@@ -1,5 +1,4 @@
-{-# LANGUAGE
-	NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 module Potential
 	( arg, forget, get, getConstraints, withConstraints
 	, rax, rbx, rcx, rdx, rsi, rdi
@@ -9,24 +8,19 @@ module Potential
 	, asm, renderFn, getType, getTypeOf
 	, asCode, Function
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
-	, cmp, sje
-	, setField, getField
+	-- , cmp, sje
+	, struct, struct_diagram
 	, assertType
-	, defineDataSize, dataSize, dataSizeT
-	, constField, reservedField, field
-	, mkStruct, defineStruct
 	, (:<=), (:==), (:<)
 	, (>>), (>>=), return, fail
+	, fromIntegral, fromInteger, ($)
 	) where
 
--- import Potential.Array
 import Potential.Assembly
 import Potential.Bit
-import Potential.BuildArray
-import Potential.BuildDataStructures
 import Potential.Constraints
 import Potential.Core
-import Potential.DataStructures
+import Potential.DataStructure
 import Potential.Flow
 import Potential.Functions
 import Potential.Integer
@@ -37,5 +31,5 @@ import Potential.Printing
 import Potential.Size
 import Potential.Stack
 
-import Potential.Machine.Flags
+import Prelude (fromIntegral, fromInteger, ($))
 

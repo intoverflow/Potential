@@ -17,11 +17,11 @@ newtype IxConstrainedT c m x y z ct a =
 instance IxMonadTrans (IxConstrainedT c) where
   lift op = IxConstrainedT $ \c -> op
 
+instance IxFunctor m => IxFunctor (IxConstrainedT c m) where
+  fmap f m = IxConstrainedT $ \c -> fmap f (runIxConstrainedT m c)
+
 instance IxMonad m => IxMonad (IxConstrainedT c m) where
   mixedReturn a = lift $ mixedReturn a
-  ixmNop st f = IxConstrainedT $ \c -> runIxConstrainedT st c `ixmNop` \a ->
-					let st' = f a
-					in runIxConstrainedT st' c
   st >>= f = IxConstrainedT $ \c -> runIxConstrainedT st c >>= \a ->
 				    let st' = f a
 				    in runIxConstrainedT st' c

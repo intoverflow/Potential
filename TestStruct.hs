@@ -1,8 +1,10 @@
 {-# LANGUAGE
-	QuasiQuotes #-}
+	QuasiQuotes,
+	NoMonomorphismRestriction,
+	NoImplicitPrelude #-}
 module TestStruct where
 
-import Potential.DataStructure
+import Potential
 
 [$struct| FlagsRegister where
     cf :: 1     -- carry
@@ -71,4 +73,8 @@ import Potential.DataStructure
     |----------------------------|--------------------------|
 
 |]
+
+testProjector = asCode "testProjector" $
+     do proj_FlagsRegister_to_0 rax rbx
+	ret
 

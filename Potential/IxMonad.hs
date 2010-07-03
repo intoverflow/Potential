@@ -5,7 +5,7 @@
 	FlexibleInstances
 	#-}
 module Potential.IxMonad
-	( IxMonad(..), IxMonadTrans(..), Composable, Terminal
+	( IxFunctor(..), IxMonad(..), IxMonadTrans(..), Composable, Terminal
 	) where
 
 import Prelude( ($) )

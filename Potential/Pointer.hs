@@ -7,6 +7,7 @@
 	#-}
 module Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
+	, primPtrProj
 	, MemRegion, MemSubRegion
 	, withMemoryRegion, nestMemoryRegion, smuggleFrom
 	) where
@@ -40,6 +41,11 @@ newPtr64 t =
      do lift $ instr Alloc
 	return $ Ptr64 t
 
+primPtrProj proj displacement src dst =
+     do instr $ Ld (Deref2 displacement (arg src)) (arg dst)
+	ptr <- get src
+	dat <- fromPtr64 ptr
+	set dst (proj dat)
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m
