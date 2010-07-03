@@ -1,13 +1,7 @@
-{-# LANGUAGE
-	ScopedTypeVariables,
-	TemplateHaskell,
-	QuasiQuotes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Potential.DataStructure.StructDiagramQQ (struct_diagram) where
 
--- For building the ``struct_diagram'' quasi-quoter
-import Data.Generics.Aliases (extQ)
 import Language.Haskell.TH.Quote
-import qualified Language.Haskell.TH as TH
 import Text.ParserCombinators.Parsec
 
 import Data.List
@@ -15,6 +9,7 @@ import Data.Char (digitToInt)
 
 import Potential.DataStructure.AbstractSyntax
 import Potential.DataStructure.CommonParser
+import Potential.DataStructure.CommonQQ
 
 parseStructDiagram fname line col s =
 	let p = do pos <- getPosition
@@ -31,11 +26,15 @@ structDiagramParser =
 	structName   <- typeName
 	whiteSpace'
 	structFields <- many1 parse_diagram_field
-	let structFields' = sortBy (\(_,a :: Integer) (_,b :: Integer) ->
+	let structFields' = map fst $
+			    sortBy (\(_,a :: Integer) (_,b :: Integer) ->
 					compare a b)
 				   structFields
+	    structFields'' = pairup structFields'
+	    pairup [] = []
+	    pairup (a:b:cs) = (a ++ b) : pairup cs
 	eof
-	return $ UserStruct structName $ concat $ map fst structFields'
+	return $ UserStruct structName structFields''
   where whiteSpace' = try parse_diagram_comment <|> whiteSpace
 	bitpos = do digits <- many1 digit
 		    return $ fromIntegral $ convert 0 digits
@@ -122,22 +121,4 @@ structDiagramParser =
 
 struct_diagram = QuasiQuoter (parseStructExp parseStructDiagram)
 			     (parseStructPat parseStructDiagram)
-
-antiE :: UserStruct -> Maybe TH.ExpQ
-antiE us = let s = show us
-	   in Just $ TH.litE $ TH.stringL s
-
-parseStructExp parser s =
-     do loc <- TH.location
-	let fname = TH.loc_filename loc
-	    (line, col) = TH.loc_start loc
-	parsed <- parser fname line col s
-	dataToExpQ (const Nothing `extQ` antiE) parsed
-
-parseStructPat parser s =
-     do loc <- TH.location
-	let fname = TH.loc_filename loc
-	    (line, col) = TH.loc_start loc
-	parsed <- parser fname line col s
-	dataToPatQ (const Nothing) parsed
 

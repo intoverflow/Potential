@@ -1,16 +1,11 @@
-{-# LANGUAGE
-	TemplateHaskell,
-	QuasiQuotes #-}
 module Potential.DataStructure.StructQQ (struct) where
 
--- For building the ``struct'' quasi-quoter
-import Data.Generics.Aliases (extQ)
 import Language.Haskell.TH.Quote
-import qualified Language.Haskell.TH as TH
 import Text.ParserCombinators.Parsec
 
 import Potential.DataStructure.AbstractSyntax
 import Potential.DataStructure.CommonParser
+import Potential.DataStructure.CommonQQ
 
 parseStruct fname line col s =
 	let p = do pos <- getPosition
@@ -33,8 +28,9 @@ structParser =
 	-- now verify that the struct can be broken up into chunks of 64
 	-- bits
 	let ps = partition structFields [] []
-	if null ps
-	  then return $ UserStruct structName structFields
+	    valid = not $ any (\p -> 64 /= partition_size p) ps
+	if valid
+	  then return $ UserStruct structName ps
 	  else fail $ "Fields for struct " ++ show structName ++
 		      " fail to partition into 64-bit chunks!\n" ++
 		      "  Partitions: \n" ++
@@ -65,11 +61,7 @@ structParser =
 		size <- integer
 		return $ VarField name size
 	partition_size p = sum $ map field_size p
-	partition [] p' ps =
-	     let ps' = filter (\p -> 0 /= partition_size p) (ps ++ [p'])
-	     in if any (\p -> 64 /= partition_size p) ps'
-		  then ps'
-		  else []
+	partition [] p' ps = filter (\p -> 0 /= partition_size p) (ps ++ [p'])
 	partition (f:fs) p' ps
 		| psize == 64 = partition fs [] (ps ++ [p'++[f]])
 		| psize <  64 = partition fs (p' ++ [f]) ps
@@ -79,22 +71,4 @@ structParser =
 
 struct = QuasiQuoter (parseStructExp parseStruct)
 		     (parseStructPat parseStruct)
-
-antiE :: UserStruct -> Maybe TH.ExpQ
-antiE us = let s = show us
-	   in Just $ TH.litE $ TH.stringL s
-
-parseStructExp parser s =
-     do loc <- TH.location
-	let fname = TH.loc_filename loc
-	    (line, col) = TH.loc_start loc
-	parsed <- parser fname line col s
-	dataToExpQ (const Nothing `extQ` antiE) parsed
-
-parseStructPat parser s =
-     do loc <- TH.location
-	let fname = TH.loc_filename loc
-	    (line, col) = TH.loc_start loc
-	parsed <- parser fname line col s
-	dataToPatQ (const Nothing) parsed
 
