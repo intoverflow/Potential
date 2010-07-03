@@ -12,7 +12,7 @@ reifyStruct us =
 			[ saveAST
 			, reifyType
 			, reifyPartialTypes
-			-- , reifyAllocator
+			, reifyAllocator
 			]
 	[| return $ concat decls |]
 
@@ -69,14 +69,15 @@ saveAST us =
 
 reifyAllocator :: UserStruct -> TH.Q [TH.Dec]
 reifyAllocator us =
-     do let name        = TH.mkName $ "new" ++ struct_name us
+     do let alloc_name  = TH.mkName $ "new" ++ struct_name us
+	    name        = TH.mkName $ struct_name us
 	    var_fields  = filter isVarField $ concat $ fields us
 	    field_names = map (TH.mkName . field_name) var_fields
-	    new = foldl (TH.appE) (TH.varE name) (map TH.varE field_names)
+	    new = foldl (TH.appE) (TH.conE name) (map TH.varE field_names)
 	theFunction <- TH.appE [| newPtr64 |] new
 	let theClause   = TH.Clause (map TH.VarP field_names)
 				    (TH.NormalB theFunction)
 				    []
-	return [ TH.FunD name [theClause] ]
+	return [ TH.FunD alloc_name [theClause] ]
 
 
