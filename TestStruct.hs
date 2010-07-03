@@ -75,6 +75,6 @@ import Potential
 |]
 
 testProjector = asCode "testProjector" $
-     do proj_FlagsRegister_to_0 rax rbx
+     do proj_InterruptGate_to_8 rax rbx
 	ret
 

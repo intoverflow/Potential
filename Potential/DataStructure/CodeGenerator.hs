@@ -108,7 +108,7 @@ reifyPartialProjectors us =
 
 reifyPartialProjector :: UserStruct -> ([Field], Int) -> TH.Q [TH.Dec]
 reifyPartialProjector us (fs, offset) =
-     do (TH.LamE vars fn) <- [| \x -> undefined |]
+     do projectorUntyped <- [| \x -> undefined |]
 	let proj_name = TH.mkName $ "proj_" ++ struct_name us ++ "_to_" ++
 			show offset
 	    domain    = structType us $ field_names us
@@ -116,7 +116,7 @@ reifyPartialProjector us (fs, offset) =
 	    signature = TH.ForallT (map TH.PlainTV $ field_names us)
 				   []
 				   (TH.AppT (TH.AppT TH.ArrowT domain) range)
-	    projector = TH.LamE vars (TH.SigE fn signature)
+	    projector = (TH.SigE projectorUntyped signature)
 	theFunction  <- TH.appE [| \proj -> primPtrProj proj offset |]
 				(return projector)
 	return $ [ TH.ValD (TH.VarP proj_name) (TH.NormalB theFunction) [] ]
