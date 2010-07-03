@@ -4,7 +4,7 @@ module TestStruct where
 
 import Potential.DataStructure
 
-fr = [$struct| FlagsRegister where
+[$struct| FlagsRegister where
     cf :: 1     -- carry
     const 1
     pf :: 1     -- parity
@@ -30,7 +30,7 @@ fr = [$struct| FlagsRegister where
     reserved 32
 |]
 
-ig = [$struct| InterruptGate where
+[$struct| InterruptGateXX where
     offset_lo :: 16
     segsel :: 16
     ist :: 3
@@ -46,7 +46,7 @@ ig = [$struct| InterruptGate where
     reserved 32
 |]
 
-ig2 = [$struct_diagram|
+[$struct_diagram|
 
 			InterruptGate
 

@@ -1,17 +1,20 @@
-{-# LANGUAGE
-	TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Potential.DataStructure.CodeGenerator where
 
 import qualified Language.Haskell.TH as TH
-import Potential.DataStructure.AbstractSyntax
 
+import Potential.DataStructure.LiftDecls
+import Potential.DataStructure.AbstractSyntax
 import Potential.Pointer (newPtr64)
 
-reifyStruct us = mapM (\f -> f us)
-			[ reifyType
+reifyStruct us =
+     do decls <- mapM (\f -> f us)
+			[ saveAST
+			, reifyType
 			, reifyPartialTypes
-			, reifyAllocator
+			-- , reifyAllocator
 			]
+	[| return $ concat decls |]
 
 {-
     Our job:
@@ -46,6 +49,19 @@ reifyPartialType name (fs, offset) =
 
 {-
     Our job:
+    1. Save the abstract syntax representation of the data structure
+       (useful for debugging)
+-}
+
+saveAST :: UserStruct -> TH.Q [TH.Dec]
+saveAST us =
+     do let name = TH.mkName $ "ast_" ++ struct_name us
+	us' <- [| us |]
+	return [ TH.ValD (TH.VarP name) (TH.NormalB us') [] ]
+
+
+{-
+    Our job:
     1. Define an allocator
     2. Define accessors
     3. Define updaters
@@ -62,4 +78,5 @@ reifyAllocator us =
 				    (TH.NormalB theFunction)
 				    []
 	return [ TH.FunD name [theClause] ]
+
 
