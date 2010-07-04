@@ -12,7 +12,7 @@ module Potential
 	, struct, struct_diagram
 	, assertType
 	, (:<=), (:==), (:<)
-	, (>>), (>>=), return, fail
+	, (>>), (>>=), return, fail, lift
 	, fromIntegral, fromInteger, ($)
 	) where
 
@@ -24,6 +24,7 @@ import Potential.DataStructure
 import Potential.Flow
 import Potential.Functions
 import Potential.Integer
+import Potential.IxMonad
 import Potential.MachineState
 import Potential.Mov
 import Potential.Pointer

@@ -7,7 +7,7 @@
 	#-}
 module Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
-	, primPtrProj
+	, primPtrProj, primPtrInj
 	, MemRegion, MemSubRegion
 	, withMemoryRegion, nestMemoryRegion, smuggleFrom
 	) where
@@ -41,11 +41,24 @@ newPtr64 t =
      do lift $ instr Alloc
 	return $ Ptr64 t
 
-primPtrProj proj displacement src dst =
-     do instr $ Ld (Deref2 displacement (arg src)) (arg dst)
+-- For projecting from Ptr64 r Type to Type_Offset
+-- Types are encoded by the proj function
+primPtrProj proj offset src dst =
+     do instr $ Ld (Deref2 offset (arg src)) (arg dst)
 	ptr <- get src
 	dat <- fromPtr64 ptr
 	set dst (proj dat)
+
+-- For injecting from Type_Offset into Ptr64 s Type, given a Ptr64 r Type
+-- to start (this burns up a subregion because it uses smuggleFrom to get
+-- the updated result)
+primPtrInj inj offset partialSrc structSrc =
+     do instr $ Sto (arg partialSrc) (Deref2 offset (arg structSrc))
+	ptr <- get structSrc
+	_ <- fromPtr64 ptr
+	partial <- get partialSrc
+	ptr' <- nestMemoryRegion $ smuggleFrom (inj partial) (return ptr)
+	set structSrc ptr'
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m

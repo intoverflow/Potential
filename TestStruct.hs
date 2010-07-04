@@ -75,6 +75,8 @@ import Potential
 |]
 
 testProjector = asCode "testProjector" $
-     do proj_InterruptGate_to_8 rax rbx
+     do proj_InterruptGate_8 rax rbx
 	ret
+
+testInjector = inj_InterruptGate_8 r10 r11
 
