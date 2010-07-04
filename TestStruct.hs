@@ -78,5 +78,7 @@ testProjector = asCode "testProjector" $
      do proj_InterruptGate_8 rax rbx
 	ret
 
-testInjector = inj_InterruptGate_8 r10 r11
+testInjector =
+     do lift $ pop r10
+	inj_InterruptGate_8 r10 r11
 

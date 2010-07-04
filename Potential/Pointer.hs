@@ -36,7 +36,8 @@ fromPtr64 ptr = return $ getPtrData ptr
 
 
 -- Allocate a pointer in the current region
-newPtr64 :: t -> MemRegion r (Code c) x x z Composable (Ptr64 r t)
+newPtr64 :: IxMonadWriter [Instr] m
+	 => t -> MemRegion r m x x z Composable (Ptr64 r t)
 newPtr64 t =
      do lift $ instr Alloc
 	return $ Ptr64 t
@@ -54,11 +55,11 @@ primPtrProj proj offset src dst =
 -- the updated result)
 primPtrInj inj offset partialSrc structSrc =
      do instr $ Sto (arg partialSrc) (Deref2 offset (arg structSrc))
-	ptr <- get structSrc
+	ptr <- lift $ get structSrc
 	_ <- fromPtr64 ptr
-	partial <- get partialSrc
+	partial <- lift $ get partialSrc
 	ptr' <- nestMemoryRegion $ smuggleFrom (inj partial) (return ptr)
-	set structSrc ptr'
+	lift $ set structSrc ptr'
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m
