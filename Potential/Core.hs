@@ -12,6 +12,7 @@ module Potential.Core
 	, comment
 	, instr, forget, get, set, getConstraints, withConstraints
 	, assertType, assertRegister, assertFunction
+	, evaluateTypes
 
 	-- stuff that comes from Potential.Assembly
 	, Reg(..), Instr(..), Deref(..), Code, runCode, Function(..)
@@ -38,6 +39,31 @@ import Potential.Size
 import Potential.Constraints
 import Potential.MachineState
 import Potential.Assembly
+
+
+-- Type families evaluate lazily.
+-- If they mention any quantified free variables lazily, this will
+-- count as escaping.  If it turns out that evaluating the type functions
+-- will not include such quantified free variables, you won't have
+-- an escaping problem.
+-- This function can be used to force lazy type functions to evaluate.
+-- Highly relevant while working with regions.
+evaluateTypes :: IxMonad m
+	=> m (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
+		 rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
+	     (MS sax sbx scx sdx ssi sdi sbp ssp sflags
+		 sip s08 s09 s10 s11 s12 s13 s14 s15 salloc scmp)
+	     (MS tax tbx tcx tdx tsi tdi tbp tsp tflags
+		 tip t08 t09 t10 t11 t12 t13 t14 t15 talloc tcmp)
+	     ct a
+	-> m (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
+		 rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
+	     (MS sax sbx scx sdx ssi sdi sbp ssp sflags
+		 sip s08 s09 s10 s11 s12 s13 s14 s15 salloc scmp)
+	     (MS tax tbx tcx tdx tsi tdi tbp tsp tflags
+		 tip t08 t09 t10 t11 t12 t13 t14 t15 talloc tcmp)
+	     ct a
+evaluateTypes a = a
 
 get field = (comment $ "get " ++ show field) >> (lift $ lift $
      do ms <- psGet

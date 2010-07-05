@@ -39,17 +39,18 @@ instance IxMonad m => IxMonad (IxRegionT typ r m) where
 
 withRegion :: IxMonad m
 	   => RegionMgr m
-	   -> (forall r . Region typ r m x y y Composable a)
+	   -> (forall r . Region typ r m x y z Composable a)
 	   -> m x y z Composable a
 withRegion region r =
-     do enter region
-	a <- runIxReaderT (runIxRegionT r) region
-	close region
-	return a
+     do --enter region
+	runIxReaderT (runIxRegionT r) region
+	--close region
+	--mixedReturn a
 
 newtype SubRegion typ r s m x y z =
  SubRegion (forall a .
-	     Region typ r m x y z Composable a -> Region typ s m x y z Composable a)
+	     Region typ r m x y z Composable a ->
+	     Region typ s m x y z Composable a)
 
 inSupRegion :: SubRegion typ r s m x y z
 	    -> Region typ r m x y z Composable a
@@ -57,15 +58,15 @@ inSupRegion :: SubRegion typ r s m x y z
 inSupRegion (SubRegion sr) r = sr r
 
 nestRegion :: IxMonad m
-	   => (forall s . SubRegion typ r s m x y y
-		-> Region typ s m x y y Composable a)
+	   => (forall s . SubRegion typ r s m x y z
+		-> Region typ s m x y z Composable a)
 	   -> Region typ r m x y z Composable a
 nestRegion body = IxRegionT $
      do region <- ask
 	let witness (IxRegionT m) = lift $
-	     do goUp region
-		a <- runIxReaderT m region
-		comeDown region
-		return a
-	lift $ withRegion region (body (SubRegion witness))
+	     do --goUp region
+		runIxReaderT m region
+		--comeDown region
+		--mixedReturn a
+	lift $ withRegion region (body $ SubRegion witness)
 

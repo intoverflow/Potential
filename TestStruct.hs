@@ -5,6 +5,10 @@
 module TestStruct where
 
 import Potential
+import Potential.IxMonad.Region (inSupRegion)
+import Potential.Pointer
+import Potential.MachineState (MS)
+import Potential.Assembly (Code)
 
 [$struct| FlagsRegister where
     cf :: 1     -- carry
@@ -78,7 +82,24 @@ testProjector = asCode "testProjector" $
      do proj_InterruptGate_8 rax rbx
 	ret
 
+testNew = asCode "testNew" $
+     do withMemoryRegion $ evaluateTypes $
+	     do newInterruptGate r11
+		lift $ mov r10 r11
+	ret
+
+doAlloc =
+     do comment "allocating new int gate..."
+	newInterruptGate r11
+
+init =
+     do newInterruptGate rax
+	inj_InterruptGate_0 r11 rax
+	inj_InterruptGate_8 r12 rax
+
 testInjector =
-     do lift $ pop r10
-	inj_InterruptGate_8 r10 r11
+     do nestMemoryRegion $ \sr -> evaluateTypes $
+	     do newInterruptGate r11
+		lift $ pop r11
+		--inj_InterruptGate_8 r10 r11 sr
 

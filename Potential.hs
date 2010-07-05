@@ -13,6 +13,7 @@ module Potential
 	, assertType
 	, (:<=), (:==), (:<)
 	, (>>), (>>=), return, fail, lift
+	, evaluateTypes
 	, fromIntegral, fromInteger, ($)
 	) where
 
