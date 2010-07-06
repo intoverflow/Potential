@@ -96,6 +96,7 @@ init =
      do newInterruptGate rax
 	inj_InterruptGate_0 r11 rax
 	inj_InterruptGate_8 r12 rax
+	lift $ mov rbx rax
 
 testInjector =
      do nestMemoryRegion $ \sr -> evaluateTypes $

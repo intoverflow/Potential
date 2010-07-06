@@ -31,7 +31,7 @@ splitStack _ = (undefined, undefined)
 asStack :: a -> b -> Stack a b
 asStack _ _ = undefined
 
-assertPushableSize :: (SZ a' :<=? T64) c => a' -> Code c x x z Composable ()
+assertPushableSize :: (SZ a' :<=? T64) c => a' -> Code c (Unmodeled x x) ()
 assertPushableSize _ = return ()
 
 primPush a' sp =
@@ -40,7 +40,7 @@ primPush a' sp =
 
 primPop :: IxMonad m
 	=> Stack t (Stack a' b')
-	-> m x x z Composable (t, Stack a' b')
+	-> m (Unmodeled x x) (t, Stack a' b')
 primPop sp =
      do let (a, sp') = splitStack sp
 	return (a, sp')
@@ -72,15 +72,15 @@ getStackFromFramePtr64 bp = return $ getBPStack bp
 push src =
      do assertRegister src
 	instr $ Push (arg src)
-        stack <- get rsp
-        a'    <- get src
+        stack  <- get rsp
+        a'     <- get src
         stack' <- primPush a' stack
         set rsp stack'
 
 pop dst =
      do assertRegister dst
 	instr $ Pop (arg dst)
-        sp <- get rsp
+        sp        <- get rsp
         (a', sp') <- primPop sp
         set dst a'
         set rsp sp'

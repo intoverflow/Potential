@@ -1,6 +1,8 @@
 {-# LANGUAGE
 	NoImplicitPrelude,
-	ExistentialQuantification
+	ExistentialQuantification,
+	ScopedTypeVariables,
+	GADTs
 	#-}
 module Potential.Assembly
 	( Reg(..)
@@ -9,7 +11,6 @@ module Potential.Assembly
 	, PState(..), psGet, psPut, psModify
 	, runCode, Code
 	, Function(..), isFn
-	, composable, terminal, getFailure
 	) where
 
 import Prelude( String, Int, undefined, (++), ($) )
@@ -23,43 +24,35 @@ import Potential.IxMonad.Constrained
 import Potential.IxMonad.State
 import Potential.IxMonad.Writer
 
-data PState x y z ct a =
-    PState  { runPState :: x -> (a, y) }
-  | PFailed { getPFailure :: String }
+data PState ct a where
+    PState  :: (ct x y) -> ( x -> (a, y) ) -> PState (ct x y) a
 
-psGet   = PState (\s -> (s, s))
-psPut s = PState (\_ -> ((), s))
+runPState :: PState (ct x y) a -> x -> (a, y)
+runPState (PState ct f) = \x -> f x
+
+psGet   = unmodeled $ PState undefined (\s -> (s, s))
+psPut s = composable $ PState undefined (\_ -> ((), s))
 psModify f = do a <- psGet
 		psPut $ f a
 
 instance IxFunctor PState where
-  fmap f (PFailed s) = PFailed s
-  fmap f ps = PState $ \x -> let (a, y) = runPState ps x
-			     in (f a, y)
+  fmap f (PState ct ps) = PState ct $ \x -> let (a, y) = ps x
+					    in (f a, y)
 
 instance IxMonad PState where
-  mixedReturn a = PState (\s -> (a, undefined))
-  f >>= m  = maybe  (PState (\s1 -> let (a, s2)  = runPState f s1
-					(a', s3) = runPState (m a) s2
-				    in (a', s3)))
-                    (PFailed)
-		    (getFailure f)
-  fail e = PFailed { getPFailure = e }
+  unsafeReturn a = PState undefined (\s -> (a, undefined))
+  (p :: PState (ct x y) a) >>= (m :: a -> PState (ct' y z) b)
+	= case p of
+	    PState _ f ->
+		    PState undefined $ \s1 ->
+			let (a, s2)     = f s1
+			    (a', s3)    = runPState (m a) s2
+			in (a', s3)
 
-
-getFailure :: PState x y z ct a -> Maybe String
-getFailure (PState _)  = Nothing
-getFailure (PFailed f) = Just f
 
 type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
 
-composable :: Code c x y z Composable a -> Code c x y z Composable a
-composable p = p
-
-terminal :: Code c x y z Terminal a -> Code c x y z Terminal a
-terminal p = p
-
-runCode :: Code c x y z ct a -> c -> x -> (a, [Instr], y)
+runCode :: Code c (ct x y) a -> c -> x -> (a, [Instr], y)
 runCode code constr input =
 	let ((a, w), y) =
 		runPState (runIxWriterT (runIxConstrainedT code constr)) input
@@ -67,7 +60,7 @@ runCode code constr input =
 
 data Function c assumes returns =
      Fn { fnname   :: String
-	, body     :: Code c assumes returns returns Terminal ()
+	, body     :: Code c (Terminal assumes returns) ()
 	}
 isFn :: Function c assumes returns -> Function c assumes returns
 isFn f = f

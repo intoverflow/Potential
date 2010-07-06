@@ -22,7 +22,7 @@ import Potential.IxMonad.Writer
 
 data Memory -- used to tag a region as a Memory region
 type MemRegion r m = Region Memory r m
-type MemSubRegion r s m x y = SubRegion Memory r s m x y
+type MemSubRegion r s m ct = SubRegion Memory r s m ct
 
 
 -- A pointer, bound to region r
@@ -36,7 +36,7 @@ fromPtr64 ptr = return $ getPtrData ptr
 
 
 -- Allocate a pointer in the current region
-newPtr64' :: IxMonad m => t -> MemRegion r m x x z Composable (Ptr64 r t)
+newPtr64' :: IxMonad m => t -> MemRegion r m (Unmodeled x x) (Ptr64 r t)
 newPtr64' t = return $ Ptr64 t
 
 newPtr64 t dst =
@@ -44,7 +44,7 @@ newPtr64 t dst =
 	ptr <- newPtr64' t
 	lift $ set dst ptr
 
-belongsHere :: IxMonad m => Ptr64 r t -> MemRegion r m x x z Composable ()
+belongsHere :: IxMonad m => Ptr64 r t -> MemRegion r m (Unmodeled x x) ()
 belongsHere _ = return ()
 
 -- For projecting from Ptr64 r Type to Type_Offset
@@ -82,21 +82,26 @@ memRegionMgr =
 
 
 -- Execute code within a memory region
-withMemoryRegion :: IxMonadWriter [Instr] m
-		 => (forall r . MemRegion r m x y z Composable a) ->
-					    m x y z Composable a
+withMemoryRegion :: ( IxMonadWriter [Instr] m
+		    , Composition ct Unmodeled, Compose ct Unmodeled ~ ct
+		    , Composition Unmodeled ct, Compose Unmodeled ct ~ ct )
+		 => (forall r . MemRegion r m (ct x y) a) -> m (ct x y) a
 withMemoryRegion r = withRegion memRegionMgr r
 
 
 -- Nest a memory region
-nestMemoryRegion :: IxMonad m
-		 => (forall s . MemSubRegion r s m x y z ->
-				     MemRegion s m x y z Composable a)
-		 -> MemRegion r m x y z Composable a
+nestMemoryRegion :: ( IxMonad m
+		    , Composition Unmodeled ct, Compose Unmodeled ct ~ ct
+		    , Composition ct Unmodeled, Compose ct Unmodeled ~ ct)
+		 => (forall s . MemSubRegion r s m (ct x y) ->
+				     MemRegion s m (ct x y) a)
+		 -> MemRegion r m (ct x y) a
 nestMemoryRegion r = nestRegion r
 
 
 -- Modify types while pulling a pointer from a child to a parent memory region
+smuggleFrom = undefined
+{-
 smuggleFrom :: IxMonadWriter [Instr] m
 	    => (t -> t')
 	    -> MemRegion s m x y y Composable (Ptr64 s t)
@@ -106,4 +111,5 @@ smuggleFrom f r sr =
      do (Ptr64 t) <- r
 	inSupRegion sr $ do instr TxOwnership
 			    return $ Ptr64 $ f t
+-}
 

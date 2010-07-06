@@ -1,32 +1,70 @@
 {-# LANGUAGE
 	NoImplicitPrelude,
-	EmptyDataDecls
+	EmptyDataDecls,
+	TypeFamilies,
+	MultiParamTypeClasses,
+	FlexibleInstances
 	#-}
 module Potential.IxMonad.IxMonad
-	( IxFunctor(..), IxMonad(..), IxMonadTrans(..)
-	, Composable, Terminal
+	( Composition(..)
+	, IxFunctor(..), IxMonad(..), IxMonadTrans(..)
+	, Unmodeled, Composable, Terminal
+	, unmodeled, composable, terminal
 	) where
 
 import Prelude( String )
 
-data Composable
-data Terminal
+class Composition (fr :: * -> * -> *) (to :: * -> * -> *) where type Compose fr to :: * -> * -> *
+
+data Unmodeled x y
+unmodeled :: IxMonad m => m (Unmodeled x x) a -> m (Unmodeled x x) a
+unmodeled m = m
+
+data Composable x y
+composable :: IxMonad m => m (Composable x y) a -> m (Composable x y) a
+composable m = m
+
+data Terminal x y
+terminal :: IxMonad m => m (Terminal x y) a -> m (Terminal x y) a
+terminal m = m
+
+instance Composition Unmodeled Unmodeled where
+  type Compose Unmodeled Unmodeled = Unmodeled
+instance Composition Unmodeled Composable where
+  type Compose Unmodeled Composable = Composable
+instance Composition Unmodeled Terminal where
+  type Compose Unmodeled Terminal = Terminal
+
+instance Composition Composable Unmodeled where
+  type Compose Composable Unmodeled = Composable
+instance Composition Composable Composable where
+  type Compose Composable Composable = Composable
+instance Composition Composable Terminal where
+  type Compose Composable Terminal = Terminal
+
+instance Composition Terminal Unmodeled where
+  type Compose Terminal Unmodeled = Terminal
+
 
 class IxFunctor m where
-  fmap :: (a -> b) -> m x y z ct a -> m x y z ct b
+  fmap :: (a -> b) -> m ct a -> m ct b
 
 class IxFunctor m => IxMonad m where
   -- minimal interface
-  mixedReturn :: a -> m x y z ct a
-  (>>=)  :: m x y z Composable a -> (a -> m y z z' ct b) -> m x z z' ct b
+  (>>=)  :: Composition ct ct' =>
+	    m (ct x y) a -> (a -> m (ct' y z) b) ->
+	    m ((Compose ct ct') x z) b
+  unsafeReturn :: a -> m (ct x y) a
   -- stuff for free
-  return :: a -> m x x z ct a
-  return a = mixedReturn a
-  (>>)   :: m x y z Composable a -> m y z z' ct b  -> m x z z' ct b
+  (>>)   :: Composition ct ct' =>
+	    m (ct x y) a -> m (ct' y z) b ->
+	    m ((Compose ct ct') x z) b
   a >> b = a >>= (\_ -> b)
-  fail :: String -> m x x x Composable a
+  return :: a -> m (Unmodeled x x) a
+  return a = unsafeReturn a
+  fail :: String -> m ct ()
   fail = fail
 
 class IxMonadTrans t where
-  lift :: IxMonad m => m x y z ct a -> t m x y z ct a
+  lift :: IxMonad m => m ct a -> t m ct a
 
