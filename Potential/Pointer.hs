@@ -13,6 +13,7 @@
 module Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
 	, primPtrProj, primPtrInj
+	, primFieldProj, primFieldInj
 	, MemRegion, MemSubRegion
 	, withMemoryRegion, nestMemoryRegion
 	) where
@@ -83,11 +84,11 @@ primPtrProj proj offset src dst =
 	dat <- fromPtr64 ptr
 	set dst (proj dat)
 
+-- For injecting from Type_Offset into Ptr64 s Type, given a Ptr64 r Type
 transform t' (SubRegion sr) =
      do instr TxOwnership
 	sr $ newPtr64' t'
 
--- For injecting from Type_Offset into Ptr64 s Type, given a Ptr64 r Type
 primPtrInj inj offset partialSrc structSrc sr =
      do instr TxOwnership
 	instr $ Sto (arg partialSrc) (Deref2 offset (arg structSrc))
@@ -100,6 +101,24 @@ primPtrInj inj offset partialSrc structSrc sr =
 	belongsInSupRegion sr structPtr'
 	lift $ set structSrc structPtr'
 
+-- For projecting from a partial to a field
+primFieldProj proj isolate_mask bit_offset src =
+     do instr $ And isolate_mask (arg src)
+	instr $ ShR bit_offset (arg src)
+	t <- get src
+	let t' = proj t
+	set src t'
+
+-- For injecting from a field into a partial
+primFieldInj inj forget_mask bit_offset src dst =
+     do instr $ ShL bit_offset (arg src)
+	instr $ And forget_mask (arg dst)
+	instr $ Or (arg src) (arg dst)
+	-- this last right shift restores src to its original contents
+	instr $ ShR bit_offset (arg src)
+	f <- get src
+	p <- get dst
+	set dst $ inj f p
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m

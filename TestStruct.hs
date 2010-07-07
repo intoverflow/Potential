@@ -82,6 +82,15 @@ testProjector = asCode "testProjector" $
      do proj_InterruptGate_8 rax rbx
 	ret
 
+testField = asCode "testField" $
+     do proj_InterruptGate_0_dpl rax
+	ret
+
+testInjectField = asCode "testInjectField" $
+     do inj_InterruptGate_8_offset_hi rax rbx
+	inj_InterruptGate_0_ist r10 r11
+	ret
+
 testNew = asCode "testNew" $
      do withMemoryRegion $ evaluateTypes $
 	     do newInterruptGate r11 []
@@ -102,12 +111,4 @@ init2 = nestMemoryRegion $ \sr1 ->
 		inj_InterruptGate_0 r10 rax sr2
 	lift $ pop r10
 	inj_InterruptGate_8 r10 rax sr1
-
-{-
-testInjector =
-     do nestMemoryRegion $ \sr -> evaluateTypes $
-	     do newInterruptGate r11
-		lift $ pop r11
-		--inj_InterruptGate_8 r10 r11 sr
--}
 

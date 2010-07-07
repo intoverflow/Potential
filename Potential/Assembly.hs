@@ -13,7 +13,7 @@ module Potential.Assembly
 	, Function(..), isFn
 	) where
 
-import Prelude( String, Int, undefined, (++), ($) )
+import Prelude( String, Integer, undefined, (++), ($) )
 
 import Data.Maybe
 import Data.Word
@@ -60,8 +60,8 @@ isFn f = f
 -- deref mem_location (%ebx, %ecx, 4) means [ebx + ecx*4 + mem_location]
 -- i.e., this is at&t syntax
 data Deref =
-    Deref  Int (Reg, Reg, Int)
- |  Deref2 Int Reg -- means int + (%reg)
+    Deref  Integer (Reg, Reg, Integer)
+ |  Deref2 Integer Reg -- means int + (%reg)
  |  Deref3 Reg
 
 data Instr =
@@ -80,8 +80,8 @@ data Instr =
  |  forall c assumes returns . SCall (Function c assumes returns)
  |  Ret
  |  Lidt Reg
- |  ShL Int Reg
- |  ShR Int Reg
+ |  ShL Integer Reg
+ |  ShR Integer Reg
  |  And Word64 Reg
  |  Or Reg Reg
  |  Enter Word16
