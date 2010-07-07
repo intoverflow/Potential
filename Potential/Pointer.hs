@@ -1,4 +1,5 @@
 {-# LANGUAGE
+	ScopedTypeVariables,
 	NoImplicitPrelude,
 	NoMonomorphismRestriction,
 	TypeFamilies,
@@ -52,6 +53,11 @@ memSensitive a = a
 newPtr64' :: IxMonad m => t -> MemRegion r m Composable x x (Ptr64 r t)
 newPtr64' t = unsafeReturn $ Ptr64 t
 
+newPtr64InSupRegion :: IxMonad m =>
+			MemSubRegion r s m ct x' y' ->
+			t -> MemRegion s m Composable x x (Ptr64 r t)
+newPtr64InSupRegion _ t = unsafeReturn $ Ptr64 t
+
 newPtr64 t dst initializers =
      do lift $ instr Alloc
 	ptr <- newPtr64' t
@@ -60,13 +66,13 @@ newPtr64 t dst initializers =
 belongsInSubRegion :: IxMonad m =>
 			MemSubRegion r s m ct x' y' ->
 			Ptr64 s t ->
-			MemRegion r m Unmodeled x x ()
+			MemRegion s m Unmodeled x x ()
 belongsInSubRegion _ _ = return ()
 
 belongsInSupRegion :: IxMonad m =>
 			MemSubRegion r s m ct x' y' ->
 			Ptr64 r t ->
-			MemRegion r m Unmodeled x x ()
+			MemRegion s m Unmodeled x x ()
 belongsInSupRegion _ _ = return ()
 
 -- For projecting from Ptr64 r Type to Type_Offset
@@ -82,8 +88,7 @@ transform t' (SubRegion sr) =
 	sr $ newPtr64' t'
 
 -- For injecting from Type_Offset into Ptr64 s Type, given a Ptr64 r Type
-primPtrInj inj offset partialSrc structSrc =
-     memSensitive $ \sr ->
+primPtrInj inj offset partialSrc structSrc sr =
      do instr TxOwnership
 	instr $ Sto (arg partialSrc) (Deref2 offset (arg structSrc))
 	partial    <- lift $ get partialSrc
@@ -91,7 +96,7 @@ primPtrInj inj offset partialSrc structSrc =
 	lift $ forget structSrc
 	belongsInSubRegion sr structPtr
 	struct     <- fromPtr64 structPtr
-	structPtr' <- inSupRegion sr $ newPtr64' (inj partial struct)
+	structPtr' <- newPtr64InSupRegion sr (inj partial struct)
 	belongsInSupRegion sr structPtr'
 	lift $ set structSrc structPtr'
 
@@ -118,7 +123,7 @@ nestMemoryRegion :: ( IxMonad m
 		    , Composition Unmodeled ct, Compose Unmodeled ct ~ ct
 		    , Composition ct Unmodeled, Compose ct Unmodeled ~ ct)
 		 => (forall s . MemSubRegion r s m ct x y ->
-		 		     MemRegion s m ct x y a)
+				     MemRegion s m ct x y a)
 		 -> MemRegion r m ct x y a
 nestMemoryRegion r = nestRegion r
 

@@ -88,9 +88,12 @@ testNew = asCode "testNew" $
 		lift $ mov r10 r11
 	ret
 
-init =
+init = nestMemoryRegion $ \sr ->
      do newInterruptGate rax []
-	-- inj_InterruptGate_0 r11 rax
+	lift $ pop r11
+	inj_InterruptGate_0 r11 rax sr
+	-- This below causes failure *hooray!*
+	-- inj_InterruptGate_8 r12 rax sr
 
 {-
 testInjector =
