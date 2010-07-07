@@ -11,8 +11,8 @@ module Potential.IxMonad.Constrained
 import Prelude( ($) )
 import Potential.IxMonad.IxMonad
 
-newtype IxConstrainedT c m ct a =
-    IxConstrainedT { runIxConstrainedT :: c -> m ct a }
+newtype IxConstrainedT c m ct x y a =
+    IxConstrainedT { runIxConstrainedT :: c -> m ct x y a }
 
 instance IxMonadTrans (IxConstrainedT c) where
   lift op = IxConstrainedT $ \c -> op

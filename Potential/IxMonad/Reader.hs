@@ -15,10 +15,10 @@ import Potential.IxMonad.IxMonad
 
 
 class (IxMonad m) => IxMonadReader r m | m -> r where
-  ask :: m (Unmodeled x x) r
+  ask :: m Unmodeled x x r
 
-newtype IxReaderT r m ct a =
-    IxReaderT { runIxReaderT :: r -> m ct a }
+newtype IxReaderT r m ct x y a =
+    IxReaderT { runIxReaderT :: r -> m ct x y a }
 
 instance IxMonadTrans (IxReaderT r) where
   lift op = IxReaderT $ \_ -> op

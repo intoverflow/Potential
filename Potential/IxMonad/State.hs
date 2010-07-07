@@ -13,11 +13,11 @@ import Prelude( ($) )
 import Potential.IxMonad.IxMonad
 
 class (IxMonad m) => IxMonadState s m | m -> s where
-  get :: m (Unmodeled x x) s
-  put :: s -> m (Unmodeled x x) ()
+  get :: m Unmodeled x x s
+  put :: s -> m Unmodeled x x ()
 
-newtype IxStateT s m ct a =
-    IxStateT { runIxStateT :: s -> m ct (a, s) }
+newtype IxStateT s m ct x y a =
+    IxStateT { runIxStateT :: s -> m ct x y (a, s) }
 
 instance IxMonadTrans (IxStateT s) where
   lift op = IxStateT $ \s -> fmap (\a -> (a, s)) op

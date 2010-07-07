@@ -84,23 +84,19 @@ testProjector = asCode "testProjector" $
 
 testNew = asCode "testNew" $
      do withMemoryRegion $ evaluateTypes $
-	     do newInterruptGate r11
+	     do newInterruptGate r11 []
 		lift $ mov r10 r11
 	ret
 
-doAlloc =
-     do comment "allocating new int gate..."
-	newInterruptGate r11
-
 init =
-     do newInterruptGate rax
-	inj_InterruptGate_0 r11 rax
-	inj_InterruptGate_8 r12 rax
-	lift $ mov rbx rax
+     do newInterruptGate rax []
+	-- inj_InterruptGate_0 r11 rax
 
+{-
 testInjector =
      do nestMemoryRegion $ \sr -> evaluateTypes $
 	     do newInterruptGate r11
 		lift $ pop r11
 		--inj_InterruptGate_8 r10 r11 sr
+-}
 

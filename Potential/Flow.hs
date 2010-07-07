@@ -14,8 +14,8 @@ import Potential.Pointer
 
 -- Pass in the type of the function we're jumping to.  We take on its
 -- post-conditions.
-primJmp :: Code c (Terminal x y) ()
-	-> Code c (Terminal x y) ()
+primJmp :: Code c Terminal x y ()
+	-> Code c Terminal x y ()
 primJmp _ = terminal $ unsafeReturn ()
 
 {- *sigh*
@@ -28,15 +28,15 @@ primCondJmp _ = composable $ mixedReturn ()
 -- so we must also leave the call instruction in that post-condition.  Note also
 -- that it assumes condition x, so we must be in condition x just prior to the
 -- call.
-primCall :: Code c (Terminal x y) ()
-	 -> Code c (Composable x y) ()
+primCall :: Code c Terminal x y ()
+	 -> Code c Composable x y ()
 primCall _ = composable $ unsafeReturn ()
 
 -- Pass in the type of the return function on the stack.  We'll assure that
 -- the function which invokes ret leaves the machine in the proper state for
 -- the ret to be safe.
-primRet :: Code c (Terminal x y) ()
-	-> Code c (Terminal x x) ()
+primRet :: Code c Terminal x y ()
+	-> Code c Terminal x x ()
 primRet _ = terminal $ unsafeReturn ()
 
 

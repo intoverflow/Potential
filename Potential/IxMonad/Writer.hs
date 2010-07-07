@@ -16,13 +16,13 @@ import Potential.IxMonad.IxMonad
 
 
 class (Monoid w, IxMonad m) => IxMonadWriter w m | m -> w where
-  tell   :: w -> m (Unmodeled x x) ()
+  tell   :: w -> m Unmodeled x x ()
   -- listen :: m ct a -> m ct (a, w)
   -- pass   :: m ct (a, w -> w) -> m ct a
 
 
-newtype IxWriterT w m ct a =
-    IxWriterT { runIxWriterT :: m ct (a, w) }
+newtype IxWriterT w m ct x y a =
+    IxWriterT { runIxWriterT :: m ct x y (a, w) }
 
 instance (Monoid w) => IxMonadTrans (IxWriterT w) where
   lift op = IxWriterT $ fmap (\a -> (a, mempty)) op

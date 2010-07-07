@@ -1,15 +1,19 @@
 {-# LANGUAGE
 	NoImplicitPrelude,
+	NoMonomorphismRestriction,
 	TypeFamilies,
 	EmptyDataDecls,
 	Rank2Types,
-	FlexibleContexts
+	MultiParamTypeClasses,
+	FlexibleContexts,
+	FlexibleInstances,
+	UndecidableInstances
 	#-}
 module Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
 	, primPtrProj, primPtrInj
 	, MemRegion, MemSubRegion
-	, withMemoryRegion, nestMemoryRegion, smuggleFrom
+	, withMemoryRegion, nestMemoryRegion
 	) where
 
 import Prelude( ($) )
@@ -35,17 +39,35 @@ getPtrData _ = undefined
 fromPtr64 ptr = return $ getPtrData ptr
 
 
--- Allocate a pointer in the current region
-newPtr64' :: IxMonad m => t -> MemRegion r m (Unmodeled x x) (Ptr64 r t)
-newPtr64' t = return $ Ptr64 t
+-- A type for locking up special instructions to prevent the unwashed
+-- masses from using them
+type MemSensitive r s m ct x y a =
+    MemSubRegion r s m ct x y -> MemRegion s m ct x y a
 
-newPtr64 t dst =
+memSensitive :: MemSensitive r s m ct x y a -> MemSensitive r s m ct x y a
+memSensitive a = a
+
+
+-- Allocate a pointer in the current region
+newPtr64' :: IxMonad m => t -> MemRegion r m Composable x x (Ptr64 r t)
+newPtr64' t = unsafeReturn $ Ptr64 t
+
+newPtr64 t dst initializers =
      do lift $ instr Alloc
 	ptr <- newPtr64' t
 	lift $ set dst ptr
 
-belongsHere :: IxMonad m => Ptr64 r t -> MemRegion r m (Unmodeled x x) ()
-belongsHere _ = return ()
+belongsInSubRegion :: IxMonad m =>
+			MemSubRegion r s m ct x' y' ->
+			Ptr64 s t ->
+			MemRegion r m Unmodeled x x ()
+belongsInSubRegion _ _ = return ()
+
+belongsInSupRegion :: IxMonad m =>
+			MemSubRegion r s m ct x' y' ->
+			Ptr64 r t ->
+			MemRegion r m Unmodeled x x ()
+belongsInSupRegion _ _ = return ()
 
 -- For projecting from Ptr64 r Type to Type_Offset
 -- Types are encoded by the proj function
@@ -55,21 +77,24 @@ primPtrProj proj offset src dst =
 	dat <- fromPtr64 ptr
 	set dst (proj dat)
 
-transform t' sr =
+transform t' (SubRegion sr) =
      do instr TxOwnership
-	inSupRegion sr $ newPtr64' t'
+	sr $ newPtr64' t'
 
 -- For injecting from Type_Offset into Ptr64 s Type, given a Ptr64 r Type
--- to start (this burns up a subregion because it uses smuggleFrom to get
--- the updated result)
-primPtrInj inj offset partialSrc structSrc = evaluateTypes $
-     do instr $ Sto (arg partialSrc) (Deref2 offset (arg structSrc))
-	partial <- lift $ get partialSrc
-	ptr     <- lift $ get structSrc
-	belongsHere ptr
-	dat     <- fromPtr64 ptr
-	ptr'    <- nestMemoryRegion $ transform (inj partial dat)
-	lift $ set structSrc ptr'
+primPtrInj inj offset partialSrc structSrc =
+     memSensitive $ \sr ->
+     do instr TxOwnership
+	instr $ Sto (arg partialSrc) (Deref2 offset (arg structSrc))
+	partial    <- lift $ get partialSrc
+	structPtr  <- lift $ get structSrc
+	lift $ forget structSrc
+	belongsInSubRegion sr structPtr
+	struct     <- fromPtr64 structPtr
+	structPtr' <- inSupRegion sr $ newPtr64' (inj partial struct)
+	belongsInSupRegion sr structPtr'
+	lift $ set structSrc structPtr'
+
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m
@@ -80,12 +105,11 @@ memRegionMgr =
 		, comeDown = instr ComeDownRegion
 		}
 
-
 -- Execute code within a memory region
 withMemoryRegion :: ( IxMonadWriter [Instr] m
 		    , Composition ct Unmodeled, Compose ct Unmodeled ~ ct
 		    , Composition Unmodeled ct, Compose Unmodeled ct ~ ct )
-		 => (forall r . MemRegion r m (ct x y) a) -> m (ct x y) a
+		 => (forall r . MemRegion r m ct x y a) -> m ct x y a
 withMemoryRegion r = withRegion memRegionMgr r
 
 
@@ -93,23 +117,8 @@ withMemoryRegion r = withRegion memRegionMgr r
 nestMemoryRegion :: ( IxMonad m
 		    , Composition Unmodeled ct, Compose Unmodeled ct ~ ct
 		    , Composition ct Unmodeled, Compose ct Unmodeled ~ ct)
-		 => (forall s . MemSubRegion r s m (ct x y) ->
-				     MemRegion s m (ct x y) a)
-		 -> MemRegion r m (ct x y) a
+		 => (forall s . MemSubRegion r s m ct x y ->
+		 		     MemRegion s m ct x y a)
+		 -> MemRegion r m ct x y a
 nestMemoryRegion r = nestRegion r
-
-
--- Modify types while pulling a pointer from a child to a parent memory region
-smuggleFrom = undefined
-{-
-smuggleFrom :: IxMonadWriter [Instr] m
-	    => (t -> t')
-	    -> MemRegion s m x y y Composable (Ptr64 s t)
-	    -> MemSubRegion r s m y y y
-	    -> MemRegion s m x y y Composable (Ptr64 r t')
-smuggleFrom f r sr =
-     do (Ptr64 t) <- r
-	inSupRegion sr $ do instr TxOwnership
-			    return $ Ptr64 $ f t
--}
 

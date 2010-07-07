@@ -4,7 +4,7 @@ module Potential
 	, rax, rbx, rcx, rdx, rsi, rdi
 	, r08, r09, r10, r11, r12, r13, r14, r15
 	, CB0(..), CB1(..), Ptr64, FrameBasePtr64, Int64, Stack
-	, withMemoryRegion, nestMemoryRegion, smuggleFrom
+	, withMemoryRegion, nestMemoryRegion
 	, asm, renderFn, getType, getTypeOf
 	, asCode, Function
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave

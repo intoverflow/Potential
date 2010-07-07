@@ -24,35 +24,26 @@ import Potential.IxMonad.Constrained
 import Potential.IxMonad.State
 import Potential.IxMonad.Writer
 
-data PState ct a where
-    PState  :: (ct x y) -> ( x -> (a, y) ) -> PState (ct x y) a
+data PState ct x y a = PState { runPState :: x -> (a, y) }
 
-runPState :: PState (ct x y) a -> x -> (a, y)
-runPState (PState ct f) = \x -> f x
-
-psGet   = unmodeled $ PState undefined (\s -> (s, s))
-psPut s = composable $ PState undefined (\_ -> ((), s))
-psModify f = do a <- psGet
-		psPut $ f a
+psGet   = unmodeled  $ PState $ \s -> (s, s)
+psPut s = composable $ PState $ \_ -> ((), s)
+psModify f =
+     do a <- psGet
+	psPut $ f a
 
 instance IxFunctor PState where
-  fmap f (PState ct ps) = PState ct $ \x -> let (a, y) = ps x
-					    in (f a, y)
+  fmap f (ps) = PState $ \x ->  let (a, y) = runPState ps x
+				in (f a, y)
 
 instance IxMonad PState where
-  unsafeReturn a = PState undefined (\s -> (a, undefined))
-  (p :: PState (ct x y) a) >>= (m :: a -> PState (ct' y z) b)
-	= case p of
-	    PState _ f ->
-		    PState undefined $ \s1 ->
-			let (a, s2)     = f s1
-			    (a', s3)    = runPState (m a) s2
-			in (a', s3)
-
+  unsafeReturn a = PState $ \s -> (a, undefined)
+  ps >>= m = PState $ \s1 -> let (a, s2) = runPState ps s1
+			     in runPState (m a) s2
 
 type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
 
-runCode :: Code c (ct x y) a -> c -> x -> (a, [Instr], y)
+runCode :: Code c ct x y a -> c -> x -> (a, [Instr], y)
 runCode code constr input =
 	let ((a, w), y) =
 		runPState (runIxWriterT (runIxConstrainedT code constr)) input
@@ -60,7 +51,7 @@ runCode code constr input =
 
 data Function c assumes returns =
      Fn { fnname   :: String
-	, body     :: Code c (Terminal assumes returns) ()
+	, body     :: Code c Terminal assumes returns ()
 	}
 isFn :: Function c assumes returns -> Function c assumes returns
 isFn f = f

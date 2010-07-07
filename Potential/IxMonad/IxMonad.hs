@@ -3,7 +3,8 @@
 	EmptyDataDecls,
 	TypeFamilies,
 	MultiParamTypeClasses,
-	FlexibleInstances
+	FlexibleInstances,
+	FunctionalDependencies
 	#-}
 module Potential.IxMonad.IxMonad
 	( Composition(..)
@@ -14,18 +15,18 @@ module Potential.IxMonad.IxMonad
 
 import Prelude( String )
 
-class Composition (fr :: * -> * -> *) (to :: * -> * -> *) where type Compose fr to :: * -> * -> *
+class Composition (fr :: *) (to :: *) where type Compose fr to :: *
 
-data Unmodeled x y
-unmodeled :: IxMonad m => m (Unmodeled x x) a -> m (Unmodeled x x) a
+data Unmodeled
+unmodeled :: IxMonad m => m Unmodeled x x a -> m Unmodeled x x a
 unmodeled m = m
 
-data Composable x y
-composable :: IxMonad m => m (Composable x y) a -> m (Composable x y) a
+data Composable
+composable :: IxMonad m => m Composable x y a -> m Composable x y a
 composable m = m
 
-data Terminal x y
-terminal :: IxMonad m => m (Terminal x y) a -> m (Terminal x y) a
+data Terminal
+terminal :: IxMonad m => m Terminal x y a -> m Terminal x y a
 terminal m = m
 
 instance Composition Unmodeled Unmodeled where
@@ -47,24 +48,24 @@ instance Composition Terminal Unmodeled where
 
 
 class IxFunctor m where
-  fmap :: (a -> b) -> m ct a -> m ct b
+  fmap :: (a -> b) -> m ct x y a -> m ct x y b
 
 class IxFunctor m => IxMonad m where
   -- minimal interface
   (>>=)  :: Composition ct ct' =>
-	    m (ct x y) a -> (a -> m (ct' y z) b) ->
-	    m ((Compose ct ct') x z) b
-  unsafeReturn :: a -> m (ct x y) a
+	    m ct x y a -> (a -> m ct' y z b) ->
+	    m (Compose ct ct') x z b
+  unsafeReturn :: a -> m ct x y a
   -- stuff for free
   (>>)   :: Composition ct ct' =>
-	    m (ct x y) a -> m (ct' y z) b ->
-	    m ((Compose ct ct') x z) b
+	    m ct x y a -> m ct' y z b ->
+	    m (Compose ct ct') x z b
   a >> b = a >>= (\_ -> b)
-  return :: a -> m (Unmodeled x x) a
+  return :: a -> m Unmodeled x x a
   return a = unsafeReturn a
-  fail :: String -> m ct ()
+  fail :: String -> m ct x x ()
   fail = fail
 
 class IxMonadTrans t where
-  lift :: IxMonad m => m ct a -> t m ct a
+  lift :: IxMonad m => m ct x y a -> t m ct x y a
 

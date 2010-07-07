@@ -19,7 +19,8 @@ module Potential.Core
 	, Unmodeled, Composable, Terminal, unmodeled, composable, terminal
 
 	-- stuff that comes from IxMonad
-	, Composition(..), IxFunctor(..), IxMonad(..), IxMonadTrans(..)
+	, Composition(..)
+	, IxFunctor(..), IxMonad(..), IxMonadTrans(..)
 
 	-- stuff that comes from MachineState
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
@@ -49,18 +50,18 @@ import Potential.Assembly
 -- This function can be used to force lazy type functions to evaluate.
 -- Highly relevant while working with regions.
 evaluateTypes :: IxMonad m
-	=> m (ct
-		(MS rax rbx rcx rdx rsi rdi rbp rsp rflags
-		    rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
-		(MS sax sbx scx sdx ssi sdi sbp ssp sflags
-		    sip s08 s09 s10 s11 s12 s13 s14 s15 salloc scmp) )
-	     a
-	-> m (ct
-		(MS rax rbx rcx rdx rsi rdi rbp rsp rflags
-		    rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
-		(MS sax sbx scx sdx ssi sdi sbp ssp sflags
-		    sip s08 s09 s10 s11 s12 s13 s14 s15 salloc scmp) )
-	     a
+   => m ct
+	(MS rax rbx rcx rdx rsi rdi rbp rsp rflags
+	    rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
+	(MS sax sbx scx sdx ssi sdi sbp ssp sflags
+	    sip s08 s09 s10 s11 s12 s13 s14 s15 salloc scmp)
+	a
+   -> m ct
+	(MS rax rbx rcx rdx rsi rdi rbp rsp rflags
+	    rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
+	(MS sax sbx scx sdx ssi sdi sbp ssp sflags
+	    sip s08 s09 s10 s11 s12 s13 s14 s15 salloc scmp)
+	a
 evaluateTypes a = a
 
 get field = lift $ lift $
@@ -69,15 +70,15 @@ get field = lift $ lift $
         return fdata
 set field new = lift $ lift $ psModify (\ms -> set' field new ms)
 
-getConstraints :: Code c (Unmodeled x x) c
+getConstraints :: Code c Unmodeled x x c
 getConstraints = return undefined
 
-withConstraints :: Code ConstraintsOn (ct x y) b
-		-> Code ConstraintsOn (ct x y) b
+withConstraints :: Code ConstraintsOn ct x y b
+		-> Code ConstraintsOn ct x y b
 withConstraints p = p
 
 -- For logging instructions
-instr :: (IxMonadWriter [Instr] m) => Instr -> m (Unmodeled x x) ()
+instr :: (IxMonadWriter [Instr] m) => Instr -> m Unmodeled x x ()
 instr i = tell [i]
 
 
@@ -101,7 +102,7 @@ forget dst =
 
 
 -- Asserting the type of an entry in the machine state
-assertType :: a -> a -> Code c (Unmodeled x x) ()
+assertType :: a -> a -> Code c Unmodeled x x ()
 assertType _ _ = return ()
 
 
