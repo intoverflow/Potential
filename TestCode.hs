@@ -35,3 +35,7 @@ testCmp = asCode "testCmp" $
 	rabxCmp <- cmp rax rbx
 	ret
 
+testPrivLevelKernel = asCode "testPrivLevelKernel" $
+     do assertPrivLevelKernel
+	ret
+

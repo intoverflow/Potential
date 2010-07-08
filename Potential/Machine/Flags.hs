@@ -81,8 +81,8 @@ defineDataSize ''PrivLevelUser   2
 defineDataSize ''PrivLevelKernel 2
 
 assertPrivLevelKernel =
-     do -- fl <- get rflags
-	-- assertType (proj_EFlagsRegister_iopl fl) PrivLevelKernel
+     do fl <- get rflags
+	assertType (proj_EFlagsRegister_iopl fl) PrivLevelKernel
 	return ()
 
 cmp r1 r2 =
