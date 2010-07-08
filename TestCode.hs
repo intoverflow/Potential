@@ -29,3 +29,9 @@ testPopSwap = asCode "testPopSwap" $
 	swap rax rbx
 	ret
 
+testCmp = asCode "testCmp" $
+     do pop rax
+	pop rbx
+	rabxCmp <- cmp rax rbx
+	ret
+

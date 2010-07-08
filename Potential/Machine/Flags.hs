@@ -1,14 +1,14 @@
 {-# LANGUAGE
 	EmptyDataDecls,
 	NoImplicitPrelude,
+	NoMonomorphismRestriction,
 	MultiParamTypeClasses,
 	FlexibleInstances,
+	FlexibleContexts,
 	TypeFamilies,
 	TemplateHaskell,
 	QuasiQuotes #-}
 module Potential.Machine.Flags where
-
-import Prelude ( fromInteger, undefined, ($) )
 
 import Potential.Size
 import Potential.Assembly
@@ -16,34 +16,41 @@ import Potential.Core
 import Potential.Integer
 import Potential.Flow
 
-import Potential.DataStructures
+import Potential.DataStructure
 
--- example:
--- :info FlagsRegister
-[$struct| FlagsRegister where
-    cf :: 1	-- carry
-    const 1
-    pf :: 1	-- parity
-    const 0
-    af :: 1	-- adjust
-    const 0
-    zf :: 1	-- zero
-    sf :: 1	-- sign
-    tf :: 1	-- trap
-    ief :: 1	-- interrupt enable
-    df :: 1	-- direction
-    ovf :: 1	-- overflow
-    iopl :: 2	-- current priv level
-    const 0	-- nested task, not supported in x86-64 so we make it 0
-    const 0
-    rf :: 1	-- resume
-    const 0	-- virtual 8086, always zero in IA-32e
-    ac :: 1	-- alignment check
-    vif :: 1	-- virtual interrupt
-    vip :: 1	-- virtual interrupt pending
-    idf :: 1	-- identification
-    reserved 10
-    reserved 32
+[$struct_diagram|
+
+		    EFlagsRegister
+
+    |63---------------------------------------32|
+    |                  reserved                 | 4
+    |-------------------------------------------|
+
+    |31------22|-21--|-20--|-19--|-18-|-17-|-16-|
+    | reserved | idf | vip | vif | ac | 0  | rf | 2
+    |----------|-----|-----|-----|----|----|----|
+                  (     (     (    (    (    ( resume
+                  (     (     (    (    ( v8086
+                  (     (     (    ( alignment check
+                  (     (     ( virtual interrupt
+                  (     ( virtual interrupt pending
+                  ( identification
+
+    |-15-|-14-|13--12|--11--|--10--|--9---|--8--|
+    | 0  | 0  | iopl |  ovf |  df  | ief  | tf  | 1
+    |----|----|------|------|------|------|-----|
+           (     (       (     (      (     ( trap
+           (     (       (     (      ( interrupts enabled
+           (     (       (     ( direction
+           (     (       ( overflow
+           (     ( current priv level
+           ( nested task
+
+    |---7--|--6--|-5-|---4--|-3-|--2--|-1-|--0--|
+    |  sgf |  zf | 0 |  ajf | 0 |  pf | 1 |  cf | 0
+    |------|-----|---|------|---|-----|---|-----|
+       ( sign  ( zero    ( adjust  ( parity  ( carry
+
 |]
 
 data CS a
@@ -59,9 +66,9 @@ data SF a
 data OF a
 
 applyCmp ::
-     c -> FlagsRegister cf pf af zf sf tf if' df of' iopl rf ac vif vip id
-       -> FlagsRegister (CF c) (PF c) (AF c) (ZF c) (SF c) tf if' df (OF c)
-			iopl rf ac vif vip id
+     c -> EFlagsRegister cf pf af zf sf tf if' df of' iopl rf ac vif vip id
+       -> EFlagsRegister (CF c) (PF c) (AF c) (ZF c) (SF c) tf if' df (OF c)
+			 iopl rf ac vif vip id
 applyCmp _ _ = undefined
 
 assertZF :: a -> ZF a -> ()
@@ -74,8 +81,9 @@ defineDataSize ''PrivLevelUser   2
 defineDataSize ''PrivLevelKernel 2
 
 assertPrivLevelKernel =
-     do fl <- get rflags
-	assertType (proj_iopl fl) PrivLevelKernel
+     do -- fl <- get rflags
+	-- assertType (proj_EFlagsRegister_iopl fl) PrivLevelKernel
+	return ()
 
 cmp r1 r2 =
      do instr $ Cmp (arg r1) (arg r2)
@@ -92,13 +100,14 @@ cmp r1 r2 =
 	f <- get rflags
 	let f' = applyCmp c' f
 	set rflags f'
-	get rcmp
-	-- return c' -- for some insane reason, this does not work.
+	return c'
 
+{-
 sje fn c =
      do instr $ SJe fn
 	fl <- get rflags
 	let zf = proj_zf fl
 	    _  = assertZF c zf
 	primCondJmp (body fn)
+-}
 

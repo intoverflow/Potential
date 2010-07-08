@@ -8,7 +8,7 @@ module Potential
 	, asm, renderFn, getType, getTypeOf
 	, asCode, Function
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
-	-- , cmp, sje
+	, cmp --, sje
 	, struct, struct_diagram
 	, assertType
 	, (:<=), (:==), (:<)
@@ -32,6 +32,8 @@ import Potential.Pointer
 import Potential.Printing
 import Potential.Size
 import Potential.Stack
+
+import Potential.Machine.Flags
 
 import Prelude (fromIntegral, fromInteger, ($))
 

@@ -111,14 +111,15 @@ primFieldProj proj isolate_mask bit_offset src =
 
 -- For injecting from a field into a partial
 primFieldInj inj forget_mask bit_offset src dst =
-     do instr $ ShL bit_offset (arg src)
+     do constraints <- getConstraints
+	instr $ ShL bit_offset (arg src)
 	instr $ And forget_mask (arg dst)
 	instr $ Or (arg src) (arg dst)
 	-- this last right shift restores src to its original contents
 	instr $ ShR bit_offset (arg src)
 	f <- get src
 	p <- get dst
-	set dst $ inj f p
+	set dst $ inj constraints f p
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m

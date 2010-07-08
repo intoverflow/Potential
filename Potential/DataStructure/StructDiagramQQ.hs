@@ -55,22 +55,18 @@ structDiagramParser =
 	     do char ('|')
 		(ranges :: [[Integer]]) <- sepEndBy1 (try parse_top') (char '|')
 		whiteSpace'
-		-- now we make sure the ranges are actually a partition
-		-- of the interval [0, 31].
+		-- now we make sure the ranges are actually a partition.
+		-- We do *not* enforce that the last bit is 31, or that the
+		-- first bit is 0.  We only enforce that the numbers are
+		-- decreasing.
 		let ranges' = concat ranges
-		if decreasing_partition ranges'
+		if decreasing ranges'
 			then return ranges
-			else fail $ "Bit ranges do not partition [0, 31].\n" ++
-				    "Numbers given: " ++ show ranges'
-	  where decreasing_partition (31:ns) = decreasing_partition' ns
-		decreasing_partition _ = False
-		decreasing_partition' [] = False
-		decreasing_partition' [0] = True
-		decreasing_partition' [a, 0] | a > 0 = True
-					     | otherwise = False
-		decreasing_partition' (a:b:ns)
-			| a > b = decreasing_partition' (b:ns)
-			| otherwise = False
+			else fail $ "Bit ranges are not strictly decreasing." ++
+				    "  Numbers given: " ++ show ranges'
+	  where decreasing [a] = True
+		decreasing (a:b:ns) | a > b  = decreasing (b:ns)
+				    | a <= b = False
 		parse_top' =
 		     do many (char '-')
 			ulimit <- bitpos >>= \l -> return [l]

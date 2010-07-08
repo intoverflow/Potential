@@ -9,6 +9,7 @@ import Potential.Pointer ( newPtr64
 			 , primPtrProj, primPtrInj
 			 , primFieldProj, primFieldInj
 			 )
+import Potential.Size( (:==?), SZ, mkT )
 
 import Data.List( mapAccumL )
 import Data.Bits( shiftL, complement )
@@ -213,20 +214,29 @@ reifyFieldProjector us (fs, byte_offset) (f, bit_offset) =
      do projectorUntyped <- [| \x -> undefined |]
 	let proj_name = TH.mkName $ "proj_" ++ struct_name us ++ "_" ++
 				    show byte_offset ++ "_" ++ field_name f
-	    domain    = structPartialType us byte_offset $
+	    type_proj_name = TH.mkName $ "proj_" ++ struct_name us ++ "_" ++
+					 field_name f
+	    domain1   = structPartialType us byte_offset $
 				field_partial_names fs
+	    domain2   = structType us $ field_names us
 	    range     = TH.VarT $ TH.mkName $ field_name f
-	    signature = TH.ForallT (map TH.PlainTV $ field_partial_names fs)
-				   []
-				   (TH.AppT (TH.AppT TH.ArrowT domain) range)
-	    projector = TH.SigE projectorUntyped signature
+	    signature1 = TH.ForallT (map TH.PlainTV $ field_partial_names fs)
+				    []
+				    (TH.AppT (TH.AppT TH.ArrowT domain1) range)
+	    signature2 = TH.ForallT (map TH.PlainTV $ field_names us)
+				    []
+				    (TH.AppT (TH.AppT TH.ArrowT domain2) range)
+	    projector1 = TH.SigE projectorUntyped signature1
+	    projector2 = TH.SigE projectorUntyped signature2
 	theFunction  <- TH.appE [| \proj -> primFieldProj
 						proj
 						( (2^(field_size f)-1) `shiftL`
 						  (fromIntegral bit_offset) )
 						bit_offset |]
-				(return projector)
-	return $ [ TH.ValD (TH.VarP proj_name) (TH.NormalB theFunction) [] ]
+				(return projector1)
+	return $ [ TH.ValD (TH.VarP proj_name) (TH.NormalB theFunction) []
+		 , TH.ValD (TH.VarP type_proj_name) (TH.NormalB projector2) []
+		 ]
 
 
 reifyFieldInjectors :: UserStruct -> TH.Q [TH.Dec]
@@ -239,21 +249,29 @@ reifyFieldInjector :: UserStruct
 			-> FieldWithBitOffset
 			-> TH.Q [TH.Dec]
 reifyFieldInjector us (fs, byte_offset) (f, bit_offset) =
-     do injectorUntyped <- [| \x y -> undefined |]
+     do injectorUntyped <- [| \c x y -> undefined |]
+	constraints     <- TH.newName "c"
 	let inj_name = TH.mkName $ "inj_" ++ struct_name us ++ "_" ++
 				   show byte_offset ++ "_" ++ field_name f
+	    constraintsT = TH.VarT constraints
 	    fieldT    = TH.VarT $ field_name_updated f
 	    partialT  = structPartialType us byte_offset $
 				field_partial_names fs
 	    partialT' = structPartialType us byte_offset $
 				field_partial_names_updated_field fs f
+	    sizeC     = TH.ClassP ''(:==?)
+				  [ TH.AppT (TH.ConT ''SZ) fieldT
+				  , mkT $ field_size f
+				  , constraintsT ]
 	    signature = TH.ForallT (map TH.PlainTV $
 					field_partial_names fs ++
-					[field_name_updated f])
-				   []
-				   (TH.AppT (TH.AppT TH.ArrowT fieldT)
-				    (TH.AppT (TH.AppT TH.ArrowT partialT)
-				     partialT'))
+					[ field_name_updated f
+					, constraints ])
+				   [sizeC]
+				   (TH.AppT (TH.AppT TH.ArrowT constraintsT)
+				    (TH.AppT (TH.AppT TH.ArrowT fieldT)
+				     (TH.AppT (TH.AppT TH.ArrowT partialT)
+				      partialT')))
 	    injector  = TH.SigE injectorUntyped signature
 	theFunction  <- TH.appE [| \inj -> primFieldInj
 						inj

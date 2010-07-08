@@ -1,6 +1,7 @@
 {-# LANGUAGE
 	QuasiQuotes,
 	NoMonomorphismRestriction,
+	FlexibleContexts,
 	NoImplicitPrelude #-}
 module TestStruct where
 
@@ -89,6 +90,8 @@ testField = asCode "testField" $
 testInjectField = asCode "testInjectField" $
      do inj_InterruptGate_8_offset_hi rax rbx
 	inj_InterruptGate_0_ist r10 r11
+	pop r10
+	inj_InterruptGate_0_dpl r10 r11
 	ret
 
 testNew = asCode "testNew" $

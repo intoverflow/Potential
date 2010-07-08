@@ -6,7 +6,8 @@
 module Potential.Core
 	(
 	-- useful things from the prelude
-	  ($), undefined, (++), Show(..), id, fromIntegral, Bool(..)
+	  ($), undefined, (++), Show(..), id
+	, fromIntegral, fromInteger, Bool(..)
 
 	-- stuff from Core
 	, comment

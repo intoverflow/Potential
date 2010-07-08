@@ -5,7 +5,6 @@
 	TypeOperators,
 	GADTs,
 	ScopedTypeVariables,
-	UndecidableInstances,
 	FlexibleContexts,
 	TypeFamilies #-}
 module Potential.Size where
@@ -38,10 +37,12 @@ class MaybeHasSZ a c
 instance (HasSZ a) => MaybeHasSZ a ConstraintsOn
 instance MaybeHasSZ a ConstraintsOff
 
+{- Actually, I don't think we need this for the current implementation.
 -- this instance decl is useful for reserved and const fields
 -- requires undecidable instances :/
 instance (SZ a :== T1, HasSZ b) => HasSZ (a, b) where
   type SZ (a, b) = S (SZ b)
+-}
 
 class a :<= b
 instance (:<=) Z b
