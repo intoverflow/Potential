@@ -14,7 +14,7 @@ module Potential
 	, (:<=), (:==), (:<)
 	, (>>), (>>=), return, fail, lift
 	, evaluateTypes
-	, fromIntegral, fromInteger, ($)
+	, fromIntegral, fromInteger, ($), show, (++)
 	) where
 
 import Potential.Assembly
@@ -35,5 +35,5 @@ import Potential.Stack
 
 import Potential.Machine.Flags
 
-import Prelude (fromIntegral, fromInteger, ($))
+import Prelude (fromIntegral, fromInteger, ($), show, (++))
 

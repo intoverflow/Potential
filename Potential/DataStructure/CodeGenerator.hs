@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Potential.DataStructure.CodeGenerator where
+module Potential.DataStructure.CodeGenerator
+	(reifyStruct, defineDataSize) where
 
 import qualified Language.Haskell.TH as TH
 
@@ -9,7 +10,7 @@ import Potential.Pointer ( newPtr64
 			 , primPtrProj, primPtrInj
 			 , primFieldProj, primFieldInj
 			 )
-import Potential.Size( (:==?), SZ, mkT )
+import Potential.Size( (:==?), HasSZ, SZ, mkT )
 
 import Data.List( mapAccumL )
 import Data.Bits( shiftL, complement )
@@ -28,6 +29,14 @@ reifyStruct us =
 	[| return $ concat decls |]
 
 {- Helper functions -}
+defineDataSize t n = defineDataSize' (TH.ConT t) n
+defineDataSize' t n =
+    return [ TH.InstanceD
+		[]
+		(TH.AppT (TH.ConT ''HasSZ) t)
+		[TH.TySynInstD ''SZ [t] (mkT n)]
+           ]
+
 field_names us =
     let var_fields = filter isVarField $ concat $ fields us
     in map (TH.mkName . field_name) var_fields
@@ -95,6 +104,7 @@ prepareFields (fs, byte_offset) =
 	    let bit_offset' = bit_offset + field_size f
 	    in (bit_offset', (f, bit_offset))
 
+
 {-
     Our job:
     1. Define a new type for the given structure.
@@ -107,7 +117,10 @@ reifyType us =
 	    type_vars   = map TH.PlainTV $ field_names us
 	    constructor = TH.NormalC name $
 			  map (\n -> (TH.NotStrict, TH.VarT n)) (field_names us)
-	return [TH.DataD [] name type_vars [constructor] []]
+	sizeDef <- defineDataSize' (structType us $ field_names us)
+				   (sum $ map field_size $ concat $ fields us)
+	return $ [TH.DataD [] name type_vars [constructor] []] ++
+		 sizeDef
 
 reifyPartialTypes :: UserStruct -> TH.Q [TH.Dec]
 reifyPartialTypes us = on_partials reifyPartialType us

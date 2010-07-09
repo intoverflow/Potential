@@ -4,7 +4,7 @@ module Potential.DataStructure.StructDiagramQQ (struct_diagram) where
 import Language.Haskell.TH.Quote
 import Text.ParserCombinators.Parsec
 
-import Data.List
+import Data.List (sortBy)
 import Data.Char (digitToInt)
 
 import Potential.DataStructure.AbstractSyntax
@@ -21,20 +21,34 @@ parseStructDiagram fname line col s =
 		Left err -> fail $ show err
 		Right e -> return e
 
+partitionSize :: [Field] -> Integer
+partitionSize as = sum $ map field_size as
+
+partition :: [Field] -> [[Field]]
+partition fs = partition64 fs [] []
+
+partition64 :: [Field] -> [Field] -> [[Field]] -> [[Field]]
+partition64 [] p' ps = filter (not . null) $ ps ++ [p']
+partition64 (f:fs) p' ps
+    | partitionSize p' >= 64 = partition64 (f:fs) []          (ps ++ [p'])
+    | otherwise              = partition64 fs     (p' ++ [f]) ps
+
 structDiagramParser =
      do whiteSpace'
 	structName   <- typeName
 	whiteSpace'
 	structFields <- many1 parse_diagram_field
-	let structFields' = map fst $
-			    sortBy (\(_,a :: Integer) (_,b :: Integer) ->
+	let structFields' = partition $
+			    concat $
+			    map fst $
+			    sortBy (\(_, a :: Integer) (_, b :: Integer) ->
 					compare a b)
 				   structFields
-	    structFields'' = pairup structFields'
-	    pairup [] = []
-	    pairup (a:b:cs) = (a ++ b) : pairup cs
 	eof
-	return $ UserStruct structName structFields''
+	if any (\p -> partitionSize p /= 64) structFields'
+	  then fail $ "Not all partitions are 64 bits in size.  Partitions: " ++
+			show structFields'
+	  else return $ UserStruct structName structFields'
   where whiteSpace' = try parse_diagram_comment <|> whiteSpace
 	bitpos = do digits <- many1 digit
 		    return $ fromIntegral $ convert 0 digits

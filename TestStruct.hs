@@ -2,7 +2,8 @@
 	QuasiQuotes,
 	NoMonomorphismRestriction,
 	FlexibleContexts,
-	NoImplicitPrelude #-}
+	NoImplicitPrelude,
+	TypeFamilies #-}
 module TestStruct where
 
 import Potential
