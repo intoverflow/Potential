@@ -3,8 +3,6 @@
 	NoImplicitPrelude #-}
 module TestCode where
 
-import Prelude ( ($), undefined, (++), show, fromInteger )
-
 import Potential
 import Potential.Flow (primCondJmp)
 import Potential.Assembly (body)

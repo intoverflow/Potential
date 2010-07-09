@@ -54,15 +54,16 @@ memSensitive a = a
 newPtr64' :: IxMonad m => t -> MemRegion r m Composable x x (Ptr64 r t)
 newPtr64' t = unsafeReturn $ Ptr64 t
 
-newPtr64InSupRegion :: IxMonad m =>
-			MemSubRegion r s m ct x' y' ->
-			t -> MemRegion s m Composable x x (Ptr64 r t)
-newPtr64InSupRegion _ t = unsafeReturn $ Ptr64 t
-
 newPtr64 t dst initializers =
      do lift $ instr Alloc
 	ptr <- newPtr64' t
 	lift $ set dst ptr
+
+-- Pointer operations for dealing with sub and sup regions
+newPtr64InSupRegion :: IxMonad m =>
+			MemSubRegion r s m ct x' y' ->
+			t -> MemRegion s m Composable x x (Ptr64 r t)
+newPtr64InSupRegion _ t = unsafeReturn $ Ptr64 t
 
 belongsInSubRegion :: IxMonad m =>
 			MemSubRegion r s m ct x' y' ->
@@ -76,13 +77,17 @@ belongsInSupRegion :: IxMonad m =>
 			MemRegion s m Unmodeled x x ()
 belongsInSupRegion _ _ = return ()
 
+belongsHere :: IxMonad m => Ptr64 r t -> MemRegion r m Unmodeled x x ()
+belongsHere _ = return ()
+
 -- For projecting from Ptr64 r Type to Type_Offset
 -- Types are encoded by the proj function
 primPtrProj proj offset src dst =
      do instr $ Ld (Deref2 offset (arg src)) (arg dst)
-	ptr <- get src
+	ptr <- lift $ get src
+	belongsHere ptr
 	dat <- fromPtr64 ptr
-	set dst (proj dat)
+	lift $ set dst (proj dat)
 
 -- For injecting from Type_Offset into Ptr64 s Type, given a Ptr64 r Type
 transform t' (SubRegion sr) =
@@ -107,6 +112,7 @@ primFieldProj proj isolate_mask bit_offset src =
 	instr $ ShR bit_offset (arg src)
 	t <- get src
 	let t' = proj t
+	forget src
 	set src t'
 
 -- For injecting from a field into a partial
