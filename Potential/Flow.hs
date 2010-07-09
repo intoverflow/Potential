@@ -3,7 +3,7 @@
 	NoMonomorphismRestriction
 	#-}
 module Potential.Flow
-	( primJmp, {- primCondJmp, -} primCall, primRet
+	( primJmp, primCondJmp, primCall, primRet
 	, sjmp, scall, ret
 	) where
 
@@ -18,11 +18,10 @@ primJmp :: Code c Terminal x y ()
 	-> Code c Terminal x y ()
 primJmp _ = terminal $ unsafeReturn ()
 
-{- *sigh*
-primCondJmp :: Code c x y y Terminal ()
-	    -> Code c x x y Composable ()
-primCondJmp _ = composable $ mixedReturn ()
--}
+primCondJmp :: Code c Terminal x y ()
+	    -> Code c Terminal x y ()
+	    -> Code c Terminal x y ()
+primCondJmp jmpTo continueWith = continueWith
 
 -- Pass in the function we're calling.  Note that it ret's to post-condition y,
 -- so we must also leave the call instruction in that post-condition.  Note also

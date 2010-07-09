@@ -6,6 +6,8 @@ module TestCode where
 import Prelude ( ($), undefined, (++), show, fromInteger )
 
 import Potential
+import Potential.Flow (primCondJmp)
+import Potential.Assembly (body)
 
 -- a useful macro
 swap r1 r2 =
@@ -33,6 +35,14 @@ testCmp = asCode "testCmp" $
      do pop rax
 	pop rbx
 	rabxCmp <- cmp rax rbx
+	sje rabxCmp doesNothing (do
+		pop rax
+		mov rax rbx
+		ret)
+
+doesNothing = asCode "doesNothing" $
+     do pop rbx
+	mov rbx rax
 	ret
 
 testPrivLevelKernel = asCode "testPrivLevelKernel" $

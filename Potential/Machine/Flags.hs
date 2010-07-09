@@ -5,6 +5,7 @@
 	MultiParamTypeClasses,
 	FlexibleInstances,
 	FlexibleContexts,
+	ScopedTypeVariables,
 	TypeFamilies,
 	TemplateHaskell,
 	QuasiQuotes #-}
@@ -100,14 +101,13 @@ cmp r1 r2 =
 	f <- get rflags
 	let f' = applyCmp c' f
 	set rflags f'
-	return c'
+	get rcmp
+	-- return c' -- does not work for some reason
 
-{-
-sje fn c =
-     do instr $ SJe fn
+sje c ifZ ifNZ =
+     do instr $ SJe ifZ
 	fl <- get rflags
-	let zf = proj_zf fl
+	let zf = proj_EFlagsRegister_zf fl
 	    _  = assertZF c zf
-	primCondJmp (body fn)
--}
+	primCondJmp (body ifZ) ifNZ
 

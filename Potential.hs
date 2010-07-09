@@ -8,7 +8,7 @@ module Potential
 	, asm, renderFn, getType, getTypeOf
 	, asCode, Function
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
-	, cmp, assertPrivLevelKernel --, sje
+	, cmp, sje, assertPrivLevelKernel
 	, struct, struct_diagram
 	, assertType
 	, (:<=), (:==), (:<)
