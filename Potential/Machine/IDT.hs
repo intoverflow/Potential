@@ -1,35 +1,42 @@
 {-# LANGUAGE
-	TemplateHaskell #-}
+	QuasiQuotes,
+	TypeFamilies,
+	NoMonomorphismRestriction #-}
 module Potential.Machine.IDT where
 
-import Potential.Size
-import Potential.BuildArray
-
+import Potential.Array
 import Potential.Machine.IntGate
 
-defineArray "IDT" (dataSize (undefined :: InterruptGate a1 a2 a3 a4 a5 a6 a7))
-		    [ "intDivideError" , "intReserved"
-		    , "intNMI" , "intBreakpoint"
+[$array|
+		InterruptDescriptionTable :: InterruptGate
 
-		    , "intOverflow" , "intBoundRangeExceeded"
-		    , "intInvalidOpcode" , "intNoMathCoprocessor"
+     0 divideError
+     1 reserved
+     2 nMI
+     3 breakpoint
 
-		    , "intDoubleFault" , "intCoprocessorSegmentOverrun"
-		    , "intInvalidTSS" , "intSegmentNotPresent"
+     4 overflow
+     5 boundRangeExceeded
+     6 invalidOpcode
+     7 noMathCoprocessor
 
-		    , "intStackSegmentFault" , "intGeneralProtection"
-		    , "intPageFault" , "intReserved2"
+     8 doubleFault
+     9 coprocessorSegmentOverrun
+    10 invalidTSS
+    11 segmentNotPresent
 
-		    , "intFloatingPointError" , "intAlignmentCheck"
-		    , "intMachineCheck" , "intSIMDFloatingPoint"
+    12 stackSegmentFault
+    13 generalProtection
+    14 pageFault
+    15 reserved
 
-		    , "intReserved3" , "intReserved4"
-		    , "intReserved5" , "intReserved6"
-		    , "intReserved7" , "intReserved8"
-		    , "intReserved9" , "intReserved10"
-		    , "intReserved11" , "intReserved12"
-		    , "intReserved13" , "intReserved14"
+    16 floatingPointError
+    17 alignmentCheck
+    18 machineCheck
+    19 sIMDFloatingPoint
 
-		    , "intMine"
-		    ]
+    -- The rest are reserved, until interrupt 32, which is ours
+
+    32 myInterrupt
+|]
 

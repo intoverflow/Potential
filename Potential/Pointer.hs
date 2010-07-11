@@ -14,6 +14,7 @@ module Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
 	, primPtrProj, primPtrInj
 	, primFieldProj, primFieldInj
+	, primArrayProj
 	, MemRegion, MemSubRegion
 	, withMemoryRegion, nestMemoryRegion
 	) where
@@ -22,6 +23,7 @@ import Prelude( ($) )
 
 import Potential.Size
 import Potential.Core
+import Potential.Printing -- temporary, used in a TODO
 
 import Potential.IxMonad.Region
 import Potential.IxMonad.Writer
@@ -126,6 +128,21 @@ primFieldInj inj forget_mask bit_offset src dst =
 	f <- get src
 	p <- get dst
 	set dst $ inj constraints f p
+
+-- Projects from an array pointer to a cell pointer
+primArrayProj proj offset src dst =
+     do comment $ "lea from " ++ show (arg src) ++ "+" ++ show offset ++
+		  " to " ++ show (arg dst)
+	-- TODO: do a real instr
+	arrayPtr <- lift $ get src
+	belongsHere arrayPtr
+	array <- fromPtr64 arrayPtr
+	return ()
+	let cell = proj array
+	cellPtr <- newPtr64' cell
+	belongsHere cellPtr
+	lift $ set dst cellPtr
+	return ()
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m

@@ -9,6 +9,7 @@ module Potential
 	, asCode, Function
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, cmp, sje, assertPrivLevelKernel
+	, array
 	, struct, struct_diagram
 	, assertType
 	, (:<=), (:==), (:<)
@@ -17,6 +18,7 @@ module Potential
 	, fromIntegral, fromInteger, ($), show, (++)
 	) where
 
+import Potential.Array
 import Potential.Assembly
 import Potential.Bit
 import Potential.Constraints

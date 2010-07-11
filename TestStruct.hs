@@ -7,10 +7,6 @@
 module TestStruct where
 
 import Potential
-import Potential.IxMonad.Region (inSupRegion)
-import Potential.Pointer
-import Potential.MachineState (MS)
-import Potential.Assembly (Code)
 
 [$struct| FlagsRegister where
     cf :: 1     -- carry
@@ -80,9 +76,9 @@ import Potential.Assembly (Code)
 
 |]
 
-testProjector = asCode "testProjector" $
+testProjector = -- asCode "testProjector" $
      do proj_InterruptGate_8 rax rbx
-	ret
+	lift $ ret
 
 testField = asCode "testField" $
      do proj_InterruptGate_0_dpl rax

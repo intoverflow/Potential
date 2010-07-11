@@ -37,13 +37,6 @@ class MaybeHasSZ a c
 instance (HasSZ a) => MaybeHasSZ a ConstraintsOn
 instance MaybeHasSZ a ConstraintsOff
 
-{- Actually, I don't think we need this for the current implementation.
--- this instance decl is useful for reserved and const fields
--- requires undecidable instances :/
-instance (SZ a :== T1, HasSZ b) => HasSZ (a, b) where
-  type SZ (a, b) = S (SZ b)
--}
-
 class a :<= b
 instance (:<=) Z b
 instance (a :<= b) => (:<=) (S a) (S b)
@@ -83,11 +76,29 @@ data Z = Z
 data S a = S a
 
 class ToInt a where
-  toInt :: a -> Int
+  toInt :: a -> Integer
 instance ToInt Z where
   toInt _ = 0
 instance (ToInt a) => ToInt (S a) where
   toInt (w::(S a)) = 1 + (toInt (undefined :: a))
+
+{- requires undecidable instances
+class Add a b where
+  type a :+: b
+
+instance Add Z b where
+  type Z :+: b = b
+instance Add a b => Add (S a) b where
+  type (S a) :+: b = a :+: (S b)
+
+class Mul a b where
+  type a :*: b
+
+instance Mul Z b where
+  type Z :*: b = Z
+instance Mul a b => Mul (S a) b where
+  type (S a) :*: b = (a :*: b) :+: b
+-}
 
 type T0 = Z
 type T1 = S Z

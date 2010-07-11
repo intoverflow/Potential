@@ -1,27 +1,31 @@
-module Potential.DataStructure.CommonQQ where
+module Potential.Array.CommonQQ
+	( parseArrayExp
+	, parseArrayPat
+	) where
 
 import Data.Generics.Aliases (extQ)
 import qualified Language.Haskell.TH as TH
 import Language.Haskell.TH.Quote (dataToExpQ, dataToPatQ)
 
-import Potential.DataStructure.AbstractSyntax
-import Potential.DataStructure.CodeGenerator
+import Potential.Array.AbstractSyntax
+import Potential.Array.CodeGenerator
 
-antiE :: UserStruct -> Maybe TH.ExpQ
-antiE us = Just $ reifyStruct us
+antiE :: UserArray -> Maybe TH.ExpQ
+antiE us = Just $ reifyArray us
 
-parseStructExp parser s =
+parseArrayExp parser s =
      do loc <- TH.location
 	let fname = TH.loc_filename loc
 	    (line, col) = TH.loc_start loc
 	parsed <- parser fname line col s
 	dataToExpQ (const Nothing `extQ` antiE) parsed
 
-parseStructPat parser s =
+parseArrayPat parser s =
      do loc <- TH.location
 	let fname = TH.loc_filename loc
 	    (line, col) = TH.loc_start loc
 	parsed <- parser fname line col s
 	dataToPatQ (const Nothing) parsed
+
 
 

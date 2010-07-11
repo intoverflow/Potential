@@ -1,6 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Potential.DataStructure.CodeGenerator
-	(reifyStruct, defineDataSize) where
+	( reifyStruct
+	, defineDataSize
+	, defineDataSize'
+	) where
 
 import qualified Language.Haskell.TH as TH
 
@@ -36,6 +39,26 @@ defineDataSize' t n =
 		(TH.AppT (TH.ConT ''HasSZ) t)
 		[TH.TySynInstD ''SZ [t] (mkT n)]
            ]
+{-
+-- runQ [| undefined :: T2 :*: (SZ (InterruptGate a b c d e f g)) |]
+defineDataSize'' t m name =
+     do info <- TH.reify name
+	case info of
+	  TH.TyConI (TH.DataD _ _ var_fields' _ _) -> 
+	     do let num_fields = mkT m
+		    var_fields = map (\(TH.PlainTV n) -> TH.VarT n) var_fields'
+		    sz_cell    = TH.ForallT var_fields' [] $
+				 TH.AppT
+				  (TH.ConT ''SZ)
+				  (foldl TH.AppT (TH.ConT name) var_fields)
+		    sz = foldl (TH.AppT) (TH.ConT ''(:*:)) [num_fields, sz_cell]
+		return [ TH.InstanceD
+			    []
+			    (TH.AppT (TH.ConT ''HasSZ) t)
+			    [TH.TySynInstD ''SZ [t] sz]
+		       ]
+	  _ -> fail $ "Expected type.  Given: " ++ show name
+-}
 
 field_names us =
     let var_fields = filter isVarField $ concat $ fields us
