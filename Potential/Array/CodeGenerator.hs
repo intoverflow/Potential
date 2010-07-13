@@ -8,11 +8,14 @@ import Potential.Array.AbstractSyntax
 import Potential.Size (dataSize)
 import Potential.Pointer (primArrayProj)
 
+import qualified Potential.DataStructure.AbstractSyntax as DAS
+
 reifyArray ua =
      do decls <- mapM (\f -> f ua)
 			[ saveAST
 			, reifyType
 			, reifyProjectors
+			, reifyInjectors
 			]
         [| return $ concat decls |]
 
@@ -65,6 +68,7 @@ reifyType ua =
 			  map (\n -> (TH.NotStrict, TH.VarT n)) fs
 	return [TH.DataD [] name type_vars [constructor] []]
 
+{-- Projectors from the array down to cells --}
 reifyProjectors :: UserArray -> TH.Q [TH.Dec]
 reifyProjectors ua = on_var_fields reifyProjector ua
 
@@ -84,4 +88,12 @@ reifyProjector ua f =
 	theFunction  <- foldl TH.appE [| primArrayProj |]
 				[ return projector, return offset ]
 	return $ [ TH.ValD (TH.VarP proj_name) (TH.NormalB theFunction) [] ]
+
+{-- Injectors from the cell's partials to the array --}
+reifyInjectors :: UserArray -> TH.Q [TH.Dec]
+reifyInjectors ua = return []
+
+reifyInjector :: UserArray -> DAS.Partial -> TH.Q [TH.Dec]
+reifyInjector ua partial =
+     do return []
 
