@@ -1,9 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Potential.DataStructure.CodeGenerator
+module Potential.DataStructure.CodeGenerator where
+{-
 	( reifyStruct
 	, defineDataSize
 	, defineDataSize'
+	, on_partials
 	) where
+-}
 
 import qualified Language.Haskell.TH as TH
 
@@ -41,26 +44,6 @@ defineDataSize' t n =
 		(TH.AppT (TH.ConT ''HasSZ) t)
 		[TH.TySynInstD ''SZ [t] (mkT n)]
            ]
-{-
--- runQ [| undefined :: T2 :*: (SZ (InterruptGate a b c d e f g)) |]
-defineDataSize'' t m name =
-     do info <- TH.reify name
-	case info of
-	  TH.TyConI (TH.DataD _ _ var_fields' _ _) -> 
-	     do let num_fields = mkT m
-		    var_fields = map (\(TH.PlainTV n) -> TH.VarT n) var_fields'
-		    sz_cell    = TH.ForallT var_fields' [] $
-				 TH.AppT
-				  (TH.ConT ''SZ)
-				  (foldl TH.AppT (TH.ConT name) var_fields)
-		    sz = foldl (TH.AppT) (TH.ConT ''(:*:)) [num_fields, sz_cell]
-		return [ TH.InstanceD
-			    []
-			    (TH.AppT (TH.ConT ''HasSZ) t)
-			    [TH.TySynInstD ''SZ [t] sz]
-		       ]
-	  _ -> fail $ "Expected type.  Given: " ++ show name
--}
 
 field_names us =
     let var_fields = filter isVarField $ concat $ fields us
@@ -95,10 +78,10 @@ structType us var_names =
 	params = map TH.VarT var_names
     in foldl TH.AppT (TH.ConT name) params
 
-on_partials :: (UserStruct -> Partial -> TH.Q [TH.Dec])
+on_partials :: (Partial -> TH.Q [TH.Dec])
 		-> UserStruct -> TH.Q [TH.Dec]
 on_partials reifier us =
-     do decls <- mapM (reifier us) $ zip (fields us) [0,8..]
+     do decls <- mapM reifier $ zip (fields us) [0,8..]
 	return $ concat decls
 
 structPartialName us offset = struct_name us ++ "_" ++ show offset
@@ -111,7 +94,7 @@ structPartialType us offset var_names =
 on_fields :: (UserStruct -> Partial -> FieldWithBitOffset -> TH.Q [TH.Dec])
 		-> UserStruct
 		-> TH.Q [TH.Dec]
-on_fields reifier us = on_partials reifier' us
+on_fields reifier us = on_partials (reifier' us) us
   where reifier' us partial =
 	     do let fs = prepareFields partial
 		decls <- mapM (reifier us partial) fs
@@ -148,7 +131,7 @@ reifyType us =
 		 sizeDef
 
 reifyPartialTypes :: UserStruct -> TH.Q [TH.Dec]
-reifyPartialTypes us = on_partials reifyPartialType us
+reifyPartialTypes us = on_partials (reifyPartialType us) us
 
 reifyPartialType :: UserStruct -> Partial -> TH.Q [TH.Dec]
 reifyPartialType us (fs, offset) =
@@ -159,7 +142,7 @@ reifyPartialType us (fs, offset) =
      in reifyType us'
 
 reifyPartialRelations :: UserStruct -> TH.Q [TH.Dec]
-reifyPartialRelations us = on_partials reifyPartialRelation us
+reifyPartialRelations us = on_partials (reifyPartialRelation us) us
 
 reifyPartialRelation :: UserStruct -> Partial -> TH.Q [TH.Dec]
 reifyPartialRelation us (fs, offset) =
@@ -208,7 +191,7 @@ reifyAllocator us =
 
 
 reifyPartialProjectors :: UserStruct -> TH.Q [TH.Dec]
-reifyPartialProjectors us = on_partials reifyPartialProjector us
+reifyPartialProjectors us = on_partials (reifyPartialProjector us) us
 
 -- Creates mnemonics for projecting down from Type to Type_Offset
 reifyPartialProjector :: UserStruct -> Partial -> TH.Q [TH.Dec]
@@ -227,7 +210,7 @@ reifyPartialProjector us (fs, offset) =
 	return $ [ TH.ValD (TH.VarP proj_name) (TH.NormalB theFunction) [] ]
 
 reifyPartialInjectors :: UserStruct -> TH.Q [TH.Dec]
-reifyPartialInjectors us = on_partials reifyPartialInjector us
+reifyPartialInjectors us = on_partials (reifyPartialInjector us) us
 
 -- Creates mnemonics for injecting up from Type_Offset to Type
 reifyPartialInjector :: UserStruct -> Partial -> TH.Q [TH.Dec]

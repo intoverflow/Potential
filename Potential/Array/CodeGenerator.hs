@@ -6,9 +6,10 @@ import qualified Language.Haskell.TH as TH
 import Potential.DataStructure.LiftDecls
 import Potential.Array.AbstractSyntax
 import Potential.Size (dataSize)
-import Potential.Pointer (primArrayProj)
+import Potential.Pointer (primArrayProj, primArrayInj)
 
 import qualified Potential.DataStructure.AbstractSyntax as DAS
+import qualified Potential.DataStructure.CodeGenerator as DCG
 
 reifyArray :: DAS.UserStruct -> UserArray -> TH.Q [TH.Dec]
 reifyArray astCell ua =
@@ -36,6 +37,14 @@ field_names ua =
 arrayType ua var_names =
     let name   = TH.mkName $ array_name ua
 	params = map TH.VarT var_names
+    in foldl TH.AppT (TH.ConT name) params
+
+arrayTypeWithCell ua var_names f t =
+    let name   = TH.mkName $ array_name ua
+	params = map (\n -> if (TH.mkName $ field_name f) == n
+				then t
+				else TH.VarT n)
+		     var_names
     in foldl TH.AppT (TH.ConT name) params
 
 cellType astCell =
@@ -92,9 +101,34 @@ reifyProjector astCell ua f =
 {-- Injectors from the cell's partials to the array --}
 reifyInjectors :: DAS.UserStruct -> UserArray -> TH.Q [TH.Dec]
 reifyInjectors astCell ua =
-     do return []
+   on_var_fields (\f -> DCG.on_partials (reifyInjector f astCell ua) astCell) ua
 
-reifyInjector :: UserArray -> DAS.Partial -> TH.Q [TH.Dec]
-reifyInjector ua partial =
-     do return []
+reifyInjector :: Field -> DAS.UserStruct -> UserArray
+		    -> DAS.Partial -> TH.Q [TH.Dec]
+reifyInjector f astCell ua (fs, poffset) =
+     do injectorUntyped <- [| \x y -> undefined |]
+	let inj_name = TH.mkName $ "inj_" ++ field_name f ++ "_" ++
+				   DAS.struct_name astCell ++ "_" ++
+				   show poffset
+	    partialT = DCG.structPartialType astCell poffset $
+			DCG.field_partial_names_updated fs
+	    cellT    = DCG.structType astCell $
+			DCG.field_names astCell
+	    cellT'   = DCG.structType astCell $
+			DCG.field_names_updated astCell fs
+	    arrayT   = arrayTypeWithCell ua (field_names ua) f cellT
+	    arrayT'  = arrayTypeWithCell ua (field_names ua) f cellT'
+	    signature = TH.ForallT (map TH.PlainTV $
+					field_names ua ++
+					DCG.field_names astCell ++
+					DCG.field_partial_names_updated fs)
+				   []
+				   (TH.AppT (TH.AppT TH.ArrowT partialT)
+				    (TH.AppT (TH.AppT TH.ArrowT arrayT)
+				     arrayT'))
+	    injector = TH.SigE injectorUntyped signature
+	    offset   = field_pos f
+	theFunction <- TH.appE [| \inj -> primArrayInj inj offset |]
+				(return injector)
+	return [ TH.ValD (TH.VarP inj_name) (TH.NormalB theFunction) [] ]
 

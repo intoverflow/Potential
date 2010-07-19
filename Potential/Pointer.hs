@@ -14,7 +14,7 @@ module Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
 	, primPtrProj, primPtrInj
 	, primFieldProj, primFieldInj
-	, primArrayProj
+	, primArrayProj, primArrayInj
 	, MemRegion, MemSubRegion
 	, withMemoryRegion, nestMemoryRegion
 	) where
@@ -133,7 +133,7 @@ primFieldInj inj forget_mask bit_offset src dst =
 primArrayProj proj offset src dst =
      do comment $ "lea from " ++ show (arg src) ++ "+" ++ show offset ++
 		  " to " ++ show (arg dst)
-	-- TODO: do a real instr
+	-- TODO: do a real instr with the right offset
 	arrayPtr <- lift $ get src
 	belongsHere arrayPtr
 	array <- fromPtr64 arrayPtr
@@ -143,6 +143,20 @@ primArrayProj proj offset src dst =
 	belongsHere cellPtr
 	lift $ set dst cellPtr
 	return ()
+
+primArrayInj inj offset src dst sr =
+     do instr TxOwnership
+	comment $ "inj from " ++ show (arg src) ++ " to " ++ show (arg dst) ++
+		  "+" ++ show offset
+	-- TODO: a real instr with the right offset
+	partial  <- lift $ get src
+	arrayPtr <- lift $ get dst
+	lift $ forget dst
+	belongsInSubRegion sr arrayPtr
+	array <- fromPtr64 arrayPtr
+	arrayPtr' <- newPtr64InSupRegion sr (inj partial array)
+	belongsInSupRegion sr arrayPtr'
+	lift $ set dst arrayPtr'
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m
