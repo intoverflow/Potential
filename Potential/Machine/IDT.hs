@@ -7,36 +7,37 @@ module Potential.Machine.IDT where
 import Potential.Array
 import Potential.Machine.IntGate
 
-[$array|
-		InterruptDescriptionTable :: InterruptGate
+reifyArray ast_InterruptGate [$array|
 
-     0 divideError
-     1 reserved
-     2 nMI
-     3 breakpoint
+				InterruptDescriptionTable
 
-     4 overflow
-     5 boundRangeExceeded
-     6 invalidOpcode
-     7 noMathCoprocessor
+		     0 divideError
+		     1 reserved
+		     2 nMI
+		     3 breakpoint
 
-     8 doubleFault
-     9 coprocessorSegmentOverrun
-    10 invalidTSS
-    11 segmentNotPresent
+		     4 overflow
+		     5 boundRangeExceeded
+		     6 invalidOpcode
+		     7 noMathCoprocessor
 
-    12 stackSegmentFault
-    13 generalProtection
-    14 pageFault
-    15 reserved
+		     8 doubleFault
+		     9 coprocessorSegmentOverrun
+		    10 invalidTSS
+		    11 segmentNotPresent
 
-    16 floatingPointError
-    17 alignmentCheck
-    18 machineCheck
-    19 sIMDFloatingPoint
+		    12 stackSegmentFault
+		    13 generalProtection
+		    14 pageFault
+		    15 reserved
 
-    -- The rest are reserved, until interrupt 32, which is ours
+		    16 floatingPointError
+		    17 alignmentCheck
+		    18 machineCheck
+		    19 sIMDFloatingPoint
 
-    32 myInterrupt
+		    -- The rest are reserved, until interrupt 32, which is ours
+
+		    32 myInterrupt
 |]
 

@@ -10,7 +10,6 @@ import qualified Language.Haskell.TH.Syntax as THS
 
 data UserArray =
       UserArray { array_name :: String
-		, cell_type  :: String
 		, fields :: [Field]
 		}
   deriving (Eq, Show, Data, Typeable)
@@ -18,7 +17,6 @@ data UserArray =
 instance THS.Lift UserArray where
   lift ua = foldl TH.appE [| UserArray |]
 			[ THS.lift $ array_name ua
-			, THS.lift $ cell_type ua
 			, THS.lift $ fields ua
 			]
 

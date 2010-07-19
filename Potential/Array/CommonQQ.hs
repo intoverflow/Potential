@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Potential.Array.CommonQQ
 	( parseArrayExp
 	, parseArrayPat
@@ -11,7 +12,7 @@ import Potential.Array.AbstractSyntax
 import Potential.Array.CodeGenerator
 
 antiE :: UserArray -> Maybe TH.ExpQ
-antiE us = Just $ reifyArray us
+antiE us = Just [| us |] -- Just $ reifyArray us
 
 parseArrayExp parser s =
      do loc <- TH.location

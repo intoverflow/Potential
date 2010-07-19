@@ -7,6 +7,7 @@ module Potential.DataStructure.CodeGenerator
 
 import qualified Language.Haskell.TH as TH
 
+import Potential.DataStructure.PartialRelation
 import Potential.DataStructure.LiftDecls
 import Potential.DataStructure.AbstractSyntax
 import Potential.Pointer ( newPtr64
@@ -23,6 +24,7 @@ reifyStruct us =
 			[ saveAST
 			, reifyType
 			, reifyPartialTypes
+			, reifyPartialRelations
 			, reifyAllocator
 			, reifyPartialProjectors
 			, reifyPartialInjectors
@@ -155,6 +157,18 @@ reifyPartialType us (fs, offset) =
 			  , fields = [ fs ]
 			  }
      in reifyType us'
+
+reifyPartialRelations :: UserStruct -> TH.Q [TH.Dec]
+reifyPartialRelations us = on_partials reifyPartialRelation us
+
+reifyPartialRelation :: UserStruct -> Partial -> TH.Q [TH.Dec]
+reifyPartialRelation us (fs, offset) =
+     do let t = structType us $ field_names us
+	    p = structPartialType us offset $ field_partial_names fs
+	return [ TH.InstanceD
+			[]
+			(foldl TH.AppT (TH.ConT ''IsPartialOf) [t, p])
+			[] ]
 
 
 {-

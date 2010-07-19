@@ -20,15 +20,13 @@ parseArray fname line col s =
 arrayParser =
      do whiteSpace
 	arrayName <- typeName
-	string "::" >> whiteSpace
-	cellSize <- typeName
 	arrayFields <- many1 $ do f <- parse_field
 				  whiteSpace
 				  return f
 	eof
 	-- verify that the entries are ascending
 	if (isStrictlyIncreasing arrayFields)
-	  then return $ UserArray arrayName cellSize $ fillIn arrayFields
+	  then return $ UserArray arrayName $ fillIn arrayFields
 	  else fail $ "Array cells not in strictly increasing order.  Cells: "++
 			show arrayFields
   where parse_field =

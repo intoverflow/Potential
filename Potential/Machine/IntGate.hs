@@ -1,5 +1,6 @@
 {-# LANGUAGE
 	NoMonomorphismRestriction,
+	UndecidableInstances,
 	NoImplicitPrelude,
 	FlexibleInstances,
 	FlexibleContexts,
