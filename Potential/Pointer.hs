@@ -56,7 +56,7 @@ memSensitive a = a
 newPtr64' :: IxMonad m => t -> MemRegion r m Composable x x (Ptr64 r t)
 newPtr64' t = unsafeReturn $ Ptr64 t
 
-newPtr64 t dst initializers =
+newPtr64 t dst =
      do lift $ instr Alloc
 	ptr <- newPtr64' t
 	lift $ set dst ptr

@@ -106,7 +106,7 @@ init = nestMemoryRegion $ \sr ->
 
 init2 = nestMemoryRegion $ \sr1 ->
      do nestMemoryRegion $ \sr2 ->
-	     do newInterruptGate rax []
+	     do newInterruptGate rax
 		lift $ pop r10
 		inj_InterruptGate_0 r10 rax sr2
 	lift $ pop r10

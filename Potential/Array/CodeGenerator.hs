@@ -6,7 +6,7 @@ import qualified Language.Haskell.TH as TH
 import Potential.DataStructure.LiftDecls
 import Potential.Array.AbstractSyntax
 import Potential.Size (dataSize)
-import Potential.Pointer (primArrayProj, primArrayInj)
+import Potential.Pointer (newPtr64, primArrayProj, primArrayInj)
 
 import qualified Potential.DataStructure.AbstractSyntax as DAS
 import qualified Potential.DataStructure.CodeGenerator as DCG
@@ -16,6 +16,7 @@ reifyArray astCell ua =
      do decls <- mapM (\f -> f ua)
 			[ saveAST
 			, reifyType
+			, reifyAllocator
 			, reifyProjectors astCell
 			, reifyInjectors astCell
 			]
@@ -76,6 +77,20 @@ reifyType ua =
 	    constructor = TH.NormalC name $
 			  map (\n -> (TH.NotStrict, TH.VarT n)) fs
 	return [TH.DataD [] name type_vars [constructor] []]
+
+{-- Allocators --}
+reifyAllocator :: UserArray -> TH.Q [TH.Dec]
+reifyAllocator ua =
+     do let alloc_name = TH.mkName $ "new" ++ array_name ua
+	    name       = TH.mkName $ array_name ua
+	    new = foldl TH.appE
+			(TH.conE name)
+			(replicate (length $ field_names ua) [| undefined |])
+	theFunction <- TH.appE [| newPtr64 |] new
+	let theClause  = TH.Clause []
+				   (TH.NormalB theFunction)
+				   []
+	return [ TH.FunD alloc_name [theClause] ]
 
 {-- Projectors from the array down to cells --}
 reifyProjectors :: DAS.UserStruct -> UserArray -> TH.Q [TH.Dec]

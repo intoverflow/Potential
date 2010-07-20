@@ -184,7 +184,7 @@ reifyAllocator us =
 			(TH.conE name)
 			(replicate (length $ field_names us) [| undefined |])
 	theFunction <- TH.appE [| newPtr64 |] new
-	let theClause   = TH.Clause [] -- (map TH.VarP $ field_names us)
+	let theClause   = TH.Clause []
 				    (TH.NormalB theFunction)
 				    []
 	return [ TH.FunD alloc_name [theClause] ]
