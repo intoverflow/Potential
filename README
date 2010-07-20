@@ -1,6 +1,6 @@
-Potential is an embedding of x86-64 assembly into Haskell as a domain specific
-language.
+Potential is a systems programming language designed for high reliability.
 
+Potential is built on top of the Haskell Platform.
 Requires GHC 6.12 and the Haskell Platform.  Download from:
 	http://hackage.haskell.org/platform/
 
@@ -14,9 +14,9 @@ Key features:
   you write has the effect you want
 * Easy to extend and modify the language to suit your application's needs
 
-To get a feel, launch ghci -fcontext-stack=160 TestCode.hs.
-* Potential code can be rendered to assembly by the renderFn command
-* Inspect types using :t getType <function name>
+To get a feel, launch ghci -fcontext-stack=160 Tests.TestCode
+* Potential functions can be rendered to assembly by the renderFn command
+* Inspect types using :t evaluateTypes <function name>
 
 For more information, visit us:
 http://potential-lang.org
