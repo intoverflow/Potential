@@ -1,10 +1,12 @@
 {-# LANGUAGE
-	QuasiQuotes,
-	NoMonomorphismRestriction,
-	FlexibleContexts,
 	NoImplicitPrelude,
+	NoMonomorphismRestriction,
+	QuasiQuotes,
+	FlexibleContexts,
+	MultiParamTypeClasses,
+	UndecidableInstances,
 	TypeFamilies #-}
-module TestStruct where
+module Tests.TestStruct where
 
 import Potential
 
@@ -93,12 +95,12 @@ testInjectField = asCode "testInjectField" $
 
 testNew = asCode "testNew" $
      do withMemoryRegion $ evaluateTypes $
-	     do newInterruptGate r11 []
+	     do newInterruptGate r11
 		lift $ mov r10 r11
 	ret
 
 init = nestMemoryRegion $ \sr ->
-     do newInterruptGate rax []
+     do newInterruptGate rax
 	lift $ pop r11
 	inj_InterruptGate_0 r11 rax sr
 	-- This below causes failure *hooray!*

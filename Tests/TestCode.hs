@@ -1,7 +1,7 @@
 {-# LANGUAGE
 	NoMonomorphismRestriction,
 	NoImplicitPrelude #-}
-module TestCode where
+module Tests.TestCode where
 
 import Potential
 import Potential.Flow (primCondJmp)

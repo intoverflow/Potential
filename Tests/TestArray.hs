@@ -1,6 +1,6 @@
 {-# LANGUAGE
 	NoImplicitPrelude #-}
-module TestArray where
+module Tests.TestArray where
 
 import Potential
 import Potential.Machine.IDT

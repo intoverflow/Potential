@@ -1,6 +1,6 @@
 {-# LANGUAGE
         NoImplicitPrelude #-}
-module TestIntGate where
+module Tests.TestIntGate where
 
 import Potential
 import Potential.Machine.IntGate
