@@ -1,4 +1,6 @@
 Potential is a systems programming language designed for high reliability.
+It is currently in active development and should be considered HIGHLY
+EXPERIMENTAL.
 
 Potential is built on top of the Haskell Platform.
 Requires GHC 6.12 and the Haskell Platform.  Download from:
