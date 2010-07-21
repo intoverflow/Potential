@@ -21,34 +21,30 @@ pos = do loc <- location
 
 asCode :: String
        -> Code c Terminal assumes returns ()
-       -> Function (Code c) c assumes returns
+       -> Function (Code c) assumes returns
 asCode fnname c =
      Fn { fnname    = fnname
 	, body      = c
 	}
 
--- renderFn :: Function c assumes returns -> IO ()
+-- renderFn :: (ASMable m i, Show i) => Function m assumes returns -> IO ()
 renderFn c =
-     do { let asmcode = asm ( body c )
+     do { let asmcode = (asm ConstraintsOff $ body c) :: [Instr]
 	; putStrLn $ fnname c ++ ":"
 	-- ; putStrLn $
 	--	"    // defined at " ++ filename c ++ ":" ++ show (fileline c)
 	; mapM_ (\l -> putStrLn $ "    " ++ show l) asmcode
 	}
 
-asm :: Code ConstraintsOff ct assumes returns a -> [Instr]
-asm code = let (_, asmcode, _) = runCode code ConstraintsOff undefined
-           in asmcode
 
-
-getType :: Function (Code ConstraintsOn) ConstraintsOn
+getType :: Function (Code ConstraintsOn)
 		    (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 			rip r08 r09 r10 r11 r12 r13 r14 r15
 			alloc cmp)
 		    (MS rax' rbx' rcx' rdx' rsi' rdi' rbp' rsp' rflags'
 			rip' r08' r09' r10' r11' r12' r13' r14' r15'
 			alloc' cmp')
-	-> Function (Code ConstraintsOn) ConstraintsOn
+	-> Function (Code ConstraintsOn)
 		    (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 			rip r08 r09 r10 r11 r12 r13 r14 r15
 			alloc cmp)
@@ -59,7 +55,7 @@ getType fn = fn
 
 getTypeOf
     :: src
-    -> Function (Code ConstraintsOn) ConstraintsOn
+    -> Function (Code ConstraintsOn)
 		(MS rax' rbx' rcx' rdx' rsi' rdi' rbp' rsp' rflags'
 		    rip' r08' r09' r10' r11' r12' r13' r14' r15' alloc' cmp)
 		(MS rax rbx rcx rdx rsi rdi rbp rsp rflags

@@ -6,7 +6,9 @@
 	TypeSynonymInstances,
 	TypeFamilies,
 	Rank2Types,
-	FlexibleContexts
+	FlexibleContexts,
+	FlexibleInstances,
+	MultiParamTypeClasses
 	#-}
 module Potential.Assembly
 	( Reg(..)
@@ -24,6 +26,7 @@ import Data.Word
 
 import Potential.MachineState( Reg )
 import Potential.IxCode
+import Potential.Constraints
 import Potential.IxMonad
 import Potential.IxMonad.Constrained
 import Potential.IxMonad.State
@@ -49,6 +52,9 @@ instance IxMonad PState where
 type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
 
 instance IxCode (Code c) where type Constraints (Code c) = c
+instance ASMable (Code c) Instr where
+  asm cnstrts code = let (_, asmcode, _) = runCode code cnstrts undefined
+		     in asmcode
 
 runCode :: Code c ct x y a -> c -> x -> (a, [Instr], y)
 runCode code constr input =
@@ -56,12 +62,12 @@ runCode code constr input =
 		runPState (runIxWriterT (runIxConstrainedT code constr)) input
 	in (a, w, y)
 
-data Function m c assumes returns =
+data Function m assumes returns =
      Fn { fnname   :: String
-	, body     :: (IxCode m, Constraints m ~ c) =>
+	, body     :: (IxCode m, ASMable m Instr) =>
 			m Terminal assumes returns ()
 	}
-isFn :: Function m c assumes returns -> Function m c assumes returns
+isFn :: Function m assumes returns -> Function m assumes returns
 isFn f = f
 
 
@@ -80,12 +86,12 @@ data Instr =
  |  Push Reg
  |  Pop Reg
  |  Cmp Reg Reg
- |  forall m c assumes returns . (IxCode m, Constraints m ~ c) => SJe (Function m c assumes returns)
+ |  forall m assumes returns . IxCode m => SJe (Function m assumes returns)
  |  Jne Reg
  |  Jmp Reg
- |  forall m c assumes returns . (IxCode m, Constraints m ~ c) => SJmp (Function m c assumes returns)
+ |  forall m assumes returns . IxCode m => SJmp (Function m assumes returns)
  |  Call Reg
- |  forall m c assumes returns . (IxCode m, Constraints m ~ c) => SCall (Function m c assumes returns)
+ |  forall m assumes returns . IxCode m => SCall (Function m assumes returns)
  |  Ret
  |  Lidt Reg
  |  ShL Integer Reg

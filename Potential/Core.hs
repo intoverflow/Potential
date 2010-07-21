@@ -21,7 +21,7 @@ module Potential.Core
 	, Unmodeled, Composable, Terminal, unmodeled, composable, terminal
 
 	-- stuff that comes from IxCode
-	, IxCode
+	, IxCode, ASMable, asm
 
 	-- stuff that comes from IxMonad
 	, Composition(..)
