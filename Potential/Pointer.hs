@@ -37,6 +37,8 @@ type MemSubRegion r s m ct = SubRegion Memory r s m ct
 instance IxCode m => IxCode (MemRegion r m) where
   type Constraints (MemRegion r m) = Constraints m
 
+instance ASMable m => ASMable (MemRegion r m) where
+  asm constraints mr = asm constraints (withRegion' memRegionMgr mr)
 
 -- A pointer, bound to region r
 data Ptr64 r t = Ptr64 t

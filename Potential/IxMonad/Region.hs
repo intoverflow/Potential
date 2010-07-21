@@ -7,7 +7,7 @@
 module Potential.IxMonad.Region
 	( IxRegionT(..), Region, RegionMgr(..)
 	, SubRegion(..), inSupRegion
-	, withRegion, nestRegion
+	, withRegion, withRegion', nestRegion
 	) where
 
 import Prelude( ($), (.) )
@@ -39,6 +39,8 @@ instance IxMonad m => IxMonad (IxRegionT typ r m) where
   fl >>= f = IxRegionT $ let fl' = runIxRegionT fl
 			 in fl' >>= (runIxRegionT . f)
 
+withRegion' region r = runIxReaderT (runIxRegionT r) region
+
 withRegion :: ( IxMonad m
 	      , Composition ct Unmodeled, Compose ct Unmodeled ~ ct
 	      , Composition Unmodeled ct, Compose Unmodeled ct ~ ct )
@@ -47,7 +49,7 @@ withRegion :: ( IxMonad m
 	   -> m ct x y a
 withRegion region r =
      do enter region
-	a <- runIxReaderT (runIxRegionT r) region
+	a <- withRegion' region r
 	close region
 	return a
 

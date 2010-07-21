@@ -31,7 +31,8 @@ splitStack _ = (undefined, undefined)
 asStack :: a -> b -> Stack a b
 asStack _ _ = undefined
 
-assertPushableSize :: (SZ a' :<=? T64) c => a' -> Code c Unmodeled x x ()
+assertPushableSize :: (IxCode m, (SZ a' :<=? T64) (Constraints m))
+			=> a' -> m Unmodeled x x ()
 assertPushableSize _ = return ()
 
 primPush a' sp =
