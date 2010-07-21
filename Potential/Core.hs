@@ -1,7 +1,8 @@
 {-# LANGUAGE
 	NoMonomorphismRestriction,
 	NoImplicitPrelude,
-	FlexibleContexts
+	FlexibleContexts,
+	TypeFamilies
 	#-}
 module Potential.Core
 	(
@@ -19,6 +20,9 @@ module Potential.Core
 	, Reg(..), Instr(..), Deref(..), Code, runCode, Function(..)
 	, Unmodeled, Composable, Terminal, unmodeled, composable, terminal
 
+	-- stuff that comes from IxCode
+	, IxCode
+
 	-- stuff that comes from IxMonad
 	, Composition(..)
 	, IxFunctor(..), IxMonad(..), IxMonadTrans(..)
@@ -35,6 +39,7 @@ module Potential.Core
 
 import Prelude hiding ( return, fail, (>>), (>>=) )
 
+import Potential.IxCode
 import Potential.IxMonad
 import Potential.IxMonad.Writer
 import Potential.Size
@@ -71,11 +76,12 @@ get field = lift $ lift $
         return fdata
 set field new = lift $ lift $ psModify (\ms -> set' field new ms)
 
-getConstraints :: Code c Unmodeled x x c
+getConstraints :: IxCode m => m Unmodeled x x (Constraints m)
 getConstraints = return undefined
 
-withConstraints :: Code ConstraintsOn ct x y b
-		-> Code ConstraintsOn ct x y b
+withConstraints :: (IxCode m, Constraints m ~ ConstraintsOn)
+			=> m ct x y b
+			-> m ct x y b
 withConstraints p = p
 
 -- For logging instructions

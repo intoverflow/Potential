@@ -21,7 +21,7 @@ pos = do loc <- location
 
 asCode :: String
        -> Code c Terminal assumes returns ()
-       -> Function c assumes returns
+       -> Function (Code c) c assumes returns
 asCode fnname c =
      Fn { fnname    = fnname
 	, body      = c
@@ -41,14 +41,14 @@ asm code = let (_, asmcode, _) = runCode code ConstraintsOff undefined
            in asmcode
 
 
-getType :: Function ConstraintsOn
+getType :: Function (Code ConstraintsOn) ConstraintsOn
 		    (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 			rip r08 r09 r10 r11 r12 r13 r14 r15
 			alloc cmp)
 		    (MS rax' rbx' rcx' rdx' rsi' rdi' rbp' rsp' rflags'
 			rip' r08' r09' r10' r11' r12' r13' r14' r15'
 			alloc' cmp')
-	-> Function ConstraintsOn
+	-> Function (Code ConstraintsOn) ConstraintsOn
 		    (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 			rip r08 r09 r10 r11 r12 r13 r14 r15
 			alloc cmp)
@@ -59,7 +59,7 @@ getType fn = fn
 
 getTypeOf
     :: src
-    -> Function ConstraintsOn
+    -> Function (Code ConstraintsOn) ConstraintsOn
 		(MS rax' rbx' rcx' rdx' rsi' rdi' rbp' rsp' rflags'
 		    rip' r08' r09' r10' r11' r12' r13' r14' r15' alloc' cmp)
 		(MS rax rbx rcx rdx rsi rdi rbp rsp rflags

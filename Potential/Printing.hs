@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 module Potential.Printing where
 
 import Numeric (showHex)

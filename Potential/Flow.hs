@@ -14,21 +14,23 @@ import Potential.Pointer
 
 -- Pass in the type of the function we're jumping to.  We take on its
 -- post-conditions.
-primJmp :: Code c Terminal x y ()
-	-> Code c Terminal x y ()
+primJmp :: IxCode m => m Terminal x y ()
+		    -> m Terminal x y ()
 primJmp _ = terminal $ unsafeReturn ()
 
-primCondJmp :: Code c Terminal x y ()
-	    -> Code c Terminal x y ()
-	    -> Code c Terminal x y ()
+primCondJmp :: IxCode m
+		=> m Terminal x y ()
+		-> m Terminal x y ()
+		-> m Terminal x y ()
 primCondJmp jmpTo continueWith = continueWith
 
 -- Pass in the function we're calling.  Note that it ret's to post-condition y,
 -- so we must also leave the call instruction in that post-condition.  Note also
 -- that it assumes condition x, so we must be in condition x just prior to the
 -- call.
-primCall :: Code c Terminal x y ()
-	 -> Code c Composable x y ()
+primCall :: IxCode m
+		=> m Terminal x y ()
+		-> m Composable x y ()
 primCall _ = composable $ unsafeReturn ()
 
 -- Pass in the type of the return function on the stack.  We'll assure that
