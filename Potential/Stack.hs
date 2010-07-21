@@ -87,13 +87,13 @@ pop dst =
 
 enter frame =
      do let l = fromIntegral $ toInt $ sz frame
-	lift $ instr $ Enter l
-	baseptr <- lift $ get rbp
-	stack   <- lift $ get rsp
-	stack'  <- lift $ primPush baseptr stack
+	instr $ Enter l
+	baseptr <- get rbp
+	stack   <- get rsp
+	stack'  <- primPush baseptr stack
 	(baseptr', stack'') <- makeFramePtr64 stack' frame
-	lift $ set rbp baseptr'
-	lift $ set rsp stack''
+	set rbp baseptr'
+	set rsp stack''
 
 leave =
      do instr Leave

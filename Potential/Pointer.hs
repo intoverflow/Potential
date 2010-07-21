@@ -24,9 +24,9 @@ import Prelude( ($) )
 
 import Potential.Size
 import Potential.Core
+import Potential.Assembly
 import Potential.Printing -- temporary, used in a TODO
 
-import Potential.IxCode
 import Potential.IxMonad.Region
 import Potential.IxMonad.Writer
 
@@ -62,9 +62,9 @@ newPtr64' :: IxMonad m => t -> MemRegion r m Composable x x (Ptr64 r t)
 newPtr64' t = unsafeReturn $ Ptr64 t
 
 newPtr64 t dst =
-     do lift $ instr Alloc
+     do instr Alloc
 	ptr <- newPtr64' t
-	lift $ set dst ptr
+	set dst ptr
 
 -- Pointer operations for dealing with sub and sup regions
 newPtr64InSupRegion :: IxMonad m =>
@@ -91,10 +91,10 @@ belongsHere _ = return ()
 -- Types are encoded by the proj function
 primPtrProj proj offset src dst =
      do instr $ Ld (Deref2 offset (arg src)) (arg dst)
-	ptr <- lift $ get src
+	ptr <- get src
 	belongsHere ptr
 	dat <- fromPtr64 ptr
-	lift $ set dst (proj dat)
+	set dst (proj dat)
 
 -- For injecting from Type_Offset into Ptr64 s Type, given a Ptr64 r Type
 transform t' (SubRegion sr) =
@@ -104,14 +104,14 @@ transform t' (SubRegion sr) =
 primPtrInj inj offset partialSrc structSrc sr =
      do instr TxOwnership
 	instr $ Sto (arg partialSrc) (Deref2 offset (arg structSrc))
-	partial    <- lift $ get partialSrc
-	structPtr  <- lift $ get structSrc
-	lift $ forget structSrc
+	partial    <- get partialSrc
+	structPtr  <- get structSrc
+	forget structSrc
 	belongsInSubRegion sr structPtr
 	struct     <- fromPtr64 structPtr
 	structPtr' <- newPtr64InSupRegion sr (inj partial struct)
 	belongsInSupRegion sr structPtr'
-	lift $ set structSrc structPtr'
+	set structSrc structPtr'
 
 -- For projecting from a partial to a field
 primFieldProj proj isolate_mask bit_offset src =
@@ -139,14 +139,14 @@ primArrayProj proj offset src dst =
      do comment $ "lea from " ++ show (arg src) ++ "+" ++ show offset ++
 		  " to " ++ show (arg dst)
 	-- TODO: do a real instr with the right offset
-	arrayPtr <- lift $ get src
+	arrayPtr <- get src
 	belongsHere arrayPtr
 	array <- fromPtr64 arrayPtr
 	return ()
 	let cell = proj array
 	cellPtr <- newPtr64' cell
 	belongsHere cellPtr
-	lift $ set dst cellPtr
+	set dst cellPtr
 	return ()
 
 primArrayInj inj offset src dst sr =
@@ -154,14 +154,14 @@ primArrayInj inj offset src dst sr =
 	comment $ "inj from " ++ show (arg src) ++ " to " ++ show (arg dst) ++
 		  "+" ++ show offset
 	-- TODO: a real instr with the right offset
-	partial  <- lift $ get src
-	arrayPtr <- lift $ get dst
-	lift $ forget dst
+	partial  <- get src
+	arrayPtr <- get dst
+	forget dst
 	belongsInSubRegion sr arrayPtr
 	array <- fromPtr64 arrayPtr
 	arrayPtr' <- newPtr64InSupRegion sr (inj partial array)
 	belongsInSupRegion sr arrayPtr'
-	lift $ set dst arrayPtr'
+	set dst arrayPtr'
 
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m

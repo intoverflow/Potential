@@ -36,8 +36,9 @@ primCall _ = composable $ unsafeReturn ()
 -- Pass in the type of the return function on the stack.  We'll assure that
 -- the function which invokes ret leaves the machine in the proper state for
 -- the ret to be safe.
-primRet :: Code c Terminal x y ()
-	-> Code c Terminal x x ()
+primRet :: IxCode m
+		=> m Terminal x y ()
+		-> m Terminal x x ()
 primRet _ = terminal $ unsafeReturn ()
 
 

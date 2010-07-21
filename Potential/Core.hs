@@ -20,7 +20,7 @@ module Potential.Core
 	, Reg(..), Instr(..), Deref(..), Code, runCode, Function(..)
 	, Unmodeled, Composable, Terminal, unmodeled, composable, terminal
 
-	-- stuff that comes from IxCode
+	-- stuff that comes from PState
 	, IxCode, ASMable, asm
 
 	-- stuff that comes from IxMonad
@@ -39,9 +39,9 @@ module Potential.Core
 
 import Prelude hiding ( return, fail, (>>), (>>=) )
 
-import Potential.IxCode
 import Potential.IxMonad
 import Potential.IxMonad.Writer
+import Potential.IxMonad.PState
 import Potential.Size
 import Potential.Constraints
 import Potential.MachineState

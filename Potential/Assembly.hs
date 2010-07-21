@@ -3,20 +3,16 @@
 	ExistentialQuantification,
 	ScopedTypeVariables,
 	GADTs,
-	TypeSynonymInstances,
 	TypeFamilies,
 	Rank2Types,
-	FlexibleContexts,
-	FlexibleInstances,
-	MultiParamTypeClasses
+	FlexibleContexts
 	#-}
 module Potential.Assembly
 	( Reg(..)
 	, Instr(..)
 	, Deref(..)
-	, PState(..), psGet, psPut, psModify
-	, runCode, Code
 	, Function(..), isFn
+	, IxCode(..), ASMable(..)
 	) where
 
 import Prelude( String, Integer, undefined, (++), ($) )
@@ -25,45 +21,18 @@ import Data.Maybe
 import Data.Word
 
 import Potential.MachineState( Reg )
-import Potential.IxCode
 import Potential.Constraints
-import Potential.IxMonad
-import Potential.IxMonad.Constrained
-import Potential.IxMonad.State
+import Potential.IxMonad.IxMonad
 import Potential.IxMonad.Writer
-import Potential.IxMonad.PState
 
-data PState ct x y a = PState { runPState :: x -> (a, y) }
+class (IxMonad m, IxMonadWriter [Instr] m) => IxCode m where type Constraints m
 
-instance IxFunctor PState where
-  fmap f (ps) = PState $ \x ->  let (a, y) = runPState ps x
-				in (f a, y)
-
-instance IxMonad PState where
-  unsafeReturn a = PState $ \s -> (a, undefined)
-  ps >>= m = PState $ \s1 -> let (a, s2) = runPState ps s1
-			     in runPState (m a) s2
-
-instance IxPState PState where
-  psGet   = unmodeled  $ PState $ \s -> (s, s)
-  psPut s = composable $ PState $ \_ -> ((), s)
-
-type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
-
-instance IxCode (Code c) where type Constraints (Code c) = c
-instance ASMable (Code c) Instr where
-  asm cnstrts code = let (_, asmcode, _) = runCode code cnstrts undefined
-		     in asmcode
-
-runCode :: Code c ct x y a -> c -> x -> (a, [Instr], y)
-runCode code constr input =
-	let ((a, w), y) =
-		runPState (runIxWriterT (runIxConstrainedT code constr)) input
-	in (a, w, y)
+class IxCode m => ASMable m where
+  asm :: Constraints m -> m ct x y a -> [Instr]
 
 data Function m assumes returns =
      Fn { fnname   :: String
-	, body     :: (IxCode m, ASMable m Instr) =>
+	, body     :: (IxCode m, ASMable m) =>
 			m Terminal assumes returns ()
 	}
 isFn :: Function m assumes returns -> Function m assumes returns
