@@ -43,32 +43,15 @@ primRet _ = terminal $ unsafeReturn ()
 
 -- we do a forget to avoid an infinite type error
 -- any way to get around this?
-{-
-jmp dst = instr ( Jmp (arg dst) )
-	>>> pGet >>>= \ms ->
-	primJmp (fromPtr64 $ get ms dst) $ primForget dst ms >>>= \retms ->
-	pPut retms
--}
-
 sjmp fn =
      do assertFunction fn
 	instr ( SJmp fn )
 	primJmp (body fn)
 
-{-
-call dst = instr ( Call (arg dst) )
-	>>> pGet >>>= \ms ->
-	let stack  = get ms rsp
-	in primPush (undefined) stack >>>= \stack' ->
-	let ms' = set ms rsp stack'
-	in primCall (fromPtr64 $ get ms dst) $ primForget dst ms' >>>= \retms ->
-	pPut retms
--}
-
 scall fn =
      do assertFunction fn
 	instr ( SCall fn )
-	stack <- get rsp
+	stack  <- get rsp
 	stack' <- primPush (undefined) stack
 	set rsp stack'
 	primCall (body fn)

@@ -70,11 +70,11 @@ evaluateTypes :: IxMonad m
 	a
 evaluateTypes a = a
 
-get field = lift $ lift $
+get field =
      do ms <- psGet
         let fdata = get' field ms
         return fdata
-set field new = lift $ lift $ psModify (\ms -> set' field new ms)
+set field new = psModify (\ms -> set' field new ms)
 
 getConstraints :: IxCode m => m Unmodeled x x (Constraints m)
 getConstraints = return undefined
@@ -97,6 +97,7 @@ comment s = instr $ Cmt s
 assertRegister r = let _ = isArg r
 		   in unmodeled $ return ()
 
+assertFunction :: IxCode m => Function m assumes returns -> m Unmodeled x x ()
 assertFunction fn = let _ = isFn fn
 		    in unmodeled $ return ()
 

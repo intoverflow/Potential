@@ -19,9 +19,10 @@ pos = do loc <- location
 	 p <- [| (filename, fileline) :: (String, Int) |]
 	 return p
 
-asCode :: String
-       -> Code c Terminal assumes returns ()
-       -> Function (Code c) assumes returns
+asCode :: IxCode m
+	=> String
+	-> m Terminal assumes returns ()
+	-> Function m assumes returns
 asCode fnname c =
      Fn { fnname    = fnname
 	, body      = c

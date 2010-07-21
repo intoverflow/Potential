@@ -6,6 +6,7 @@
 	EmptyDataDecls,
 	Rank2Types,
 	MultiParamTypeClasses,
+	TypeSynonymInstances,
 	FlexibleContexts,
 	FlexibleInstances,
 	UndecidableInstances
@@ -25,12 +26,16 @@ import Potential.Size
 import Potential.Core
 import Potential.Printing -- temporary, used in a TODO
 
+import Potential.IxCode
 import Potential.IxMonad.Region
 import Potential.IxMonad.Writer
 
 data Memory -- used to tag a region as a Memory region
 type MemRegion r m = Region Memory r m
 type MemSubRegion r s m ct = SubRegion Memory r s m ct
+
+instance IxCode m => IxCode (MemRegion r m) where
+  type Constraints (MemRegion r m) = Constraints m
 
 
 -- A pointer, bound to region r

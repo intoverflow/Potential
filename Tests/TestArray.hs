@@ -11,7 +11,12 @@ testProjector =
 
 testInjector =
      do nestMemoryRegion $ \sr ->
-	     do newInterruptDescriptionTable rax
+	     do scall doAlloc
+		-- newInterruptDescriptionTable rax
 		inj_overflow_InterruptGate_0 r10 rax sr
+	ret
+
+doAlloc = asCode "doAlloc" $
+     do newInterruptDescriptionTable rax
 	lift $ ret
 

@@ -31,14 +31,9 @@ import Potential.IxMonad
 import Potential.IxMonad.Constrained
 import Potential.IxMonad.State
 import Potential.IxMonad.Writer
+import Potential.IxMonad.PState
 
 data PState ct x y a = PState { runPState :: x -> (a, y) }
-
-psGet   = unmodeled  $ PState $ \s -> (s, s)
-psPut s = composable $ PState $ \_ -> ((), s)
-psModify f =
-     do a <- psGet
-	psPut $ f a
 
 instance IxFunctor PState where
   fmap f (ps) = PState $ \x ->  let (a, y) = runPState ps x
@@ -48,6 +43,10 @@ instance IxMonad PState where
   unsafeReturn a = PState $ \s -> (a, undefined)
   ps >>= m = PState $ \s1 -> let (a, s2) = runPState ps s1
 			     in runPState (m a) s2
+
+instance IxPState PState where
+  psGet   = unmodeled  $ PState $ \s -> (s, s)
+  psPut s = composable $ PState $ \_ -> ((), s)
 
 type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
 
