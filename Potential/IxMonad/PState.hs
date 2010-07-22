@@ -9,7 +9,7 @@
         TypeFamilies
 	#-}
 module Potential.IxMonad.PState
-	( IxPState(..), PState, runCode, Code
+	( IxPState(..), PState, runCode, Code, isCode
 	) where
 
 import Prelude( undefined, ($) )
@@ -41,6 +41,9 @@ instance IxPState PState where
   psPut s = composable $ PState $ \_ -> ((), s)
 
 type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
+
+isCode :: (Code c) Unmodeled x x ()
+isCode = return ()
 
 instance (IxMonadWriter [Instr] (Code c)) =>
   IxCode (Code c) where type Constraints (Code c) = c

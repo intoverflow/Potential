@@ -6,7 +6,7 @@ module Potential
 	, CB0(..), CB1(..), Ptr64, FrameBasePtr64, Int64, Stack
 	, withMemoryRegion, nestMemoryRegion
 	, asm, renderFn, getType, getTypeOf
-	, asCode, Function
+	, asCode, Function, isCode
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, cmp, sje, assertPrivLevelKernel
 	, array
@@ -28,6 +28,7 @@ import Potential.Flow
 import Potential.Functions
 import Potential.Integer
 import Potential.IxMonad
+import Potential.IxMonad.PState (isCode)
 import Potential.MachineState
 import Potential.Mov
 import Potential.Pointer
