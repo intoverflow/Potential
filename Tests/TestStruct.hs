@@ -78,39 +78,49 @@ import Potential
 
 |]
 
-testProjector = -- asCode "testProjector" $
-     do proj_InterruptGate_8 rax rbx
-	lift $ ret
+testProjector = asCode "testProjector" $
+     do lift $ isCode
+	proj_InterruptGate_8 rax rbx
+	ret
 
 testField = asCode "testField" $
-     do proj_InterruptGate_0_dpl rax
+     do isCode
+	proj_InterruptGate_0_dpl rax
 	ret
 
 testInjectField = asCode "testInjectField" $
-     do inj_InterruptGate_8_offset_hi rax rbx
+     do isCode
+	inj_InterruptGate_8_offset_hi rax rbx
 	inj_InterruptGate_0_ist r10 r11
 	pop r10
 	inj_InterruptGate_0_dpl r10 r11
 	ret
 
 testNew = asCode "testNew" $
-     do withMemoryRegion $ evaluateTypes $
+     do isCode
+	withMemoryRegion $ evaluateTypes $
 	     do newInterruptGate r11
-		lift $ mov r10 r11
+		mov r10 r11
 	ret
 
-init = nestMemoryRegion $ \sr ->
-     do newInterruptGate rax
-	lift $ pop r11
-	inj_InterruptGate_0 r11 rax sr
-	-- This below causes failure *hooray!*
-	-- inj_InterruptGate_8 r12 rax sr
-
-init2 = nestMemoryRegion $ \sr1 ->
-     do nestMemoryRegion $ \sr2 ->
+init = asCode "init" $
+     do lift $ isCode
+	nestMemoryRegion $ \sr ->
 	     do newInterruptGate rax
-		lift $ pop r10
-		inj_InterruptGate_0 r10 rax sr2
-	lift $ pop r10
-	inj_InterruptGate_8 r10 rax sr1
+		pop r11
+		inj_InterruptGate_0 r11 rax sr
+		-- This below causes failure *hooray!*
+		-- inj_InterruptGate_8 r12 rax sr
+	ret
+
+init2 = asCode "init2" $
+     do lift $ isCode
+	nestMemoryRegion $ \sr1 ->
+	     do nestMemoryRegion $ \sr2 ->
+		     do newInterruptGate rax
+			pop r10
+			inj_InterruptGate_0 r10 rax sr2
+		pop r10
+		inj_InterruptGate_8 r10 rax sr1
+	ret
 

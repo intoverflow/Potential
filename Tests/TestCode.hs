@@ -16,21 +16,25 @@ swap r1 r2 =
 	comment ("swap complete")
 
 testSwap = asCode "testSwap" $
-     do swap rax rbx
+     do isCode
+	swap rax rbx
 	ret
 
 testMov = asCode "testMov" $
-     do mov rax rbx
+     do isCode
+	mov rax rbx
 	ret
 
 testPopSwap = asCode "testPopSwap" $
-     do pop rax
+     do isCode
+	pop rax
 	pop rbx
 	swap rax rbx
 	ret
 
 testCmp = asCode "testCmp" $
-     do pop rax
+     do isCode
+	pop rax
 	pop rbx
 	rabxCmp <- cmp rax rbx
 	sje rabxCmp doesNothing (do
@@ -39,11 +43,13 @@ testCmp = asCode "testCmp" $
 		ret)
 
 doesNothing = asCode "doesNothing" $
-     do pop rbx
+     do isCode
+	pop rbx
 	mov rbx rax
 	ret
 
 testPrivLevelKernel = asCode "testPrivLevelKernel" $
-     do assertPrivLevelKernel
+     do isCode
+	assertPrivLevelKernel
 	ret
 
