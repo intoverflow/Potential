@@ -3,7 +3,7 @@ module PC.Compiler where
 
 import Control.Monad.Reader
 import GHC
-import GHC.Paths (libdir) -- this is a Cabal thing
+import GHC.Paths (libdir) 		-- this is a Cabal thing
 import DynFlags (defaultDynFlags)	-- this is a -package ghc thing
 
 import Outputable
@@ -30,11 +30,13 @@ compileFile total n targetFile =
 	res <- liftIO $ defaultErrorHandler defaultDynFlags $
 	     do runGhc (Just libdir) $
 		     do dflags <- getSessionDynFlags
-			setSessionDynFlags (dflags{ ctxtStkDepth = 160 })
+			setSessionDynFlags (dflags{ ctxtStkDepth = 160
+						  , objectDir = Just "temp"
+						  , hiDir = Just "temp" })
 			target <- guessTarget targetFile Nothing
 			setTargets [target]
 			load LoadAllTargets
-			modSum <- getModSummary $ mkModuleName "B"
+			modSum <- getModSummary $ mkModuleName "Tests.TestCode"
 			p <- parseModule modSum
 			t <- typecheckModule p
 			d <- desugarModule t
@@ -43,6 +45,6 @@ compileFile total n targetFile =
 			c <- return $ coreModule d
 			g <- getModuleGraph
 			mapM showModule g     
-			return $ (parsedSource d, "/n-----/n", typecheckedSource d)
+			return $ typecheckedSource d
 	liftIO $ print $ showSDoc (ppr res)
 
