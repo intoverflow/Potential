@@ -36,7 +36,7 @@ compileFile total n targetFile =
 			target <- guessTarget targetFile Nothing
 			setTargets [target]
 			load LoadAllTargets
-			modSum <- getModSummary $ mkModuleName "Tests.TestCode"
+			modSum <- getModSummary $ mkModuleName targetFile
 			p <- parseModule modSum
 			t <- typecheckModule p
 			d <- desugarModule t
@@ -45,6 +45,6 @@ compileFile total n targetFile =
 			c <- return $ coreModule d
 			g <- getModuleGraph
 			mapM showModule g     
-			return $ typecheckedSource d
+			return $ parsedSource d
 	liftIO $ print $ showSDoc (ppr res)
 
