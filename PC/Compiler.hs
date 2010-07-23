@@ -6,6 +6,8 @@ import GHC
 import GHC.Paths (libdir) 		-- this is a Cabal thing
 import DynFlags (defaultDynFlags)	-- this is a -package ghc thing
 
+import Digraph (flattenSCCs)
+
 import Outputable
 
 import PC.Config
@@ -28,23 +30,30 @@ compileFile total n targetFile =
 		"[" ++ show n ++ " of " ++ show total ++ "] Compiling " ++
 		show targetFile ++ "..."
 	res <- liftIO $ defaultErrorHandler defaultDynFlags $
-	     do runGhc (Just libdir) $
-		     do dflags <- getSessionDynFlags
-			setSessionDynFlags (dflags{ ctxtStkDepth = 160
-						  , objectDir = Just "temp"
-						  , hiDir = Just "temp" })
-			target <- guessTarget targetFile Nothing
-			setTargets [target]
-			load LoadAllTargets
-			modSum <- getModSummary $ mkModuleName targetFile
-			p <- parseModule modSum
-			t <- typecheckModule p
-			d <- desugarModule t
-			l <- loadModule d
-			n <- getNamesInScope
-			c <- return $ coreModule d
-			g <- getModuleGraph
-			mapM showModule g     
-			return $ parsedSource d
-	liftIO $ print $ showSDoc (ppr res)
+			  runGhc (Just libdir) (doCompileFile targetFile)
+	liftIO $ putStrLn $ showSDoc (ppr res)
+
+doCompileFile targetFile =
+     do dflags <- getSessionDynFlags
+	setSessionDynFlags (dflags{ ctxtStkDepth = 160
+				  , objectDir = Just "temp"
+				  , hiDir = Just "temp" })
+	target <- guessTarget targetFile Nothing
+	setTargets [target]
+	-- Dependency analysis
+	-- TODO: make sure client code isn't cheating by importing forbidden
+	-- fruit.
+	modGraph <- do mg <- depanal [] False
+		       return $ flattenSCCs $
+				topSortModuleGraph False mg Nothing
+	let targetMod  = last modGraph
+	    targetName = ms_mod_name targetMod
+	-- Load the code
+	load LoadAllTargets
+	-- Figure out the top level definitions for the target
+	maybeTargetModInfo  <- getModuleInfo (ms_mod targetMod)
+	let targetTopLevel = case maybeTargetModInfo of
+				Nothing -> Nothing
+				Just targetModInfo -> Just $ modInfoExports targetModInfo
+	return (targetName, targetTopLevel)
 
