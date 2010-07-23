@@ -15,24 +15,24 @@ swap r1 r2 =
 	pop r2
 	comment ("swap complete")
 
-testSwap = asCode "testSwap" $
+testSwap = defun $
      do isCode
 	swap rax rbx
 	ret
 
-testMov = asCode "testMov" $
+testMov = defun $
      do isCode
 	mov rax rbx
 	ret
 
-testPopSwap = asCode "testPopSwap" $
+testPopSwap = defun $
      do isCode
 	pop rax
 	pop rbx
 	swap rax rbx
 	ret
 
-testCmp = asCode "testCmp" $
+testCmp = defun $
      do isCode
 	pop rax
 	pop rbx
@@ -42,13 +42,13 @@ testCmp = asCode "testCmp" $
 		mov rax rbx
 		ret)
 
-doesNothing = asCode "doesNothing" $
+doesNothing = defun $
      do isCode
 	pop rbx
 	mov rbx rax
 	ret
 
-testPrivLevelKernel = asCode "testPrivLevelKernel" $
+testPrivLevelKernel = defun $
      do isCode
 	assertPrivLevelKernel
 	ret

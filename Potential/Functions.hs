@@ -4,36 +4,50 @@
 	Rank2Types,
 	FlexibleContexts #-}
 module Potential.Functions
-	( asCode, renderFn, asm
+	( defun, renderFn, asm
 	, getType, getTypeOf
 	) where
 
-import Language.Haskell.TH
+import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.TH.Syntax as THS
 
 import Potential.Core hiding (return, (>>), (>>=), fail)
 import Potential.Printing
 
-pos = do loc <- location
-	 let filename = loc_filename loc
-	     fileline = fst $ loc_start loc
+{-
+pos = do loc <- TH.location
+	 let filename = TH.loc_filename loc
+	     fileline = fst $ TH.loc_start loc
 	 p <- [| (filename, fileline) :: (String, Int) |]
 	 return p
+-}
 
-asCode :: IxCode m
-	=> String
-	-> m Terminal assumes returns ()
+defun :: IxCode m
+	-- => String
+	=> m Terminal assumes returns ()
 	-> Function m assumes returns
-asCode fnname c =
-     Fn { fnname    = fnname
-	, body      = c
-	}
+	-- -> TH.Q [TH.Dec]
+defun c =
+     Fn { body = c }
+{-
+     do let name = TH.mkName fnname
+	loc <- TH.location
+	let filename = TH.loc_filename loc
+	    fileline = fst $ TH.loc_start loc
+	fndef  <- [| Fn { fnname   = fnname
+			, body     = c
+			, filename = filename
+			, fileline = fileline
+			} |]
+	return [ TH.ValD (TH.VarP name) (TH.NormalB fndef) [] ]
+-}
 
 -- renderFn :: (ASMable m i, Show i) => Function m assumes returns -> IO ()
 renderFn c =
      do { let asmcode = (asm ConstraintsOff $ body c) :: [Instr]
 	; putStrLn $ fnname c ++ ":"
-	-- ; putStrLn $
-	--	"    // defined at " ++ filename c ++ ":" ++ show (fileline c)
+	; putStrLn $
+	    "    // defined at " ++ filename c ++ ":" ++ show (fileline c)
 	; mapM_ (\l -> putStrLn $ "    " ++ show l) asmcode
 	}
 

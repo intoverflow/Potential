@@ -17,11 +17,11 @@ module Potential.Core
 	, evaluateTypes
 
 	-- stuff that comes from Potential.Assembly
-	, Reg(..), Instr(..), Deref(..), Code, runCode, Function(..)
+	, Reg(..), Instr(..), Deref(..), Function(..)
 	, Unmodeled, Composable, Terminal, unmodeled, composable, terminal
 
 	-- stuff that comes from PState
-	, IxCode, ASMable, asm
+	, IxCode, ASMable, asm, isCode, Code
 
 	-- stuff that comes from IxMonad
 	, Composition(..)

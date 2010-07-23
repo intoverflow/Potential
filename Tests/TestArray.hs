@@ -6,12 +6,12 @@ module Tests.TestArray where
 import Potential
 import Potential.Machine.IDT
 
-testProjector = asCode "testInjector" $
+testProjector = defun $
      do lift $ isCode
 	proj_InterruptDescriptionTable_nMI rax rbx
 	ret
 
-testInjector = asCode "testInjector" $
+testInjector = defun $
      do lift $ isCode
 	nestMemoryRegion $ \sr ->
 	     do scall doAlloc
@@ -19,7 +19,7 @@ testInjector = asCode "testInjector" $
 		inj_overflow_InterruptGate_0 r10 rax sr
 	ret
 
-doAlloc = asCode "doAlloc" $
+doAlloc = defun $
      do lift $ isCode
 	newInterruptDescriptionTable rax
 	ret

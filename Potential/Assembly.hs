@@ -15,7 +15,7 @@ module Potential.Assembly
 	, IxCode(..), ASMable(..)
 	) where
 
-import Prelude( String, Integer, undefined, (++), ($) )
+import Prelude( String, Integer, Int, foldl, undefined, (++), ($) )
 
 import Data.Maybe
 import Data.Word
@@ -34,7 +34,10 @@ data Function m assumes returns =
      Fn { fnname   :: String
 	, body     :: (IxCode m, ASMable m) =>
 			m Terminal assumes returns ()
+	, filename :: String
+	, fileline :: Int
 	}
+
 isFn :: Function m assumes returns -> Function m assumes returns
 isFn f = f
 

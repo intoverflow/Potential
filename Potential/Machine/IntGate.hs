@@ -16,7 +16,7 @@ import Potential.Stack
 import Potential.Flow
 import Potential.Mov
 
-import Potential.Functions (asCode)
+import Potential.Functions (defun)
 import Potential.DataStructure
 
 [$struct_diagram|
@@ -54,8 +54,9 @@ defineDataSize ''NotPresent 1
 
 -- rax contains Ptr to the interrupt gate
 -- will return dpl in rbx
-getDPL = -- asCode "getDPL" $
-     do proj_InterruptGate_0 rax rbx
-	lift $ proj_InterruptGate_0_dpl rbx
-	lift $ ret
+getDPL = defun $
+     do lift $ isCode
+	proj_InterruptGate_0 rax rbx
+	proj_InterruptGate_0_dpl rbx
+	ret
 

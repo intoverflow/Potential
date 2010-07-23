@@ -3,12 +3,11 @@ module PC.Compiler where
 
 import Control.Monad.Reader
 import GHC
+import Name
 import GHC.Paths (libdir) 		-- this is a Cabal thing
 import DynFlags (defaultDynFlags)	-- this is a -package ghc thing
-
+import Outputable (showSDoc, ppr)
 import Digraph (flattenSCCs)
-
-import Outputable
 
 import PC.Config
 
@@ -31,7 +30,18 @@ compileFile total n targetFile =
 		show targetFile ++ "..."
 	res <- liftIO $ defaultErrorHandler defaultDynFlags $
 			  runGhc (Just libdir) (doCompileFile targetFile)
-	liftIO $ putStrLn $ showSDoc (ppr res)
+	case res of
+	  Nothing   -> liftIO $ putStrLn "Error: Nothing returned"
+	  Just (nm, exps) -> liftIO $
+		     do putStrLn $ (showSDoc $ ppr nm) ++ ":"
+			mapM_ processExport exps
+  where processExport e =
+	     do let definedName = getOccString e
+		    formalName  = showSDoc $ ppr e
+		    loc         = showSDoc $ ppr $ getSrcLoc e
+		putStrLn $ "  " ++ definedName ++
+			   ": (" ++ formalName ++ ":" ++ loc ++ ")"
+					 
 
 doCompileFile targetFile =
      do dflags <- getSessionDynFlags
@@ -52,8 +62,12 @@ doCompileFile targetFile =
 	load LoadAllTargets
 	-- Figure out the top level definitions for the target
 	maybeTargetModInfo  <- getModuleInfo (ms_mod targetMod)
-	let targetTopLevel = case maybeTargetModInfo of
-				Nothing -> Nothing
-				Just targetModInfo -> Just $ modInfoExports targetModInfo
-	return (targetName, targetTopLevel)
+	case maybeTargetModInfo of
+	  Nothing -> failNoModInfo
+	  Just targetModInfo -> compileMod targetName
+					   (modInfoExports targetModInfo)
+  where failNoModInfo = return Nothing
+
+compileMod targetName targetExports =
+	return $ Just ( targetName , targetExports )
 
