@@ -54,7 +54,7 @@ defineDataSize ''NotPresent 1
 
 -- rax contains Ptr to the interrupt gate
 -- will return dpl in rbx
-getDPL = defun $
+getDPL = defun "getDPL" $
      do lift $ isCode
 	proj_InterruptGate_0 rax rbx
 	proj_InterruptGate_0_dpl rbx

@@ -13,6 +13,7 @@ module Potential.Assembly
 	, Deref(..)
 	, Function(..), isFn
 	, IxCode(..), ASMable(..)
+	, funName
 	) where
 
 import Prelude( String, Integer, Int, foldl, undefined, (++), ($) )
@@ -34,12 +35,13 @@ data Function m assumes returns =
      Fn { fnname   :: String
 	, body     :: (IxCode m, ASMable m) =>
 			m Terminal assumes returns ()
-	, filename :: String
-	, fileline :: Int
 	}
 
 isFn :: Function m assumes returns -> Function m assumes returns
 isFn f = f
+
+funName :: (Constraints m ~ ConstraintsOff) => Function m assumes returns -> String
+funName f = fnname f
 
 
 -- deref mem_location (%ebx, %ecx, 4) means [ebx + ecx*4 + mem_location]

@@ -1,11 +1,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 module PC.Compiler where
 
+import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.Trans
 import Language.Haskell.Interpreter
+import Language.Haskell.Interpreter.Unsafe
 
 import qualified GHC as GHC
+import qualified Outputable as Out
 
 import PC.Config
 
@@ -40,25 +43,38 @@ say = liftIO . putStrLn
 doCompileFile :: FilePath -> InterpreterT (ReaderT Config IO) ()
 doCompileFile targetFile =
      do -- set our flags
-	runGhc $ do dflags <- GHC.getSessionDynFlags
-		    GHC.setSessionDynFlags $
-			  dflags{ GHC.ctxtStkDepth = 160
-				, GHC.objectDir = Just "temp"
-				, GHC.hiDir = Just "temp" }
+	unsafeSetGhcOption "-fcontext-stack=160"
 	-- load the modules
 	loadModules [targetFile]
 	loaded <- getLoadedModules
 	-- grab the target module
 	let mod = head loaded
-	say $ "Primary module: " ++ show mod
-	interpd <- isModuleInterpreted mod
-	if interpd
-	  then say "...interpreted"
-	  else say "...NOT interpreted"
+	say $ "Primary module: " ++ mod
 	-- load into scope
 	setTopLevelModules [mod]
-	setImports []
+	setImportsQ [("Potential.Assembly", Just "Potential.Assembly")]
 	-- analyze the module
 	exports <- getModuleExports mod
-	mapM_ (say . show) exports
+	mapM_ analyzeExport exports
+
+analyzeExport export =
+     do isFn <- typeChecks $ "Potential.Assembly.isFn " ++ (name export)
+	when isFn $
+	     do let strname = name export
+		strname' <- interpret ("Potential.Assembly.funName " ++ strname)
+				      (as :: String)
+		say $ strname
+		when (strname /= strname') $
+		     say $ "  Warning: names do not match.  " ++
+			   strname ++ " /= " ++ strname'
+		typ <- typeOf strname
+		-- say $ "  type: " ++ typ
+		loc <- getExportLoc export
+		say $ "  loc: " ++ loc
+		
+
+getExportLoc export = runGhc $
+     do (n:_) <- GHC.parseName (name export)
+	let loc = GHC.nameSrcSpan n
+	return $ Out.showSDoc $ Out.ppr loc
 

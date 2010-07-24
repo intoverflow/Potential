@@ -78,17 +78,17 @@ import Potential
 
 |]
 
-testProjector = defun $
+testProjector = defun "testProjector" $
      do lift $ isCode
 	proj_InterruptGate_8 rax rbx
 	ret
 
-testField = defun $
+testField = defun "testField" $
      do isCode
 	proj_InterruptGate_0_dpl rax
 	ret
 
-testInjectField = defun $
+testInjectField = defun "testInjectField" $
      do isCode
 	inj_InterruptGate_8_offset_hi rax rbx
 	inj_InterruptGate_0_ist r10 r11
@@ -96,14 +96,14 @@ testInjectField = defun $
 	inj_InterruptGate_0_dpl r10 r11
 	ret
 
-testNew = defun $
+testNew = defun "testNew" $
      do isCode
 	withMemoryRegion $ evaluateTypes $
 	     do newInterruptGate r11
 		mov r10 r11
 	ret
 
-init = defun $
+init = defun "init" $
      do lift $ isCode
 	nestMemoryRegion $ \sr ->
 	     do newInterruptGate rax
@@ -113,7 +113,7 @@ init = defun $
 		-- inj_InterruptGate_8 r12 rax sr
 	ret
 
-init2 = defun $
+init2 = defun "init" $
      do lift $ isCode
 	nestMemoryRegion $ \sr1 ->
 	     do nestMemoryRegion $ \sr2 ->
