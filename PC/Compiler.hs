@@ -1,7 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 module PC.Compiler where
 
-import Control.Monad.Reader
+import Control.Monad.Reader hiding (liftIO)
+import qualified Control.Monad.Reader as CMR
+import MonadUtils hiding (liftIO)
+import qualified MonadUtils as MU
+import Exception
+
 import GHC
 import Name
 import GHC.Paths (libdir) 		-- this is a Cabal thing
@@ -11,7 +16,7 @@ import Digraph (flattenSCCs)
 
 import PC.Config
 
-compile :: MonadIO m => Config -> m ()
+compile :: Config -> IO ()
 compile cfg = runReaderT compile' cfg
 
 on_source :: MonadReader Config m => (Int -> Int -> FilePath -> m ()) -> m ()
@@ -19,30 +24,21 @@ on_source f =
      do cfg <- ask
 	sequence_ $ zipWith (f $ length $ source cfg) [1 .. ] (source cfg)
 
-compile' :: MonadIO m => ReaderT Config m ()
+compile' :: ReaderT Config IO ()
 compile' =
      do on_source compileFile
 
-compileFile :: MonadIO m => Int -> Int -> FilePath -> ReaderT Config m ()
+compileFile :: Int -> Int -> FilePath -> ReaderT Config IO ()
 compileFile total n targetFile =
-     do liftIO $ putStrLn $
+     do CMR.liftIO $ putStrLn $
 		"[" ++ show n ++ " of " ++ show total ++ "] Compiling " ++
 		show targetFile ++ "..."
-	res <- liftIO $ defaultErrorHandler defaultDynFlags $
-			  runGhc (Just libdir) (doCompileFile targetFile)
-	case res of
-	  Nothing   -> liftIO $ putStrLn "Error: Nothing returned"
-	  Just (nm, exps) -> liftIO $
-		     do putStrLn $ (showSDoc $ ppr nm) ++ ":"
-			mapM_ processExport exps
-  where processExport e =
-	     do let definedName = getOccString e
-		    formalName  = showSDoc $ ppr e
-		    loc         = showSDoc $ ppr $ getSrcLoc e
-		putStrLn $ "  " ++ definedName ++
-			   ": (" ++ formalName ++ ":" ++ loc ++ ")"
-					 
+	CMR.liftIO $
+		defaultErrorHandler defaultDynFlags $
+		    runGhcT (Just libdir) (doCompileFile targetFile)
+	CMR.liftIO $ putStrLn "  ...done"
 
+doCompileFile :: FilePath -> GhcT IO ()
 doCompileFile targetFile =
      do dflags <- getSessionDynFlags
 	setSessionDynFlags (dflags{ ctxtStkDepth = 160
@@ -60,14 +56,29 @@ doCompileFile targetFile =
 	    targetName = ms_mod_name targetMod
 	-- Load the code
 	load LoadAllTargets
+	parsed <- parseModule targetMod
+	typed  <- typecheckModule parsed
+	loadModule typed
 	-- Figure out the top level definitions for the target
 	maybeTargetModInfo  <- getModuleInfo (ms_mod targetMod)
 	case maybeTargetModInfo of
-	  Nothing -> failNoModInfo
-	  Just targetModInfo -> compileMod targetName
-					   (modInfoExports targetModInfo)
-  where failNoModInfo = return Nothing
+	  Nothing -> MU.liftIO $ putStrLn "could not get moduleInfo"
+	  Just targetModInfo -> compileModule targetName targetMod targetModInfo
 
-compileMod targetName targetExports =
-	return $ Just ( targetName , targetExports )
+compileModule name mod modInfo =
+     do p <- parseModule mod
+	let loc = getLoc $ pm_parsed_source p
+	MU.liftIO  $ do putStrLn $ (showSDoc $ ppr name)
+			putStrLn "\ntop level:"
+			mapM_ processTopLev (modInfoTyThings modInfo)
+			putStrLn "\nexports:"
+			mapM_ processExport (modInfoExports modInfo)
+			putStrLn "\nsrcloc:"
+			putStrLn $ showSDoc $ pprDefnLoc loc
+  where processTopLev ty =
+	     do putStrLn $ (showSDoc $ ppr ty) ++ " at " ++
+			   (showSDoc $ pprDefnLoc $ nameSrcSpan $ getName ty)
+	processExport e =
+	     do putStrLn $ (showSDoc $ ppr e) ++ " at " ++
+			   (showSDoc $ pprDefnLoc $ nameSrcSpan e)
 
