@@ -12,6 +12,7 @@ module Potential.MachineState ( Reg(..), MS
 			      , rcmp, ralloc
 			      ) where
 
+import Prelude
 import Potential.MachineStateBuilder
 
 data Reg =

@@ -4,6 +4,7 @@ module Potential.Array.CommonQQ
 	, parseArrayPat
 	) where
 
+import Prelude
 import Data.Generics.Aliases (extQ)
 import qualified Language.Haskell.TH as TH
 import Language.Haskell.TH.Quote (dataToExpQ, dataToPatQ)

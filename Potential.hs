@@ -6,7 +6,7 @@ module Potential
 	, CB0(..), CB1(..), Ptr64, FrameBasePtr64, Int64, Stack
 	, withMemoryRegion, nestMemoryRegion
 	, asm, renderFn, getType, getTypeOf
-	, isFn, funName
+	, isFn, funName, getAssembly
 	, defun, Function, isCode
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, cmp, sje, assertPrivLevelKernel
@@ -16,7 +16,7 @@ module Potential
 	, (:<=), (:==), (:<)
 	, (>>), (>>=), return, fail, lift
 	, evaluateTypes
-	, fromIntegral, fromInteger, ($), show, (++)
+	, fromIntegral, fromInteger, ($), show, (++), Char, String, Int, Integer
 	) where
 
 import Potential.Array
@@ -39,5 +39,5 @@ import Potential.Stack
 
 import Potential.Machine.Flags
 
-import Prelude (fromIntegral, fromInteger, ($), show, (++))
+import Prelude hiding (undefined, (>>), (>>=), return, fail)
 

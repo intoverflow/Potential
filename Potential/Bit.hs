@@ -4,6 +4,7 @@
 module Potential.Bit
 	( RB(..), CB0(..), CB1(..) ) where
 
+import Prelude
 import Potential.Size
 
 -- some basic data types

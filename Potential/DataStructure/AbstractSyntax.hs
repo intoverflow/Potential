@@ -11,6 +11,7 @@ module Potential.DataStructure.AbstractSyntax
 	, pretty_bit_show
 	) where
 
+import Prelude
 import Data.Typeable
 import Data.Data
 import qualified Language.Haskell.TH as TH

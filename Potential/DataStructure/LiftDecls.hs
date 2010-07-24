@@ -3,6 +3,7 @@
 	TypeSynonymInstances #-}
 module Potential.DataStructure.LiftDecls where
 
+import Prelude
 import Language.Haskell.TH
 import qualified Language.Haskell.TH.Syntax as THS
 -- Requires:

@@ -5,7 +5,7 @@ import PC.Config
 
 main :: IO ()
 main =
-     do putStrLn "Potential compiler 2010 http://potential-lang.org/\n"
+     do putStrLn "Potential compiler 2010 http://potential-lang.org/"
 	config <- getConfig
 	compile config
 

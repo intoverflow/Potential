@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Potential.DataStructure.StructDiagramQQ (struct_diagram) where
 
+import Prelude
 import Language.Haskell.TH.Quote
 import Text.ParserCombinators.Parsec
 

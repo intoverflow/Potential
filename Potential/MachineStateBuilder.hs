@@ -2,6 +2,7 @@
 	TemplateHaskell #-}
 module Potential.MachineStateBuilder (defineRegisters) where
 
+import Prelude
 import Language.Haskell.TH
 
 dataName reg = mkName $ "RR" ++ reg

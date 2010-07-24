@@ -7,6 +7,7 @@ module Potential.DataStructure.CommonParser
 	, fieldName
 	) where
 
+import Prelude
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as P
 import Text.ParserCombinators.Parsec.Language (haskellDef)

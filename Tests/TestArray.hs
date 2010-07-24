@@ -1,6 +1,3 @@
-{-# LANGUAGE
-	NoImplicitPrelude,
-	NoMonomorphismRestriction #-}
 module Tests.TestArray where
 
 import Potential

@@ -11,6 +11,7 @@ module Potential.Size where
 
 import Language.Haskell.TH
 
+import Prelude
 import Potential.Constraints
 
 class (ToInt (SZ a)) => HasSZ a where

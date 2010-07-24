@@ -1,5 +1,6 @@
 module Potential.Array.ArrayQQ (array) where
 
+import Prelude
 import Language.Haskell.TH.Quote
 import Text.ParserCombinators.Parsec
 

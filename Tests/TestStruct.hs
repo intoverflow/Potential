@@ -1,11 +1,3 @@
-{-# LANGUAGE
-	NoImplicitPrelude,
-	NoMonomorphismRestriction,
-	QuasiQuotes,
-	FlexibleContexts,
-	MultiParamTypeClasses,
-	UndecidableInstances,
-	TypeFamilies #-}
 module Tests.TestStruct where
 
 import Potential

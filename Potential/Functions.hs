@@ -8,6 +8,7 @@ module Potential.Functions
 	, getType, getTypeOf
 	) where
 
+import Prelude
 import Potential.Core hiding (return, (>>), (>>=), fail)
 import Potential.Printing
 

@@ -3,6 +3,7 @@ module Potential.Printing where
 
 import Numeric (showHex)
 
+import Prelude
 import Potential.MachineState( Reg(..) )
 import Potential.Assembly
 

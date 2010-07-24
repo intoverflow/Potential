@@ -1,13 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Potential.DataStructure.CodeGenerator where
-{-
-	( reifyStruct
-	, defineDataSize
-	, defineDataSize'
-	, on_partials
-	) where
--}
 
+import Prelude
 import qualified Language.Haskell.TH as TH
 
 import Potential.DataStructure.PartialRelation

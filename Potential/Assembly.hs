@@ -5,7 +5,8 @@
 	GADTs,
 	TypeFamilies,
 	Rank2Types,
-	FlexibleContexts
+	FlexibleContexts,
+	DeriveDataTypeable
 	#-}
 module Potential.Assembly
 	( Reg(..)
@@ -13,13 +14,14 @@ module Potential.Assembly
 	, Deref(..)
 	, Function(..), isFn
 	, IxCode(..), ASMable(..)
-	, funName
+	, funName, getAssembly
 	) where
 
 import Prelude( String, Integer, Int, foldl, undefined, (++), ($) )
 
 import Data.Maybe
 import Data.Word
+import Data.Typeable
 
 import Potential.MachineState( Reg )
 import Potential.Constraints
@@ -42,6 +44,10 @@ isFn f = f
 
 funName :: (Constraints m ~ ConstraintsOff) => Function m assumes returns -> String
 funName f = fnname f
+
+getAssembly :: (ASMable m, Constraints m ~ ConstraintsOff) =>
+		Function m assumes returns -> [Instr]
+getAssembly f = asm ConstraintsOff $ body f
 
 
 -- deref mem_location (%ebx, %ecx, 4) means [ebx + ecx*4 + mem_location]
@@ -81,5 +87,6 @@ data Instr =
  |  GoUpRegion
  |  ComeDownRegion
  |  TxOwnership
+  deriving Typeable
 
 

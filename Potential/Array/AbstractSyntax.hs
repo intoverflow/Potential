@@ -3,6 +3,7 @@
 	DeriveDataTypeable #-}
 module Potential.Array.AbstractSyntax where
 
+import Prelude
 import Data.Typeable
 import Data.Data
 import qualified Language.Haskell.TH as TH

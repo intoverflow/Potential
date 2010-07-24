@@ -1,5 +1,6 @@
 module Potential.DataStructure.StructQQ (struct) where
 
+import Prelude
 import Language.Haskell.TH.Quote
 import Text.ParserCombinators.Parsec
 

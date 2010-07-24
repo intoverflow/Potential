@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Potential.Array.CodeGenerator (reifyArray) where
 
+import Prelude
 import qualified Language.Haskell.TH as TH
 
 import Potential.DataStructure.LiftDecls
