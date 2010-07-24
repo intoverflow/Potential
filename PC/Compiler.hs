@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 module PC.Compiler where
 
+import Data.Maybe (fromJust)
 import Control.Monad.Reader hiding (liftIO)
 import qualified Control.Monad.Reader as CMR
 import MonadUtils hiding (liftIO)
@@ -56,9 +57,11 @@ doCompileFile targetFile =
 	    targetName = ms_mod_name targetMod
 	-- Load the code
 	load LoadAllTargets
-	parsed <- parseModule targetMod
-	typed  <- typecheckModule parsed
-	loadModule typed
+	mapM_ (\mod -> do let name_str = moduleNameString $ ms_mod_name mod
+			  MU.liftIO $ putStrLn $ "..." ++ name_str
+			  parseModule mod >>= typecheckModule >>= loadModule)
+	      modGraph
+	setContext (map ms_mod modGraph) [ms_mod targetMod]
 	-- Figure out the top level definitions for the target
 	maybeTargetModInfo  <- getModuleInfo (ms_mod targetMod)
 	case maybeTargetModInfo of
@@ -67,18 +70,19 @@ doCompileFile targetFile =
 
 compileModule name mod modInfo =
      do p <- parseModule mod
-	let loc = getLoc $ pm_parsed_source p
-	MU.liftIO  $ do putStrLn $ (showSDoc $ ppr name)
-			putStrLn "\ntop level:"
-			mapM_ processTopLev (modInfoTyThings modInfo)
-			putStrLn "\nexports:"
-			mapM_ processExport (modInfoExports modInfo)
-			putStrLn "\nsrcloc:"
-			putStrLn $ showSDoc $ pprDefnLoc loc
+	MU.liftIO $ putStrLn $ (showSDoc $ ppr name)
+	MU.liftIO $ putStrLn "\ntop level:"
+	mapM_ processTopLev (modInfoTyThings modInfo)
   where processTopLev ty =
-	     do putStrLn $ (showSDoc $ ppr ty) ++ " at " ++
-			   (showSDoc $ pprDefnLoc $ nameSrcSpan $ getName ty)
-	processExport e =
-	     do putStrLn $ (showSDoc $ ppr e) ++ " at " ++
-			   (showSDoc $ pprDefnLoc $ nameSrcSpan e)
+	     do let name_str = showSDoc $ ppr $ getName ty
+		    loc_str  = showSDoc $ pprDefnLoc $ nameSrcSpan $ getName ty
+		MU.liftIO $ putStrLn $ name_str
+		MU.liftIO $ putStrLn $ "  " ++ loc_str
+		gcatch (do typ <- exprType name_str
+			   let typ_str = showSDoc $ ppr typ
+			   MU.liftIO $ putStrLn $ "  Type " ++ typ_str)
+		       eCatcher
+
+eCatcher :: GhcException -> GhcT IO ()
+eCatcher e = MU.liftIO $ putStrLn $ show e
 
