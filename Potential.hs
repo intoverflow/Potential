@@ -6,6 +6,7 @@ module Potential
 	, CB0(..), CB1(..), Ptr64, FrameBasePtr64, Int64, Stack
 	, withMemoryRegion, nestMemoryRegion
 	, asm, renderFn, getType, getTypeOf
+	, isFn, funName
 	, defun, Function, isCode
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, cmp, sje, assertPrivLevelKernel

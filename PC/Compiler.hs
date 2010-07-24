@@ -52,16 +52,16 @@ doCompileFile targetFile =
 	say $ "Primary module: " ++ mod
 	-- load into scope
 	setTopLevelModules [mod]
-	setImportsQ [("Potential.Assembly", Just "Potential.Assembly")]
+	setImportsQ [("Potential", Just "Potential")]
 	-- analyze the module
 	exports <- getModuleExports mod
 	mapM_ analyzeExport exports
 
 analyzeExport export =
-     do isFn <- typeChecks $ "Potential.Assembly.isFn " ++ (name export)
+     do isFn <- typeChecks $ "Potential.isFn " ++ (name export)
 	when isFn $
 	     do let strname = name export
-		strname' <- interpret ("Potential.Assembly.funName " ++ strname)
+		strname' <- interpret ("Potential.funName " ++ strname)
 				      (as :: String)
 		say $ strname
 		when (strname /= strname') $
@@ -71,7 +71,9 @@ analyzeExport export =
 		-- say $ "  type: " ++ typ
 		loc <- getExportLoc export
 		say $ "  loc: " ++ loc
-		
+		code <- interpret ("Potential.renderFn " ++ strname)
+				  (as :: String)
+		say code
 
 getExportLoc export = runGhc $
      do (n:_) <- GHC.parseName (name export)

@@ -28,10 +28,9 @@ defun fnname c =
 
 -- renderFn :: (ASMable m i, Show i) => Function m assumes returns -> IO ()
 renderFn c =
-     do { let asmcode = (asm ConstraintsOff $ body c) :: [Instr]
-	; putStrLn $ fnname c ++ ":"
-	; mapM_ (\l -> putStrLn $ "    " ++ show l) asmcode
-	}
+     let asmcode = (asm ConstraintsOff $ body c) :: [Instr]
+     in unlines $ [fnname c ++ ":"] ++
+		  (map (\l -> "    " ++ show l) asmcode)
 
 
 getType :: Function (Code ConstraintsOn)
