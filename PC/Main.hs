@@ -6,6 +6,8 @@ import PC.Config
 main :: IO ()
 main =
      do putStrLn "Potential compiler 2010 http://potential-lang.org/"
-	config <- getConfig
-	compile config
+	k <- getConfig
+	case k of
+	  Right cfg -> doCompile cfg
+	  Left  ce  -> putStrLn $ "Configuration error: " ++ show ce
 
