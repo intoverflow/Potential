@@ -19,9 +19,9 @@ instance MonadState CompilerState (InterpreterT Compiler) where
   get = lift get
   put s = lift (put s)
 
-type Compiler = StateT CompilerState (ReaderT Config IO)
+type Compiler = StateT CompilerState (ReaderT Mode IO)
 
-runCompiler :: Compiler a -> Config -> CompilerState -> IO (a, CompilerState)
+runCompiler :: Compiler a -> Mode -> CompilerState -> IO (a, CompilerState)
 runCompiler compiler config compilerState =
   runReaderT (runStateT compiler compilerState) config
 

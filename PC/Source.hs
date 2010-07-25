@@ -20,10 +20,10 @@ data AssemblyCode =
 		 , floc  :: String
 		 , fcode :: [Instr] }
 
-analyzeFile :: Target -> InterpreterT Compiler [AssemblyCode]
+analyzeFile :: String -> InterpreterT Compiler [AssemblyCode]
 analyzeFile target =
-     do liftIO $ putStrLn $ "Compiling `" ++ show target ++ "'..."
-	doAnalyzeFile $ path target
+     do liftIO $ putStrLn $ "Compiling `" ++ target ++ "'..."
+	doAnalyzeFile target
 
 doAnalyzeFile :: FilePath -> InterpreterT Compiler [AssemblyCode]
 doAnalyzeFile targetFile =
