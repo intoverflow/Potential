@@ -38,24 +38,24 @@ instance Show Deref where
 
 instance Show Instr where
   show (Cmt s)     = "// " ++ s
-  show (Ld s d)    = "mov " ++ show s ++ " " ++ show d
-  show (Sto s d)   = "mov " ++ show s ++ " " ++ show d
-  show (Mov r1 r2) = "mov " ++ show r1 ++ " " ++ show r2
+  show (Ld s d)    = "mov " ++ show s ++ ", " ++ show d
+  show (Sto s d)   = "mov " ++ show s ++ ", " ++ show d
+  show (Mov r1 r2) = "mov " ++ show r1 ++ ", " ++ show r2
   show (Push r)    = "push " ++ show r
   show (Pop r)     = "pop " ++ show r
-  show (Cmp r1 r2) = "cmp " ++ show r1 ++ " " ++ show r2
+  show (Cmp r1 r2) = "cmp " ++ show r1 ++ ", " ++ show r2
   show (SJe f)     = "je " ++ fnname f
   show (Jne r)     = "jne " ++ show r
   show (Jmp r)     = "jmp " ++ show r
-  show (SJmp f)    = "jmp " ++ fnname f -- ++ " (defined at " ++ filename f ++ ":" ++ show (fileline f) ++ ")"
+  show (SJmp f)    = "jmp " ++ fnname f
   show (Call r)    = "call " ++ show r
-  show (SCall f)   = "call " ++ fnname f -- ++ " (defined at " ++ filename f ++ ":" ++ show (fileline f) ++ ")"
+  show (SCall f)   = "call " ++ fnname f
   show (Ret)       = "ret"
   show (Lidt r)    = "lidt " ++ show r
-  show (ShL i r)   = "shl " ++ show i ++ " " ++ show r
-  show (ShR i r)   = "shr " ++ show i ++ " " ++ show r
-  show (And w r)   = "and 0x" ++ (showHex w "") ++ " " ++ show r
-  show (Or r1 r2)  = "or " ++ show r1 ++ " " ++ show r2
+  show (ShL i r)   = "shl " ++ show i ++ ", " ++ show r
+  show (ShR i r)   = "shr " ++ show i ++ ", " ++ show r
+  show (And w r)   = "and 0x" ++ (showHex w "") ++ ", " ++ show r
+  show (Or r1 r2)  = "or " ++ show r1 ++ ", " ++ show r2
   show (Enter l)   = "enter 0x" ++ (showHex l "")
   show (Leave)     = "leave"
   show (Label s)   = s ++ ":"
