@@ -95,6 +95,7 @@ doCompileFile targetFile = inDepth $
 	say $ "Module " ++ mod ++ " defines functions:"
 	exports <- getModuleExports mod
 	mapM_ (inDepth . analyzeExport) exports
+	reset
 
 analyzeExport export =
      do isFn <- typeChecks $ "Potential.isFn " ++ (name export)

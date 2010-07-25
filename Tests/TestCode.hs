@@ -1,8 +1,6 @@
 module Tests.TestCode where
 
 import Potential
-import Potential.Flow (primCondJmp)
-import Potential.Assembly (body)
 
 -- a useful macro
 swap r1 r2 =
