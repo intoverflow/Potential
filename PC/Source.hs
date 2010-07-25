@@ -1,24 +1,32 @@
-module PC.Source (compileFile) where
+module PC.Source (analyzeFile, AssemblyCode(..), Warning(..)) where
 
 import Control.Monad
 import Language.Haskell.Interpreter hiding (get)
 
 import qualified GHC as GHC
-import qualified Outputable as Out
+import qualified FastString as FS
 
 import Potential.Assembly (Instr)
-import Potential.Printing
 
 import PC.Config
 import PC.Base
 
-compileFile :: Target -> InterpreterT Compiler ()
-compileFile target =
-     do liftIO $ putStrLn $ "Compiling `" ++ show target ++ "'..."
-	doCompileFile $ path target
+data Warning = NameMismatch String String
+  deriving Show
 
-doCompileFile :: FilePath -> InterpreterT Compiler ()
-doCompileFile targetFile =
+data AssemblyCode =
+    AssemblyCode { fname :: String
+		 , fnotes :: [Warning]
+		 , floc  :: String
+		 , fcode :: [Instr] }
+
+analyzeFile :: Target -> InterpreterT Compiler [AssemblyCode]
+analyzeFile target =
+     do liftIO $ putStrLn $ "Compiling `" ++ show target ++ "'..."
+	doAnalyzeFile $ path target
+
+doAnalyzeFile :: FilePath -> InterpreterT Compiler [AssemblyCode]
+doAnalyzeFile targetFile =
      do -- load the modules
 	loadModules [targetFile]
 	loaded <- getLoadedModules
@@ -29,31 +37,39 @@ doCompileFile targetFile =
 	setImportsQ [ ("Potential", Just "Potential")
 		    , ("Potential.Assembly", Just "Potential.Assembly") ]
 	-- analyze the module
-	say $ "Module " ++ mod ++ " defines functions:"
+	-- say $ "Module " ++ mod ++ " defines functions:"
 	exports <- getModuleExports mod
-	mapM_ (inDepth . analyzeExport) exports
+	fns <- mapM (inDepth . analyzeExport) exports
+	return $ concat fns
 
 analyzeExport export =
-     do isFn <- typeChecks $ "Potential.isFn " ++ (name export)
-	when isFn $
-	     do let strname = name export
+   do isFn <- typeChecks $ "Potential.isFn " ++ (name export)
+      if not isFn
+	then return []
+	else do let strname = name export
 		strname' <- interpret ("Potential.funName " ++ strname)
 				      (as :: String)
-		say $ strname' ++ ":"
+		-- say $ strname' ++ ":"
 		inDepth $ inDepth $
-		     do when (strname /= strname') $
-			     say $ "// Warning: names do not match.  " ++
-				   strname ++ " /= " ++ strname'
+		     do let notes = if (strname /= strname')
+					then [NameMismatch strname strname']
+					else []
 			typ <- typeOf strname
 			-- say $ "  type: " ++ typ
 			loc <- getExportLoc export
-			say $ "// Defined at: " ++ loc
+			-- say $ "// Defined at: " ++ loc
 			code <- interpret ("Potential.getAssembly " ++ strname)
 					  (as :: [Instr])
-			mapM_ (say . show) code
+			-- mapM_ (say . show) code
+			return [ AssemblyCode { fname = strname'
+					      , floc = loc
+					      , fnotes = notes
+					      , fcode = code } ]
 
 getExportLoc export = runGhc $
      do (n:_) <- GHC.parseName (name export)
 	let loc = GHC.nameSrcSpan n
-	return $ Out.showSDoc $ Out.ppr loc
+	    filename = FS.unpackFS $ GHC.srcSpanFile loc
+	    fileline = show $ GHC.srcSpanStartLine loc
+	return $ filename ++ ":" ++ fileline
 

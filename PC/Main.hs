@@ -8,6 +8,6 @@ main =
      do putStrLn "Potential compiler 2010 http://potential-lang.org/"
 	k <- getConfig
 	case k of
-	  Right cfg -> doCompile cfg
+	  Right cfg -> compiler cfg
 	  Left  ce  -> putStrLn $ "Configuration error: " ++ show ce
 

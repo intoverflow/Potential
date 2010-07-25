@@ -21,7 +21,7 @@ data MaybeConfig =
   deriving Show
 
 data Target = Target { path :: FilePath }
-instance Show Target where show t = show $ path t
+instance Show Target where show t = path t
 
 data Mode =
     Compile { outdir :: FilePath }
