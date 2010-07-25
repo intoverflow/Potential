@@ -5,6 +5,7 @@ EXPERIMENTAL.
 Potential is built on top of the Haskell Platform.
 Requires GHC 6.12 and the Haskell Platform.  Download from:
 	http://hackage.haskell.org/platform/
+Requires packages hint and th-lift, available by cabal install hint th-lift.
 
 Key features:
 * Automatically manages pointer aliases, invalidating aliases when changes are
