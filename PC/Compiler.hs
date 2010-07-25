@@ -8,6 +8,7 @@ import Language.Haskell.Interpreter.Unsafe
 
 import System.Directory (createDirectoryIfMissing)
 import System.IO (withFile, IOMode(..), hPutStrLn)
+import System.FilePath (combine)
 
 import qualified GHC as GHC
 
@@ -46,6 +47,9 @@ compiler cfg =
 				  Check{}   -> doCheck fns
 				  Compile{} -> doCompile inFile
 							 (outDir cfg)
+							 (if (outFile cfg == "")
+							    then inFile ++ ".S"
+							    else outFile cfg)
 							 fns)
 		      (inFiles cfg)
 
@@ -53,8 +57,8 @@ doCheck fns =
      do say "Functions:"
 	inDepth $ mapM_ (\f -> say $ fname f ++ " defined at " ++ floc f) fns
 
-doCompile mod outdir fns =
-     do let outname = outdir ++ mod ++ ".S"
+doCompile mod outdir outfile fns =
+     do let outname = combine outdir outfile
 	say $ "Rendering to: `" ++ outname ++ "'"
 	liftIO $ createDirectoryIfMissing True outdir
 	liftIO $ withFile outname WriteMode $ \h ->

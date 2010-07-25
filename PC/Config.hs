@@ -10,7 +10,8 @@ import Data.Maybe (fromJust)
 
 data Mode =
     Compile { inFiles :: [String]
-	    , outDir  :: String }
+	    , outDir  :: String
+	    , outFile :: String }
   | Check { inFiles :: [String] }
   deriving (Show, Data, Typeable)
 
@@ -20,10 +21,14 @@ compileMode = mode $
 				& flag "infile"
 				& typ "MODULE"
 				& args
-		, outDir = "asm/" &= text "Output directory"
+		, outDir = "asm" &= text "Output directory"
 				& explicit
 				& flag "outdir"
-				& typDir }
+				& typDir
+		, outFile = def &= text "Output file (rel. to output directory)"
+				& explicit
+				& flag "outfile"
+				& typFile }
 	&= defMode
 checkMode = mode $
 	Check { inFiles = def &= text "Input file"
