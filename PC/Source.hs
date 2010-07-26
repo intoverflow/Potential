@@ -17,6 +17,7 @@ data Warning = NameMismatch String String
 data AssemblyCode =
     AssemblyCode { fname :: String
 		 , fnotes :: [Warning]
+		 , ftyp  :: String
 		 , floc  :: String
 		 , fcode :: [Instr] }
 
@@ -63,6 +64,7 @@ analyzeExport export =
 			-- mapM_ (say . show) code
 			return [ AssemblyCode { fname = strname'
 					      , floc = loc
+					      , ftyp = typ
 					      , fnotes = notes
 					      , fcode = code } ]
 

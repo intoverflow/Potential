@@ -13,6 +13,8 @@ data Mode =
 	    , outDir  :: String
 	    , outFile :: String }
   | Check { inFiles :: [String] }
+  | GetType { inFiles :: [String]
+	    , function :: String }
   deriving (Show, Data, Typeable)
 
 compileMode = mode $
@@ -36,3 +38,14 @@ checkMode = mode $
 				& flag "infile"
 				& typ "MODULE"
 				& args }
+getTypeMode = mode $
+	GetType { inFiles = def &= text "Input file"
+				& explicit
+				& flag "infile"
+				& typ "MODULE"
+				& args
+		, function = def &= text "Function to inspect"
+				& explicit
+				& flag "function"
+				& typ "IDENTIFIER" }
+

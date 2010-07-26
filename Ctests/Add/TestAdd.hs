@@ -1,4 +1,4 @@
-module Tests.TestAdd where
+module Ctests.Add.TestAdd where
 
 import Potential
 

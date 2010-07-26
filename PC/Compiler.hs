@@ -2,6 +2,7 @@ module PC.Compiler (compiler) where
 
 import Control.Monad
 import Control.Monad.Reader (ask)
+import Data.List (find)
 
 import Language.Haskell.Interpreter hiding (get)
 import Language.Haskell.Interpreter.Unsafe
@@ -50,7 +51,10 @@ compiler cfg =
 							 (if (outFile cfg == "")
 							    then inFile ++ ".S"
 							    else outFile cfg)
-							 fns)
+							 fns
+				  GetType{} -> doGetTyp inFile
+							(function cfg)
+							fns)
 		      (inFiles cfg)
 
 doCheck fns =
@@ -81,4 +85,18 @@ doCompileFile h fn =
 		hPutStrLn h $ indent ++ "//"
 	mapM_ (\c -> hPutStrLn h $ indent ++ show c) (fcode fn)
 	hPutStrLn h ""
+
+doGetTyp inFile func fns =
+     if func == ""
+	then mapM_ doGetTypOf fns
+	else let mf = find (\f -> func == fname f) fns
+	     in case mf of
+		  Nothing -> say $ "Function `" ++ func ++
+					"' not found in this module."
+		  Just f -> doGetTypOf f
+
+doGetTypOf f =
+     do say $ fname f ++ ":"
+	say $ ftyp f
+	say ""
 

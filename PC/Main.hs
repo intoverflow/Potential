@@ -9,11 +9,11 @@ identification = "Potential Compiler 2010, (C) Tim Carstens 2010 http://potentia
 
 main :: IO ()
 main =
-    (do conf <- cmdArgs identification [compileMode, checkMode]
+    (do conf <- cmdArgs identification [compileMode, checkMode, getTypeMode]
 	if length (inFiles conf) == 1
 	 then compiler conf
 	 else do help <- cmdArgsHelp identification
-				     [compileMode, checkMode]
+				     [compileMode, checkMode, getTypeMode]
 				     Text
 		 putStrLn help
 		 putStrLn "Exactly one MODULE must be supplied.")
