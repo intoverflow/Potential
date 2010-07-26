@@ -97,22 +97,26 @@ testNew = defun "testNew" $
 
 init = defun "init" $
      do lift $ isCode
-	nestMemoryRegion $ \sr ->
+	nestMemoryRegion $
 	     do newInterruptGate rax
 		pop r11
-		inj_InterruptGate_0 r11 rax sr
+		inj_InterruptGate_0 r11 rax
 		-- This below causes failure *hooray!*
-		-- inj_InterruptGate_8 r12 rax sr
+		-- inj_InterruptGate_8 r12 rax
 	ret
 
+-- fails because of a change to how regions are nested
+-- see Potential.IxMonad.Region
+{-
 init2 = defun "init" $
      do lift $ isCode
-	nestMemoryRegion $ \sr1 ->
-	     do nestMemoryRegion $ \sr2 ->
+	nestMemoryRegion $
+	     do nestMemoryRegion $
 		     do newInterruptGate rax
 			pop r10
-			inj_InterruptGate_0 r10 rax sr2
+			inj_InterruptGate_0 r10 rax
 		pop r10
-		inj_InterruptGate_8 r10 rax sr1
+		inj_InterruptGate_8 r10 rax
 	ret
+-}
 

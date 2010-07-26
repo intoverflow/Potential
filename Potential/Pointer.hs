@@ -32,7 +32,8 @@ import Potential.IxMonad.Writer
 
 data Memory -- used to tag a region as a Memory region
 type MemRegion r m = Region Memory r m
-type MemSubRegion r s = SubRegion Memory r s
+type MemSubRegion r s m = SubRegion Memory r s m
+type MemSubRegionWitness r s = SubRegionWitness Memory r s
 
 instance IxCode m => IxCode (MemRegion r m) where
   type Constraints (MemRegion r m) = Constraints m
@@ -51,8 +52,16 @@ fromPtr64 ptr = return $ getPtrData ptr
 
 
 -- Allocate a pointer in the current region
-newPtr64' :: IxMonad m => t -> MemRegion r m Composable x x (Ptr64 r t)
-newPtr64' t = unsafeReturn $ Ptr64 t
+class IxMonad m => NewPtr m where
+  type Rgn m
+  newPtr64' :: t -> m Composable x x (Ptr64 (Rgn m) t)
+  newPtr64' t = unsafeReturn $ Ptr64 t
+
+instance IxMonad m=> NewPtr (MemRegion r m) where
+  type Rgn (MemRegion r m) = r
+
+instance IxMonad m=> NewPtr (MemSubRegion r s m) where
+  type Rgn (MemSubRegion r s m) = s
 
 newPtr64 t dst =
      do instr Alloc
@@ -61,19 +70,16 @@ newPtr64 t dst =
 
 -- Pointer operations for dealing with sub and sup regions
 newPtr64InSupRegion :: IxMonad m =>
-			MemSubRegion r s -> t
-			-> MemRegion s m Composable x x (Ptr64 r t)
-newPtr64InSupRegion _ t = unsafeReturn $ Ptr64 t
-
-belongsInSubRegion :: IxMonad m =>
-			MemSubRegion r s -> Ptr64 s t
-			-> MemRegion s m Unmodeled x x ()
-belongsInSubRegion _ _ = return ()
+			t -> MemSubRegion r s m Composable x x (Ptr64 r t)
+newPtr64InSupRegion t = unsafeReturn $ Ptr64 t
 
 belongsInSupRegion :: IxMonad m =>
-			MemSubRegion r s -> Ptr64 r t
-			-> MemRegion s m Unmodeled x x ()
-belongsInSupRegion _ _ = return ()
+			Ptr64 r t -> MemSubRegion r s m Unmodeled x x ()
+belongsInSupRegion _ = return ()
+
+belongsInSubRegion :: IxMonad m =>
+			Ptr64 s t -> MemSubRegion r s m Unmodeled x x ()
+belongsInSubRegion _ = return ()
 
 belongsHere :: IxMonad m => Ptr64 r t -> MemRegion r m Unmodeled x x ()
 belongsHere _ = return ()
@@ -87,16 +93,16 @@ primPtrProj proj offset src dst =
 	dat <- fromPtr64 ptr
 	set dst (proj dat)
 
-primPtrInj inj offset partialSrc structSrc sr =
+primPtrInj inj offset partialSrc structSrc =
      do instr TxOwnership
 	instr $ Sto (arg partialSrc) (Deref2 offset (arg structSrc))
 	partial    <- get partialSrc
 	structPtr  <- get structSrc
 	forget structSrc
-	belongsInSubRegion sr structPtr
+	belongsInSubRegion structPtr
 	struct     <- fromPtr64 structPtr
-	structPtr' <- newPtr64InSupRegion sr (inj partial struct)
-	belongsInSupRegion sr structPtr'
+	structPtr' <- newPtr64InSupRegion (inj partial struct)
+	belongsInSupRegion structPtr'
 	set structSrc structPtr'
 
 -- For projecting from a partial to a field
@@ -135,7 +141,7 @@ primArrayProj proj offset src dst =
 	set dst cellPtr
 	return ()
 
-primArrayInj inj offset src dst sr =
+primArrayInj inj offset src dst =
      do instr TxOwnership
 	comment $ "inj from " ++ show (arg src) ++ " to " ++ show (arg dst) ++
 		  "+" ++ show offset
@@ -143,10 +149,10 @@ primArrayInj inj offset src dst sr =
 	partial  <- get src
 	arrayPtr <- get dst
 	forget dst
-	belongsInSubRegion sr arrayPtr
+	belongsInSubRegion arrayPtr
 	array <- fromPtr64 arrayPtr
-	arrayPtr' <- newPtr64InSupRegion sr (inj partial array)
-	belongsInSupRegion sr arrayPtr'
+	arrayPtr' <- newPtr64InSupRegion (inj partial array)
+	belongsInSupRegion arrayPtr'
 	set dst arrayPtr'
 
 -- the Memory region manager
@@ -170,7 +176,7 @@ withMemoryRegion r = withRegion memRegionMgr r
 nestMemoryRegion :: ( IxMonad m
 		    , Composition Unmodeled ct, Compose Unmodeled ct ~ ct
 		    , Composition ct Unmodeled, Compose ct Unmodeled ~ ct)
-		 => (forall s . MemSubRegion r s -> MemRegion s m ct x y a)
+		 => (forall s . MemSubRegion r s m ct x y a)
 		 -> MemRegion r m ct x y a
 nestMemoryRegion r = nestRegion r
 

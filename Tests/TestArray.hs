@@ -10,11 +10,14 @@ testProjector = defun "testProjector" $
 
 testInjector = defun "testInjector" $
      do lift $ isCode
-	nestMemoryRegion $ \sr ->
-	     do scall doAlloc
-		inj_overflow_InterruptGate_0 r10 rax sr
+	nestMemoryRegion $
+	     do -- scall doAlloc
+		newInterruptDescriptionTable rax
+		inj_overflow_InterruptGate_0 r10 rax
 	ret
 
+-- fails because of change in how newPtr64' works
+-- see Potential.Pointer
 doAlloc = defun "doAlloc" $
      do lift $ isCode
 	newInterruptDescriptionTable rax

@@ -25,9 +25,13 @@ compiler cfg =
 	putStrLn $ "Configuration: " ++ show cfg ++ "\n"
 	(r, _) <- runCompiler (runInterpreter compiler) cfg compilerState
 	case r of
-	  Left err  -> printInterpreterError err
+	  Left err  ->
+	     do putStrLn $ "Error during compile:"
+		case err of
+		  WontCompile errs -> mapM_ printInterpreterError errs
+		  _ -> putStrLn $ show err
 	  Right () -> putStrLn "Done compiling"
-  where printInterpreterError err = putStrLn $ "Ups... " ++ (show err)
+  where printInterpreterError (GhcError errMsg) = putStrLn errMsg
 	compiler =
 	     do -- set our flags
 		unsafeSetGhcOption "-fcontext-stack=160"
