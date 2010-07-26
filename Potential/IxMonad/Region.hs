@@ -5,8 +5,7 @@
 	TypeFamilies
 	#-}
 module Potential.IxMonad.Region
-	( IxRegionT(..), Region, RegionMgr(..)
-	, SubRegion(..), inSupRegion
+	( RegionMgr(..), IxRegionT(..), Region, SubRegion(..)
 	, withRegion, withRegion', nestRegion
 	) where
 
@@ -53,28 +52,14 @@ withRegion region r =
 	close region
 	return a
 
-newtype SubRegion typ r s m ct x y =
- SubRegion (forall a .
-	     Region typ r m ct x y a ->
-	     Region typ s m ct x y a)
-
-inSupRegion :: SubRegion typ r s m ct x y
-	    -> Region typ r m ct x y a
-	    -> Region typ s m ct x y a
-inSupRegion (SubRegion sr) r = sr r
+data SubRegion typ r s = SubRegion
 
 nestRegion :: ( IxMonad m
 	      , Composition Unmodeled ct, Compose Unmodeled ct ~ ct
 	      , Composition ct Unmodeled, Compose ct Unmodeled ~ ct )
-	   => (forall s . SubRegion typ r s m ct x y
-			    -> Region typ s m ct x y a)
+	   => (forall s . SubRegion typ r s -> Region typ s m ct x y a)
 	   -> Region typ r m ct x y a
 nestRegion body = IxRegionT $
      do region <- ask
-	let witness (IxRegionT m) = lift $
-	     do goUp region
-		a <- runIxReaderT m region
-		comeDown region
-		return a
-	lift $ withRegion region (body $ SubRegion witness)
+	lift $ withRegion region (body SubRegion)
 

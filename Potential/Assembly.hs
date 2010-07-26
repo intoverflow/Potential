@@ -83,8 +83,8 @@ data Instr =
  |  Label String
  -- temporary instructions, used by the memory manager
  |  Alloc
- |  EnterRegion
- |  CloseRegion
+ |  NewRegion
+ |  KillRegion
  |  GoUpRegion
  |  ComeDownRegion
  |  TxOwnership

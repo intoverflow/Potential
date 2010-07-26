@@ -12,7 +12,6 @@ testInjector = defun "testInjector" $
      do lift $ isCode
 	nestMemoryRegion $ \sr ->
 	     do scall doAlloc
-		-- newInterruptDescriptionTable rax
 		inj_overflow_InterruptGate_0 r10 rax sr
 	ret
 

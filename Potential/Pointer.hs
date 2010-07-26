@@ -32,7 +32,7 @@ import Potential.IxMonad.Writer
 
 data Memory -- used to tag a region as a Memory region
 type MemRegion r m = Region Memory r m
-type MemSubRegion r s m ct = SubRegion Memory r s m ct
+type MemSubRegion r s = SubRegion Memory r s
 
 instance IxCode m => IxCode (MemRegion r m) where
   type Constraints (MemRegion r m) = Constraints m
@@ -50,15 +50,6 @@ getPtrData _ = undefined
 fromPtr64 ptr = return $ getPtrData ptr
 
 
--- A type for locking up special instructions to prevent the unwashed
--- masses from using them
-type MemSensitive r s m ct x y a =
-    MemSubRegion r s m ct x y -> MemRegion s m ct x y a
-
-memSensitive :: MemSensitive r s m ct x y a -> MemSensitive r s m ct x y a
-memSensitive a = a
-
-
 -- Allocate a pointer in the current region
 newPtr64' :: IxMonad m => t -> MemRegion r m Composable x x (Ptr64 r t)
 newPtr64' t = unsafeReturn $ Ptr64 t
@@ -70,20 +61,18 @@ newPtr64 t dst =
 
 -- Pointer operations for dealing with sub and sup regions
 newPtr64InSupRegion :: IxMonad m =>
-			MemSubRegion r s m ct x' y' ->
-			t -> MemRegion s m Composable x x (Ptr64 r t)
+			MemSubRegion r s -> t
+			-> MemRegion s m Composable x x (Ptr64 r t)
 newPtr64InSupRegion _ t = unsafeReturn $ Ptr64 t
 
 belongsInSubRegion :: IxMonad m =>
-			MemSubRegion r s m ct x' y' ->
-			Ptr64 s t ->
-			MemRegion s m Unmodeled x x ()
+			MemSubRegion r s -> Ptr64 s t
+			-> MemRegion s m Unmodeled x x ()
 belongsInSubRegion _ _ = return ()
 
 belongsInSupRegion :: IxMonad m =>
-			MemSubRegion r s m ct x' y' ->
-			Ptr64 r t ->
-			MemRegion s m Unmodeled x x ()
+			MemSubRegion r s -> Ptr64 r t
+			-> MemRegion s m Unmodeled x x ()
 belongsInSupRegion _ _ = return ()
 
 belongsHere :: IxMonad m => Ptr64 r t -> MemRegion r m Unmodeled x x ()
@@ -97,11 +86,6 @@ primPtrProj proj offset src dst =
 	belongsHere ptr
 	dat <- fromPtr64 ptr
 	set dst (proj dat)
-
--- For injecting from Type_Offset into Ptr64 s Type, given a Ptr64 r Type
-transform t' (SubRegion sr) =
-     do instr TxOwnership
-	sr $ newPtr64' t'
 
 primPtrInj inj offset partialSrc structSrc sr =
      do instr TxOwnership
@@ -168,8 +152,8 @@ primArrayInj inj offset src dst sr =
 -- the Memory region manager
 memRegionMgr :: (IxMonadWriter [Instr] m) => RegionMgr m
 memRegionMgr =
-      RegionMgr { enter    = instr EnterRegion
-		, close    = instr CloseRegion
+      RegionMgr { enter    = instr NewRegion
+		, close    = instr KillRegion
 		, goUp     = instr GoUpRegion
 		, comeDown = instr ComeDownRegion
 		}
@@ -186,8 +170,7 @@ withMemoryRegion r = withRegion memRegionMgr r
 nestMemoryRegion :: ( IxMonad m
 		    , Composition Unmodeled ct, Compose Unmodeled ct ~ ct
 		    , Composition ct Unmodeled, Compose ct Unmodeled ~ ct)
-		 => (forall s . MemSubRegion r s m ct x y ->
-				     MemRegion s m ct x y a)
+		 => (forall s . MemSubRegion r s -> MemRegion s m ct x y a)
 		 -> MemRegion r m ct x y a
 nestMemoryRegion r = nestRegion r
 
