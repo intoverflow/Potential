@@ -6,7 +6,6 @@ import Potential.Machine.IntGate
 _changeDpl = defun "_changeDpl" $
      do lift $ isCode
 	comment "rdi is new dpl, rsi is *intDesc"
-	comment "(AMD64 ABI calling convention)"
 	nestMemoryRegion $ \sr ->
 	     do push rax
 		comment "get the first partial of the intDesc"
