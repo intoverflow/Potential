@@ -72,6 +72,7 @@ doCompile mod outdir outfile fns =
 doCompileFile h fn =
      do putStrLn $ "  " ++ fname fn ++ "..."
 	let indent = replicate 4 ' '
+	hPutStrLn h $ ".globl " ++ fname fn
 	hPutStrLn h $ fname fn ++ ":"
 	hPutStrLn h $ indent ++ "// Defined at " ++ floc fn
 	unless (null $ fnotes fn) $

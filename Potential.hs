@@ -9,6 +9,7 @@ module Potential
 	, isFn, funName, getAssembly
 	, defun, Function, isCode
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
+	, add
 	, cmp, sje, assertPrivLevelKernel
 	, array
 	, struct, struct_diagram

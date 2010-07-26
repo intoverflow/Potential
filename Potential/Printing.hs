@@ -56,6 +56,7 @@ instance Show Instr where
   show (ShR i r)   = "shr " ++ show i ++ ", " ++ show r
   show (And w r)   = "and 0x" ++ (showHex w "") ++ ", " ++ show r
   show (Or r1 r2)  = "or " ++ show r1 ++ ", " ++ show r2
+  show (Add r1 r2) = "add " ++ show r1 ++ ", " ++ show r2
   show (Enter l)   = "enter 0x" ++ (showHex l "")
   show (Leave)     = "leave"
   show (Label s)   = s ++ ":"

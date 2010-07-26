@@ -77,6 +77,7 @@ data Instr =
  |  ShR Integer Reg
  |  And Word64 Reg
  |  Or Reg Reg
+ |  Add Reg Reg
  |  Enter Word16
  |  Leave
  |  Label String
