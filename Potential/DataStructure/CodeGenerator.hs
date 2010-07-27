@@ -5,16 +5,18 @@ import Prelude
 import qualified Language.Haskell.TH as TH
 
 import Potential.DataStructure.PartialRelation
+import Potential.DataStructure.FieldRelation
 import Potential.DataStructure.LiftDecls
 import Potential.DataStructure.AbstractSyntax
 import Potential.Pointer ( newPtr64
 			 , primPtrProj, primPtrInj
 			 , primFieldProj, primFieldInj
 			 )
-import Potential.Size( (:==?), HasSZ, SZ, mkT )
+import Potential.Size ((:==?), HasSZ, SZ, mkT)
 
-import Data.List( mapAccumL )
-import Data.Bits( shiftL, complement )
+import Data.List (mapAccumL)
+import Data.Bits (shiftL, complement)
+import Data.Char (toUpper)
 
 reifyStruct us =
      do decls <- mapM (\f -> f us)
@@ -25,6 +27,7 @@ reifyStruct us =
 			, reifyAllocator
 			, reifyPartialProjectors
 			, reifyPartialInjectors
+			, reifyFieldRelations
 			, reifyFieldProjectors
 			, reifyFieldInjectors
 			]
@@ -38,6 +41,8 @@ defineDataSize' t n =
 		(TH.AppT (TH.ConT ''HasSZ) t)
 		[TH.TySynInstD ''SZ [t] (mkT n)]
            ]
+
+field_label_name us f = TH.mkName $ struct_name us ++ "_" ++ field_name f
 
 field_names us =
     let var_fields = filter isVarField $ concat $ fields us
@@ -227,6 +232,33 @@ reifyPartialInjector us (fs, offset) =
 	theFunction  <- TH.appE [| \inj -> primPtrInj inj offset |]
 				(return injector)
 	return $ [ TH.ValD (TH.VarP inj_name) (TH.NormalB theFunction) [] ]
+
+
+reifyFieldRelations :: UserStruct -> TH.Q [TH.Dec]
+reifyFieldRelations us = on_fields reifyFieldRelation us
+
+reifyFieldRelation us (fs, offset) (f, bit_offset) =
+     do let fieldName = field_label_name us f
+	    ft = TH.ConT fieldName
+	    pt = structPartialType us offset $ field_partial_names fs
+	isolateMaskV <- [| \_ _ -> (2^(field_size f)-1) `shiftL`
+				   (fromIntegral bit_offset) |]
+	forgetMaskV  <- [| \x y -> complement $ isolateMask x y |]
+	return  [ TH.DataD [] fieldName [] [TH.NormalC fieldName []] []
+		, TH.InstanceD
+			[]
+			(foldl TH.AppT (TH.ConT ''IsFieldOf) [pt, ft])
+			[ TH.FunD 'forgetMask -- (TH.mkName "forgetMask")
+			    [ TH.Clause []
+					(TH.NormalB forgetMaskV)
+					[]
+			    ]
+			, TH.FunD 'isolateMask -- (TH.mkName "isolateMask")
+			    [ TH.Clause []
+					(TH.NormalB isolateMaskV)
+					[]
+			    ]
+			] ]
 
 
 reifyFieldProjectors :: UserStruct -> TH.Q [TH.Dec]
