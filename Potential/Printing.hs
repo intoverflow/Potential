@@ -41,6 +41,7 @@ instance Show Instr where
   show (Ld s d)    = "mov " ++ show s ++ ", " ++ show d
   show (Sto s d)   = "mov " ++ show s ++ ", " ++ show d
   show (Mov r1 r2) = "mov " ++ show r1 ++ ", " ++ show r2
+  show (MovC c r)   = "mov $0x" ++ (showHex c "") ++ ", " ++ show r
   show (Push r)    = "push " ++ show r
   show (Pop r)     = "pop " ++ show r
   show (Cmp r1 r2) = "cmp " ++ show r1 ++ ", " ++ show r2
@@ -54,7 +55,7 @@ instance Show Instr where
   show (Lidt r)    = "lidt " ++ show r
   show (ShL i r)   = "shl $" ++ show i ++ ", " ++ show r
   show (ShR i r)   = "shr $" ++ show i ++ ", " ++ show r
-  show (And w r)   = "and $0x" ++ (showHex w "") ++ ", " ++ show r
+  show (And r1 r2) = "and " ++ show r1 ++ ", " ++ show r2
   show (Or r1 r2)  = "or " ++ show r1 ++ ", " ++ show r2
   show (Add r1 r2) = "add " ++ show r1 ++ ", " ++ show r2
   show (Enter l)   = "enter 0x" ++ (showHex l "")

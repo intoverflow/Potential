@@ -116,8 +116,10 @@ primPtrInj inj offset partialSrc structSrc =
 	set structSrc structPtr'
 
 -- For projecting from a partial to a field
-primFieldProj proj isolate_mask bit_offset src =
-     do instr $ And isolate_mask (arg src)
+primFieldProj proj isolate_mask bit_offset src tmp =
+     do forget tmp
+	instr $ MovC isolate_mask (arg tmp)
+	instr $ And (arg tmp) (arg src)
 	instr $ ShR bit_offset (arg src)
 	t <- get src
 	let t' = proj t
@@ -125,15 +127,12 @@ primFieldProj proj isolate_mask bit_offset src =
 	set src t'
 
 -- For injecting from a field into a partial
-primFieldInj inj forget_mask bit_offset src dst =
+primFieldInj inj forget_mask bit_offset src dst tmp =
      do constraints <- getConstraints
+	forget tmp
 	instr $ ShL bit_offset (arg src)
-	-- TODO:
-	-- cannot and 64-bit-literal 64-bit-register
-	-- need to:
-	--   mov 64-bit-literal 64-bit-register
-	--   and reg reg.
-	instr $ And forget_mask (arg dst)
+	instr $ MovC forget_mask (arg tmp)
+	instr $ And (arg tmp) (arg dst)
 	instr $ Or (arg src) (arg dst)
 	-- this last right shift restores src to its original contents
 	instr $ ShR bit_offset (arg src)

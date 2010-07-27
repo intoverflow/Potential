@@ -62,6 +62,7 @@ data Instr =
  |  Ld Deref Reg
  |  Sto Reg Deref
  |  Mov Reg Reg
+ |  MovC Word64 Reg
  |  Push Reg
  |  Pop Reg
  |  Cmp Reg Reg
@@ -75,7 +76,7 @@ data Instr =
  |  Lidt Reg
  |  ShL Integer Reg
  |  ShR Integer Reg
- |  And Word64 Reg
+ |  And Reg Reg
  |  Or Reg Reg
  |  Add Reg Reg
  |  Enter Word16

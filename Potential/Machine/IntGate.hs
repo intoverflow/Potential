@@ -57,6 +57,8 @@ defineDataSize ''NotPresent 1
 getDPL = defun "getDPL" $
      do lift $ isCode
 	proj_InterruptGate_0 rax rbx
-	proj_InterruptGate_0_dpl rbx
+	push rcx
+	proj_InterruptGate_0_dpl rbx rcx
+	pop rcx
 	ret
 
