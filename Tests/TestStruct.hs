@@ -77,15 +77,21 @@ testProjector = defun "testProjector" $
 
 testField = defun "testField" $
      do isCode
-	proj_InterruptGate_0_dpl rax
+	push rcx
+	proj_InterruptGate_0_dpl rax rcx
+	pop rcx
 	ret
 
 testInjectField = defun "testInjectField" $
      do isCode
-	inj_InterruptGate_8_offset_hi rax rbx
-	inj_InterruptGate_0_ist r10 r11
+	push rcx
+	inj_InterruptGate_8_offset_hi rax rbx rcx
+	inj_InterruptGate_0_ist r10 r11 rcx
+	pop rcx
 	pop r10
-	inj_InterruptGate_0_dpl r10 r11
+	push rcx
+	inj_InterruptGate_0_dpl r10 r11 rcx
+	pop rcx
 	ret
 
 testNew = defun "testNew" $
