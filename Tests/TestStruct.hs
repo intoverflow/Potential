@@ -71,7 +71,7 @@ import Potential
 |]
 
 testProjector = defun "testProjector" $
-     do lift $ isCode
+     do isMemRegion $ isCode
 	proj_InterruptGate_8 rax rbx
 	ret
 
@@ -96,7 +96,7 @@ testNew = defun "testNew" $
 	ret
 
 init = defun "init" $
-     do lift $ isCode
+     do isMemRegion $ isCode
 	nestMemoryRegion $
 	     do newInterruptGate rax
 		pop r11
@@ -105,18 +105,14 @@ init = defun "init" $
 		-- inj_InterruptGate_8 r12 rax
 	ret
 
--- fails because of a change to how regions are nested
--- see Potential.IxMonad.Region
-{-
 init2 = defun "init" $
-     do lift $ isCode
+     do isMemRegion $ isCode
 	nestMemoryRegion $
-	     do nestMemoryRegion $
-		     do newInterruptGate rax
-			pop r10
-			inj_InterruptGate_0 r10 rax
+	     do lift $ nestMemoryRegion $
+			     do newInterruptGate rax
+				pop r10
+				inj_InterruptGate_0 r10 rax
 		pop r10
 		inj_InterruptGate_8 r10 rax
 	ret
--}
 

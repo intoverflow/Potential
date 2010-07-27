@@ -1,10 +1,14 @@
 module Ctests.IntGate.ChangeDpl where
 
+{-
+ compile --outdir=Ctests/IntGate --outfile=changeDpl.S Ctests.IntGate.ChangeDpl
+-}
+
 import Potential
 import Potential.Machine.IntGate
 
 _changeDpl = defun "_changeDpl" $
-     do lift $ isCode
+     do isMemSubRegion $ isMemRegion $ isCode
 	comment "rdi is new dpl, rsi is *intDesc"
 	push rax
 	comment "get the first partial of the intDesc"

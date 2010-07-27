@@ -16,7 +16,7 @@ module Potential.Pointer
 	, primPtrProj, primPtrInj
 	, primFieldProj, primFieldInj
 	, primArrayProj, primArrayInj
-	, MemRegion, MemSubRegion
+	, MemRegion, isMemRegion, isMemSubRegion
 	, withMemoryRegion, nestMemoryRegion
 	) where
 
@@ -28,18 +28,35 @@ import Potential.Assembly
 import Potential.Printing -- temporary, used in a TODO
 
 import Potential.IxMonad.Region
+import Potential.IxMonad.Reader
 import Potential.IxMonad.Writer
 
 data Memory -- used to tag a region as a Memory region
 type MemRegion r m = Region Memory r m
-type MemSubRegion r s m = SubRegion Memory r s m
 type MemSubRegionWitness r s = SubRegionWitness Memory r s
+
+isMemRegion :: IxMonad m => m Unmodeled x x () -> MemRegion r m Unmodeled x x ()
+isMemRegion _ = return ()
+
+isMemSubRegion :: (IxMonadRegion m, RegionType m ~ Memory)
+			=> m Unmodeled x x ()
+			-> IxReaderT (MemSubRegionWitness r (RegionLabel m))
+					m Unmodeled x x ()
+isMemSubRegion _ = return ()
 
 instance IxCode m => IxCode (MemRegion r m) where
   type Constraints (MemRegion r m) = Constraints m
 
+instance (IxCode m, IxMonadRegion m, RegionType m ~ Memory, RegionLabel m ~ s)
+  => IxCode (IxReaderT (MemSubRegionWitness r s) m) where
+    type Constraints (IxReaderT (MemSubRegionWitness r s) m) = Constraints m
+
 instance ASMable m => ASMable (MemRegion r m) where
   asm constraints mr = asm constraints (withRegion' memRegionMgr mr)
+
+instance (ASMable m, IxMonadRegion m, RegionType m ~ Memory, RegionLabel m ~ s)
+  => ASMable (IxReaderT (MemSubRegionWitness r s) m) where
+    asm constraints mr = asm constraints (runIxReaderT mr undefined)
 
 -- A pointer, bound to region r
 data Ptr64 r t = Ptr64 t
@@ -52,16 +69,8 @@ fromPtr64 ptr = return $ getPtrData ptr
 
 
 -- Allocate a pointer in the current region
-class IxMonad m => NewPtr m where
-  type Rgn m
-  newPtr64' :: t -> m Composable x x (Ptr64 (Rgn m) t)
-  newPtr64' t = unsafeReturn $ Ptr64 t
-
-instance IxMonad m=> NewPtr (MemRegion r m) where
-  type Rgn (MemRegion r m) = r
-
-instance IxMonad m=> NewPtr (MemSubRegion r s m) where
-  type Rgn (MemSubRegion r s m) = s
+newPtr64' :: IxMonadRegion m => t -> m Composable x x (Ptr64 (RegionLabel m) t)
+newPtr64' t = unsafeReturn $ Ptr64 t
 
 newPtr64 t dst =
      do instr Alloc
@@ -69,19 +78,20 @@ newPtr64 t dst =
 	set dst ptr
 
 -- Pointer operations for dealing with sub and sup regions
-newPtr64InSupRegion :: IxMonad m =>
-			t -> MemSubRegion r s m Composable x x (Ptr64 r t)
+newPtr64InSupRegion :: IxMonadReader (MemSubRegionWitness r s) m =>
+			t -> m Composable x x (Ptr64 r t)
 newPtr64InSupRegion t = unsafeReturn $ Ptr64 t
 
-belongsInSupRegion :: IxMonad m =>
-			Ptr64 r t -> MemSubRegion r s m Unmodeled x x ()
+belongsInSupRegion :: IxMonadReader (MemSubRegionWitness r s) m =>
+			Ptr64 r t -> m Unmodeled x x ()
 belongsInSupRegion _ = return ()
 
-belongsInSubRegion :: IxMonad m =>
-			Ptr64 s t -> MemSubRegion r s m Unmodeled x x ()
+belongsInSubRegion :: IxMonadReader (MemSubRegionWitness r s) m =>
+			Ptr64 s t -> m Unmodeled x x ()
 belongsInSubRegion _ = return ()
 
-belongsHere :: IxMonad m => Ptr64 r t -> MemRegion r m Unmodeled x x ()
+belongsHere :: (IxMonadRegion m, RegionType m ~ Memory)
+		=> Ptr64 (RegionLabel m) t ->  m Unmodeled x x ()
 belongsHere _ = return ()
 
 -- For projecting from Ptr64 r Type to Type_Offset
@@ -176,7 +186,8 @@ withMemoryRegion r = withRegion memRegionMgr r
 nestMemoryRegion :: ( IxMonad m
 		    , Composition Unmodeled ct, Compose Unmodeled ct ~ ct
 		    , Composition ct Unmodeled, Compose ct Unmodeled ~ ct)
-		 => (forall s . MemSubRegion r s m ct x y a)
+		 => (forall s . IxReaderT (MemSubRegionWitness r s)
+					  (MemRegion s m) ct x y a)
 		 -> MemRegion r m ct x y a
 nestMemoryRegion r = nestRegion r
 

@@ -4,22 +4,21 @@ import Potential
 import Potential.Machine.IDT
 
 testProjector = defun "testProjector" $
-     do lift $ isCode
+     do isMemRegion $ isCode
 	proj_InterruptDescriptionTable_nMI rax rbx
 	ret
 
 testInjector = defun "testInjector" $
-     do lift $ isCode
+     do isMemRegion $ isCode
 	nestMemoryRegion $
-	     do -- scall doAlloc
-		newInterruptDescriptionTable rax
+	     do lift $ scall doAlloc
+		newInterruptDescriptionTable rbx
 		inj_overflow_InterruptGate_0 r10 rax
+		inj_overflow_InterruptGate_0 r10 rbx
 	ret
 
--- fails because of change in how newPtr64' works
--- see Potential.Pointer
 doAlloc = defun "doAlloc" $
-     do lift $ isCode
+     do isMemRegion $ isCode
 	newInterruptDescriptionTable rax
 	ret
 

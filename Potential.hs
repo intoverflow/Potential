@@ -7,7 +7,8 @@ module Potential
 	, withMemoryRegion, nestMemoryRegion
 	, asm, renderFn, getType, getTypeOf
 	, isFn, funName, getAssembly
-	, defun, Function, isCode
+	, defun, Function
+	, isCode, isMemRegion, isMemSubRegion
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, add
 	, cmp, sje, assertPrivLevelKernel

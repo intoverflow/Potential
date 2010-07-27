@@ -5,8 +5,9 @@
 	TypeFamilies
 	#-}
 module Potential.IxMonad.Region
-	( RegionMgr(..), IxRegionT(..), IxSubRegionT(..)
-	, Region, SubRegion, SubRegionWitness
+	( IxMonadRegion(..)
+	, RegionMgr(..), IxRegionT(..)
+	, Region, SubRegionWitness
 	, withRegion, withRegion', nestRegion
 	) where
 
@@ -15,6 +16,9 @@ import Prelude( undefined )
 import Potential.IxMonad.IxMonad
 import Potential.IxMonad.Reader
 
+class IxMonad m => IxMonadRegion m where
+  type RegionType m
+  type RegionLabel m
 
 data RegionMgr m =
       RegionMgr { enter :: forall x . m Unmodeled x x ()
@@ -39,6 +43,10 @@ instance IxMonad m => IxMonad (IxRegionT typ r m) where
   fl >>= f = IxRegionT $ let fl' = runIxRegionT fl
 			 in fl' >>= (runIxRegionT . f)
 
+instance IxMonad m => IxMonadRegion (IxRegionT typ r m) where
+  type RegionType (IxRegionT typ r m) = typ
+  type RegionLabel (IxRegionT typ r m) = r
+
 withRegion' region r = runIxReaderT (runIxRegionT r) region
 
 withRegion :: ( IxMonad m
@@ -55,30 +63,13 @@ withRegion region r =
 
 data SubRegionWitness typ r s = SubRegionWitness
 
-newtype IxSubRegionT typ r s m ct x y a =
-  IxSubRegionT { runIxSubRegionT :: IxReaderT (SubRegionWitness typ r s)
-					      (Region typ s m) ct x y a }
-
-type SubRegion typ r m = IxSubRegionT typ r m
-
-instance IxMonadTrans (IxSubRegionT typ r s) where
-  lift f = IxSubRegionT $ lift $ lift f
-
-instance IxFunctor m => IxFunctor (IxSubRegionT typ r s m) where
-  fmap f (IxSubRegionT m) = IxSubRegionT $ fmap f m
-
-instance IxMonad m => IxMonad (IxSubRegionT typ r s m) where
-  unsafeReturn a = lift $ unsafeReturn a
-  fl >>= f = IxSubRegionT $ let fl' = runIxSubRegionT fl
-			    in fl' >>= (runIxSubRegionT . f)
-
 nestRegion :: ( IxMonad m
 	      , Composition Unmodeled ct, Compose Unmodeled ct ~ ct
 	      , Composition ct Unmodeled, Compose ct Unmodeled ~ ct )
-	   => (forall s . SubRegion typ r s m ct x y a)
+	   => (forall s . IxReaderT (SubRegionWitness typ r s)
+				    (Region typ s m) ct x y a)
 	   -> Region typ r m ct x y a
 nestRegion body = IxRegionT $
      do region <- ask
-	lift $ withRegion region
-			  (runIxReaderT (runIxSubRegionT body) SubRegionWitness)
+	lift $ withRegion region (runIxReaderT body SubRegionWitness)
 
