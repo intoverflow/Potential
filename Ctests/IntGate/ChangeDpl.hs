@@ -7,7 +7,7 @@ module Ctests.IntGate.ChangeDpl where
 import Potential
 import Potential.Machine.IntGate
 
-_changeDpl = defun "_changeDpl" $
+_changeDpl2 = defun "_changeDpl2" $
      do isMemSubRegion $ isMemRegion $ isCode
 	comment "rdi is new dpl, rsi is *intDesc"
 	push rax

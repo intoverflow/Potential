@@ -128,6 +128,11 @@ primFieldProj proj isolate_mask bit_offset src =
 primFieldInj inj forget_mask bit_offset src dst =
      do constraints <- getConstraints
 	instr $ ShL bit_offset (arg src)
+	-- TODO:
+	-- cannot and 64-bit-literal 64-bit-register
+	-- need to:
+	--   mov 64-bit-literal 64-bit-register
+	--   and reg reg.
 	instr $ And forget_mask (arg dst)
 	instr $ Or (arg src) (arg dst)
 	-- this last right shift restores src to its original contents

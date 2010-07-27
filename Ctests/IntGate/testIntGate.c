@@ -25,22 +25,20 @@ void changeDpl1(int dpl, struct IntDesc_t *pIntDesc) {
 void changeDpl2(int dpl, struct IntDesc_t *pIntDesc);
 
 int main() {
-  int dpl1 = 0;
-  int dpl2 = 1;
-  int dpl3 = 3;
   struct IntDesc_t intDesc;
 
-  changeDpl1(dpl1, &intDesc);
+  changeDpl1(0, &intDesc);
+  printf("dpl: %d\n", intDesc.dpl);
 
-  // printf("dpl: %d\n", intDesc.dpl);
+  changeDpl1(1, &intDesc);
+  printf("dpl: %d\n", intDesc.dpl);
 
-  changeDpl1(dpl2, &intDesc);
+  changeDpl2(3, &intDesc);
+  printf("dpl: %d\n", intDesc.dpl);
 
-  // printf("dpl: %d\n", intDesc.dpl);
+  changeDpl2(2, &intDesc);
+  printf("dpl: %d\n", intDesc.dpl);
 
-  // changeDpl2(dpl3, &intDesc);
-
-  // printf("dpl: %d\n", intDesc.dpl);
 
   return 0;
 }
