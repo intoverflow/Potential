@@ -40,6 +40,7 @@ compiler cfg =
 			, NoMonomorphismRestriction
 			, QuasiQuotes
 			, FlexibleContexts
+			, FlexibleInstances
 			, MultiParamTypeClasses
 			, UndecidableInstances
 			, TypeFamilies
