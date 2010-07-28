@@ -25,6 +25,7 @@ import Prelude( ($) )
 import Potential.Size
 import Potential.Core
 import Potential.Assembly
+import Potential.DataStructure.FieldRelation
 import Potential.Printing -- temporary, used in a TODO
 
 import Potential.IxMonad.Region
@@ -116,29 +117,29 @@ primPtrInj inj offset partialSrc structSrc =
 	set structSrc structPtr'
 
 -- For projecting from a partial to a field
-primFieldProj proj isolate_mask bit_offset src tmp =
+primFieldProj field_label src tmp =
      do forget tmp
-	instr $ MovC isolate_mask (arg tmp)
-	instr $ And (arg tmp) (arg src)
-	instr $ ShR bit_offset (arg src)
-	t <- get src
-	let t' = proj t
+	partial <- get src
 	forget src
-	set src t'
+	instr $ MovC (isolateMask partial field_label) (arg tmp)
+	instr $ And (arg tmp) (arg src)
+	instr $ ShR (bitOffset partial field_label) (arg src)
+	let field = projField partial field_label
+	set src field
 
 -- For injecting from a field into a partial
-primFieldInj inj forget_mask bit_offset src dst tmp =
+primFieldInj inj field_label src dst tmp =
      do constraints <- getConstraints
 	forget tmp
-	instr $ ShL bit_offset (arg src)
-	instr $ MovC forget_mask (arg tmp)
+	partial <- get dst
+	instr $ ShL (bitOffset partial field_label) (arg src)
+	instr $ MovC (forgetMask partial field_label) (arg tmp)
 	instr $ And (arg tmp) (arg dst)
 	instr $ Or (arg src) (arg dst)
 	-- this last right shift restores src to its original contents
-	instr $ ShR bit_offset (arg src)
-	f <- get src
-	p <- get dst
-	set dst $ inj constraints f p
+	instr $ ShR (bitOffset partial field_label) (arg src)
+	field <- get src
+	set dst $ inj constraints field partial
 
 -- Projects from an array pointer to a cell pointer
 primArrayProj proj offset src dst =

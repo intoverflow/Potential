@@ -44,6 +44,8 @@ defineDataSize' t n =
 
 field_label_name us f = TH.mkName $ struct_name us ++ "_" ++ field_name f
 
+field_label us f = TH.ConE $ field_label_name us f
+
 field_names us =
     let var_fields = filter isVarField $ concat $ fields us
     in map (TH.mkName . field_name) var_fields
@@ -239,25 +241,26 @@ reifyFieldRelations us = on_fields reifyFieldRelation us
 
 reifyFieldRelation us (fs, offset) (f, bit_offset) =
      do let fieldName = field_label_name us f
-	    ft = TH.ConT fieldName
+	    fl = TH.ConT fieldName
+	    ft = TH.VarT $ TH.mkName $ field_name f
 	    pt = structPartialType us offset $ field_partial_names fs
 	isolateMaskV <- [| \_ _ -> (2^(field_size f)-1) `shiftL`
 				   (fromIntegral bit_offset) |]
 	forgetMaskV  <- [| \x y -> complement $ isolateMask x y |]
+	bitOffsetV   <- [| \_ _ -> bit_offset |]
+	projV        <- [| \_ _ -> undefined |]
 	return  [ TH.DataD [] fieldName [] [TH.NormalC fieldName []] []
 		, TH.InstanceD
 			[]
-			(foldl TH.AppT (TH.ConT ''IsFieldOf) [pt, ft])
-			[ TH.FunD 'forgetMask -- (TH.mkName "forgetMask")
-			    [ TH.Clause []
-					(TH.NormalB forgetMaskV)
-					[]
-			    ]
-			, TH.FunD 'isolateMask -- (TH.mkName "isolateMask")
-			    [ TH.Clause []
-					(TH.NormalB isolateMaskV)
-					[]
-			    ]
+			(foldl TH.AppT (TH.ConT ''IsFieldOf) [pt, fl, ft])
+			[ TH.FunD 'forgetMask
+			    [ TH.Clause [] (TH.NormalB forgetMaskV) [] ]
+			, TH.FunD 'isolateMask
+			    [ TH.Clause [] (TH.NormalB isolateMaskV) [] ]
+			, TH.FunD 'bitOffset
+			    [ TH.Clause [] (TH.NormalB bitOffsetV) [] ]
+			, TH.FunD 'projField
+			    [ TH.Clause [] (TH.NormalB projV) [] ]
 			] ]
 
 
@@ -285,14 +288,10 @@ reifyFieldProjector us (fs, byte_offset) (f, bit_offset) =
 	    signature2 = TH.ForallT (map TH.PlainTV $ field_names us)
 				    []
 				    (TH.AppT (TH.AppT TH.ArrowT domain2) range)
-	    projector1 = TH.SigE projectorUntyped signature1
+	    -- projector1 = TH.SigE projectorUntyped signature1
 	    projector2 = TH.SigE projectorUntyped signature2
-	theFunction  <- TH.appE [| \proj -> primFieldProj
-						proj
-						( (2^(field_size f)-1) `shiftL`
-						  (fromIntegral bit_offset) )
-						bit_offset |]
-				(return projector1)
+	    label = field_label us f
+	theFunction  <- TH.appE [| primFieldProj |] (return label)
 	return $ [ TH.ValD (TH.VarP proj_name) (TH.NormalB theFunction) []
 		 , TH.ValD (TH.VarP type_proj_name) (TH.NormalB projector2) []
 		 ]
@@ -332,13 +331,9 @@ reifyFieldInjector us (fs, byte_offset) (f, bit_offset) =
 				     (TH.AppT (TH.AppT TH.ArrowT partialT)
 				      partialT')))
 	    injector  = TH.SigE injectorUntyped signature
-	theFunction  <- TH.appE [| \inj -> primFieldInj
-						inj
-						( complement $
-						  (2^(field_size f)-1) `shiftL`
-						  (fromIntegral bit_offset) )
-						bit_offset |]
-				(return injector)
+	    label     = field_label us f
+	theFunction  <- foldl TH.appE [| \inj label -> primFieldInj inj label |]
+				      [return injector, return label]
 	return $ [ TH.ValD (TH.VarP inj_name) (TH.NormalB theFunction) [] ]
 
 
