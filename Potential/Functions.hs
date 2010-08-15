@@ -50,14 +50,6 @@ getType :: Function (Code ConstraintsOn)
 			alloc' cmp')
 getType fn = fn
 
-getTypeOf
-    :: src
-    -> Function (Code ConstraintsOn)
-		(MS rax' rbx' rcx' rdx' rsi' rdi' rbp' rsp' rflags'
-		    rip' r08' r09' r10' r11' r12' r13' r14' r15' alloc' cmp)
-		(MS rax rbx rcx rdx rsi rdi rbp rsp rflags
-		    rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
-    -> Get src rax rbx rcx rdx rsi rdi rbp rsp rflags
-	       rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
+getTypeOf :: src -> Function (Code ConstraintsOn) ms' ms -> Get src ms
 getTypeOf src fn = undefined
 

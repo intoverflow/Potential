@@ -1,6 +1,5 @@
 {-# LANGUAGE
-	TemplateHaskell #-}
-{-# LANGUAGE
+	TemplateHaskell,
 	MultiParamTypeClasses,
 	FlexibleContexts,
 	FlexibleInstances,
@@ -48,26 +47,13 @@ data MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 	, ms_rcmp :: cmp -- the last cmp
 	}
 
-class MSSet field new rax rbx rcx rdx rsi rdi rbp rsp rflags
-		      rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp where
-  type Set field new rax rbx rcx rdx rsi rdi rbp rsp rflags
-		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
-  set' :: field
-	 -> new
-	 -> (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
-		rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
-	 -> Set field new rax rbx rcx rdx rsi rdi rbp rsp rflags
-			  rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
+class MSSet field new ms where
+  type Set field new ms
+  set' :: field -> new -> ms -> Set field new ms
 
-class MSGet field rax rbx rcx rdx rsi rdi rbp rsp rflags
-		  rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp where
-  type Get field rax rbx rcx rdx rsi rdi rbp rsp rflags
-		 rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
-  get' :: field
-	-> (MS rax rbx rcx rdx rsi rdi rbp rsp rflags
-	       rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp)
-	-> Get field rax rbx rcx rdx rsi rdi rbp rsp rflags
-		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp
+class MSGet field ms where
+  type Get field ms
+  get' :: field -> ms -> Get field ms
 
 class MSArg field where
   arg   :: field -> Reg

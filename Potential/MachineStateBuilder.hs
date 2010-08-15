@@ -55,15 +55,14 @@ defMSSetInstance regs name =
 		(foldl AppT (ConT $ mkName "MSSet") $
 			[ ConT $ dataName name
 			, VarT $ argName' name
-			] ++
-			(map (VarT . argName) regs)
+			, ms
+			]
 		)
 		[ TySynInstD (mkName "Set")
-				([ ConT $ dataName name
+				[ ConT $ dataName name
 				 , VarT $ argName' name
-				 ] ++
-				 (map (VarT . argName) regs)
-				)
+				 , ms
+				]
 				ms'
 		, FunD (mkName "set'")
 		       [ Clause [ ConP (dataName name) []
@@ -85,13 +84,10 @@ defMSGetInstance regs name =
  let ms  = foldl AppT (ConT $ mkName "MS") (map (VarT . argName) regs)
  in [ InstanceD []
 		(foldl AppT (ConT $ mkName "MSGet") $
-			[ ConT $ dataName name ] ++
-			(map (VarT . argName) regs)
+			[ ConT $ dataName name, ms ]
 		)
 		[ TySynInstD (mkName "Get")
-				([ ConT $ dataName name ] ++
-				 (map (VarT . argName) regs)
-				)
+				[ ConT $ dataName name, ms ]
 				(VarT $ argName name)
 		, FunD (mkName "get'")
 		       [ Clause [ ConP (dataName name) [] ]

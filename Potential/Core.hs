@@ -70,11 +70,19 @@ evaluateTypes :: IxMonad m
 	a
 evaluateTypes a = a
 
+isUsingMS :: (x ~ MS rax rbx rcx rdx rsi rdi rbp rsp rflags
+		     rip r08 r09 r10 r11 r12 r13 r14 r15 alloc cmp, IxMonad m)
+	=> m Unmodeled x x ()
+isUsingMS = return ()
+
 get field =
-     do ms <- psGet
+     do isUsingMS
+	ms <- psGet
         let fdata = get' field ms
         return fdata
-set field new = psModify (\ms -> set' field new ms)
+set field new =
+     do isUsingMS
+	psModify (\ms -> set' field new ms)
 
 getConstraints :: IxCode m => m Unmodeled x x (Constraints m)
 getConstraints = return undefined
