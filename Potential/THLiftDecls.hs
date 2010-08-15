@@ -1,7 +1,7 @@
 {-# LANGUAGE
 	TemplateHaskell,
 	TypeSynonymInstances #-}
-module Potential.DataStructure.LiftDecls where
+module Potential.THLiftDecls where
 
 import Prelude
 import Language.Haskell.TH

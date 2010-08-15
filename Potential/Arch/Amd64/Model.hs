@@ -9,10 +9,19 @@ module Potential.Arch.Amd64.Model
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
 	, rip, r08, r09, r10, r11, r12, r13, r14, r15
 	, rcmp, ralloc
+	, amd64
 	) where
 
 import Prelude
 import Potential.Arch.Builder
+
+import Language.Haskell.TH.Quote
+import qualified Language.Haskell.TH as TH
+import Text.ParserCombinators.Parsec
+import Data.Maybe (isNothing)
+
+import Potential.Arch.ParseType
+import Potential.Arch.CommonQQ
 
 data Reg =
     Rax | Rbx | Rcx | Rdx
@@ -51,4 +60,37 @@ defineRegisters ''MS ''Reg
 		[ "ax", "bx", "cx", "dx", "si", "di", "bp", "sp", "flags"
 		, "ip", "08", "09", "10", "11", "12", "13", "14", "15"
 		, "alloc", "cmp"]
+
+parseAmd64 =
+     do whiteSpace
+	assignments <- commaSep bind
+	whiteSpace
+	eof
+	return $ forgeMS assignments
+  where bind =
+	     do r <- identifier
+		if not (elem r regs)
+		  then fail $ "`" ++ r ++ "' is not a register in this model"
+		  else do colon
+			  t <- parseType parseAmd64 "amd64"
+			  return (r, t)
+
+forgeMS assignments =
+	TH.ForallT (map (TH.PlainTV . TH.mkName) missing)
+		   []
+		   (foldl TH.AppT (TH.ConT ''MS) (map assign regs))
+  where assign r = maybe (TH.VarT $ TH.mkName r) (id) (lookup r assignments)
+	missing = filter (\r -> isNothing $ lookup r assignments) regs
+
+regs =  [ "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp"
+	, "rflags", "rip"
+	, "r08", "r09", "r10", "r11" , "r12", "r13", "r14", "r15"
+	, "rcmp", "ralloc" ]
+
+{- Example:
+	:t undefined :: $([$amd64| rax : Int |])
+-}
+
+amd64 = QuasiQuoter (parseExp $ parseModel parseAmd64)
+		    (parsePat $ parseModel parseAmd64)
 

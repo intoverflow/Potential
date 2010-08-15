@@ -6,7 +6,7 @@ import qualified Language.Haskell.TH as TH
 
 import Potential.DataStructure.PartialRelation
 import Potential.DataStructure.FieldRelation
-import Potential.DataStructure.LiftDecls
+import Potential.THLiftDecls
 import Potential.DataStructure.AbstractSyntax
 import Potential.Pointer ( newPtr64
 			 , primPtrProj, primPtrInj

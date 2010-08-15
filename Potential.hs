@@ -3,6 +3,7 @@ module Potential
 	( arg, forget, get, getConstraints, withConstraints
 	, rax, rbx, rcx, rdx, rsi, rdi
 	, r08, r09, r10, r11, r12, r13, r14, r15
+	, amd64
 	, CB0(..), CB1(..), Ptr64, FrameBasePtr64, Int64, Stack
 	, withMemoryRegion, nestMemoryRegion
 	, asm, renderFn, getType, getTypeOf

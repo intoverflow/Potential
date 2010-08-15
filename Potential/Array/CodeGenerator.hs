@@ -4,7 +4,7 @@ module Potential.Array.CodeGenerator (reifyArray) where
 import Prelude
 import qualified Language.Haskell.TH as TH
 
-import Potential.DataStructure.LiftDecls
+import Potential.THLiftDecls
 import Potential.Array.AbstractSyntax
 import Potential.Size (dataSize)
 import Potential.Pointer (newPtr64, primArrayProj, primArrayInj)
