@@ -4,7 +4,7 @@ module Potential.Printing where
 import Numeric (showHex)
 
 import Prelude
-import Potential.Arch.Amd64.State( Reg(..) )
+import Potential.Arch.Amd64.Model( Reg(..) )
 import Potential.Assembly
 
 instance Show Reg where

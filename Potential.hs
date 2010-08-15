@@ -32,7 +32,7 @@ import Potential.Functions
 import Potential.Integer
 import Potential.IxMonad
 import Potential.IxMonad.PState (isCode)
-import Potential.Arch.Amd64.State
+import Potential.Arch.Amd64.Model
 import Potential.Mov
 import Potential.Pointer
 import Potential.Printing

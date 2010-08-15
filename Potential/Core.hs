@@ -27,7 +27,7 @@ module Potential.Core
 	, Composition(..)
 	, IxFunctor(..), IxMonad(..), IxMonadTrans(..)
 
-	-- stuff that comes from State
+	-- stuff that comes from Model
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
 	, rip, r08, r09, r10, r11, r12, r13, r14, r15, rcmp
 	, MS
@@ -47,7 +47,7 @@ import Potential.IxMonad.PState
 import Potential.Size
 import Potential.Constraints
 import Potential.Arch.SetGet
-import Potential.Arch.Amd64.State
+import Potential.Arch.Amd64.Model
 import Potential.Assembly
 
 
