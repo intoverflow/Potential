@@ -8,7 +8,7 @@
 	TypeFamilies,
 	TemplateHaskell,
 	QuasiQuotes #-}
-module Potential.Machine.IntGate where
+module Potential.Arch.Amd64.Machine.IntGate where
 
 import Potential.Size
 import Potential.Core

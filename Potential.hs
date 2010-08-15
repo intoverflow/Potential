@@ -32,14 +32,14 @@ import Potential.Functions
 import Potential.Integer
 import Potential.IxMonad
 import Potential.IxMonad.PState (isCode)
-import Potential.MachineState
+import Potential.Arch.Amd64.State
 import Potential.Mov
 import Potential.Pointer
 import Potential.Printing
 import Potential.Size
 import Potential.Stack
 
-import Potential.Machine.Flags
+import Potential.Arch.Amd64.Machine.Flags
 
 import Prelude hiding (undefined, (>>), (>>=), return, fail)
 

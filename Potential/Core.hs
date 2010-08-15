@@ -27,11 +27,13 @@ module Potential.Core
 	, Composition(..)
 	, IxFunctor(..), IxMonad(..), IxMonadTrans(..)
 
-	-- stuff that comes from MachineState
+	-- stuff that comes from State
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
-	, rip, r08, r09, r10, r11, r12, r13, r14, r15
-	, arg, MS, Get
-	, rcmp
+	, rip, r08, r09, r10, r11, r12, r13, r14, r15, rcmp
+	, MS
+
+	-- stuff that comes from SetGet
+	, Set, Get, arg
 
 	-- stuff that comes from Constraints
 	, ConstraintsOn(..), ConstraintsOff(..)
@@ -44,7 +46,8 @@ import Potential.IxMonad.Writer
 import Potential.IxMonad.PState
 import Potential.Size
 import Potential.Constraints
-import Potential.MachineState
+import Potential.Arch.SetGet
+import Potential.Arch.Amd64.State
 import Potential.Assembly
 
 

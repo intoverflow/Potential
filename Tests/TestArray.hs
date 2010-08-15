@@ -1,7 +1,7 @@
 module Tests.TestArray where
 
 import Potential
-import Potential.Machine.IDT
+import Potential.Arch.Amd64.Machine.IDT
 
 testProjector = defun "testProjector" $
      do isMemRegion $ isCode

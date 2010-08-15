@@ -4,15 +4,15 @@
 	FlexibleContexts,
 	FlexibleInstances,
 	TypeFamilies #-}
-module Potential.MachineState ( Reg(..), MS
-			      , rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
-			      , rip, r08, r09, r10, r11, r12, r13, r14, r15
-			      , MSGet(..), MSSet(..), MSArg(..)
-			      , rcmp, ralloc
-			      ) where
+module Potential.Arch.Amd64.State
+	( Reg(..), MS
+	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
+	, rip, r08, r09, r10, r11, r12, r13, r14, r15
+	, rcmp, ralloc
+	) where
 
 import Prelude
-import Potential.MachineStateBuilder
+import Potential.Arch.Builder
 
 data Reg =
     Rax | Rbx | Rcx | Rdx
@@ -47,19 +47,8 @@ data MS rax rbx rcx rdx rsi rdi rbp rsp rflags
 	, ms_rcmp :: cmp -- the last cmp
 	}
 
-class MSSet field new ms where
-  type Set field new ms
-  set' :: field -> new -> ms -> Set field new ms
-
-class MSGet field ms where
-  type Get field ms
-  get' :: field -> ms -> Get field ms
-
-class MSArg field where
-  arg   :: field -> Reg
-  isArg :: field -> ()
-
-defineRegisters [ "ax", "bx", "cx", "dx", "si", "di", "bp", "sp", "flags"
+defineRegisters ''MS ''Reg
+		[ "ax", "bx", "cx", "dx", "si", "di", "bp", "sp", "flags"
 		, "ip", "08", "09", "10", "11", "12", "13", "14", "15"
 		, "alloc", "cmp"]
 

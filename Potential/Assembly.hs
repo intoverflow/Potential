@@ -23,7 +23,7 @@ import Data.Maybe
 import Data.Word
 import Data.Typeable
 
-import Potential.MachineState( Reg )
+import Potential.Arch.Amd64.State( Reg )
 import Potential.Constraints
 import Potential.IxMonad.IxMonad
 import Potential.IxMonad.Writer

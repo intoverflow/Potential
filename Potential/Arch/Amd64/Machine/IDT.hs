@@ -2,10 +2,10 @@
 	QuasiQuotes,
 	TypeFamilies,
 	NoMonomorphismRestriction #-}
-module Potential.Machine.IDT where
+module Potential.Arch.Amd64.Machine.IDT where
 
 import Potential.Array
-import Potential.Machine.IntGate
+import Potential.Arch.Amd64.Machine.IntGate
 
 reifyArray ast_InterruptGate [$array|
 

@@ -3,7 +3,7 @@
 # A script for doing a bunch of compiles
 
 function compile {
-  runhaskell "-package ghc" PC.Main $1
+  time runhaskell "-package ghc" PC.Main $1
 }
 
 compile 'compile Tests.TestArray'

@@ -9,7 +9,7 @@
 	TypeFamilies,
 	TemplateHaskell,
 	QuasiQuotes #-}
-module Potential.Machine.Flags where
+module Potential.Arch.Amd64.Machine.Flags where
 
 import Potential.Size
 import Potential.Assembly

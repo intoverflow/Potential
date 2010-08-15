@@ -1,9 +1,11 @@
 {-# LANGUAGE
 	TemplateHaskell #-}
-module Potential.MachineStateBuilder (defineRegisters) where
+module Potential.Arch.Builder (defineRegisters) where
 
 import Prelude
 import Language.Haskell.TH
+
+import Potential.Arch.SetGet
 
 dataName reg = mkName $ "RR" ++ reg
 regName reg = mkName $ "R" ++ reg
@@ -25,15 +27,15 @@ defRegisterName name =
 	   []
 	 ]
 
-defArgInstance name =
+defArgInstance regtyp name =
     [ InstanceD []
-		(AppT (ConT $ mkName "MSArg") (ConT $ dataName name))
-		[ FunD (mkName "arg")
+		(foldl AppT (ConT ''IsArg) [ConT $ dataName name, ConT regtyp])
+		[ FunD 'arg
 		       [ Clause [ConP (dataName name) []]
 				(NormalB (ConE $ regName name))
 				[]
 		       ]
-		, FunD (mkName "isArg")
+		, FunD 'isArg
 		       [ Clause [ConP (dataName name) []]
 				(NormalB (ConE $ mkName "()"))
 				[]
@@ -45,26 +47,26 @@ replace _ _ [] = []
 replace old new (a:as) = if old == a then new : replace old new as
 				     else a : replace old new as
 
-defMSSetInstance regs name =
- let ms  = foldl AppT (ConT $ mkName "MS") (map (VarT . argName) regs)
-     ms' = foldl AppT (ConT $ mkName "MS")
+defSetInstance typ regs name =
+ let ms  = foldl AppT (ConT typ) (map (VarT . argName) regs)
+     ms' = foldl AppT (ConT typ)
 		 (map VarT (replace (argName name)
 				    (argName' name)
 				    (map argName regs)))
  in [ InstanceD []
-		(foldl AppT (ConT $ mkName "MSSet") $
+		(foldl AppT (ConT ''Setter) $
 			[ ConT $ dataName name
 			, VarT $ argName' name
 			, ms
 			]
 		)
-		[ TySynInstD (mkName "Set")
+		[ TySynInstD ''Set
 				[ ConT $ dataName name
 				 , VarT $ argName' name
 				 , ms
 				]
 				ms'
-		, FunD (mkName "set'")
+		, FunD 'set'
 		       [ Clause [ ConP (dataName name) []
 				, VarP (argName' name)
 				, VarP (mkName "ms")
@@ -80,16 +82,16 @@ defMSSetInstance regs name =
 		]
     ]
 
-defMSGetInstance regs name =
- let ms  = foldl AppT (ConT $ mkName "MS") (map (VarT . argName) regs)
+defGetInstance typ regs name =
+ let ms  = foldl AppT (ConT typ) (map (VarT . argName) regs)
  in [ InstanceD []
-		(foldl AppT (ConT $ mkName "MSGet") $
+		(foldl AppT (ConT ''Getter)
 			[ ConT $ dataName name, ms ]
 		)
-		[ TySynInstD (mkName "Get")
+		[ TySynInstD ''Get
 				[ ConT $ dataName name, ms ]
 				(VarT $ argName name)
-		, FunD (mkName "get'")
+		, FunD 'get'
 		       [ Clause [ ConP (dataName name) [] ]
 				(NormalB (VarE $ msArgName name))
 				[]
@@ -97,10 +99,10 @@ defMSGetInstance regs name =
 		]
     ]
 
-defineRegisters regs =
+defineRegisters mstyp regtyp regs =
     return $ concat $ (map defRegisterData regs) ++
 		      (map defRegisterName regs) ++
-		      (map defArgInstance regs) ++
-		      (map (defMSSetInstance regs) regs) ++
-		      (map (defMSGetInstance regs) regs)
+		      (map (defArgInstance regtyp) regs) ++
+		      (map (defSetInstance mstyp regs) regs) ++
+		      (map (defGetInstance mstyp regs) regs)
 

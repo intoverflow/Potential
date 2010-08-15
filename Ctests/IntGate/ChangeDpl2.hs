@@ -5,7 +5,7 @@ compile --outdir=Ctests/IntGate --outfile=changeDpl2.S Ctests.IntGate.ChangeDpl2
 -}
 
 import Potential
-import Potential.Machine.IntGate
+import Potential.Arch.Amd64.Machine.IntGate
 
 _changeDpl2 = defun "_changeDpl2" $
      do isMemSubRegion $ isMemRegion $ isCode
