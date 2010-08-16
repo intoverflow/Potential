@@ -1,0 +1,5 @@
+Render TestAdd.hs to add2.S
+Compile with gcc adder.c add2.S
+
+Execution of a.out should yield the number 7 twice: once by a call to a C
+function, once by a call to a Potential function.

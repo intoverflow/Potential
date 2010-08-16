@@ -11,8 +11,8 @@ module Potential
 	, defun, Function
 	, isCode, isMemRegion, isMemSubRegion
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
-	, add
-	, cmp, sje, assertPrivLevelKernel
+	, add, sub, mul, loadInt
+	, cmp, sje, sjne, assertPrivLevelKernel
 	, array
 	, struct, struct_diagram
 	, assertType

@@ -67,6 +67,7 @@ data Instr =
  |  Pop Reg
  |  Cmp Reg Reg
  |  forall m assumes returns . IxCode m => SJe (Function m assumes returns)
+ |  forall m assumes returns . IxCode m => SJne (Function m assumes returns)
  |  Jne Reg
  |  Jmp Reg
  |  forall m assumes returns . IxCode m => SJmp (Function m assumes returns)
@@ -79,6 +80,8 @@ data Instr =
  |  And Reg Reg
  |  Or Reg Reg
  |  Add Reg Reg
+ |  Sub Reg Reg
+ |  Mul Reg Reg
  |  Enter Word16
  |  Leave
  |  Label String

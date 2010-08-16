@@ -111,3 +111,10 @@ sje c ifZ ifNZ =
 	    _  = assertZF c zf
 	primCondJmp (body ifZ) ifNZ
 
+sjne c ifNZ ifZ =
+     do instr $ SJne ifNZ
+	fl <- get rflags
+	let zf = proj_EFlagsRegister_zf fl
+	    _  = assertZF c zf
+	primCondJmp (body ifNZ) ifZ
+
