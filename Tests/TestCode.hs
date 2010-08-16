@@ -31,11 +31,11 @@ testCmp = defun "testCmp" $
      do isCode
 	pop rax
 	pop rbx
-	rabxCmp <- cmp rax rbx
-	sje rabxCmp doesNothing (do
-		pop rax
-		mov rax rbx
-		ret)
+	compare rax rbx
+		(JZ doesNothing)
+		(do pop rax
+		    mov rax rbx
+		    ret)
 
 doesNothing = defun "doesNothing" $
      do isCode

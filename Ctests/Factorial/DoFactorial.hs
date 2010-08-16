@@ -14,17 +14,19 @@ _doFactorial = defun "_doFactorial" $
 
 	loadInt 0 rbx
 	loadInt 0 rax
-	isZero <- cmp rdi rbx
-	sjne isZero doFactorial1 (sjmp allDone)
+	compare rdi rbx
+		(JZ allDone)
+		(do loadInt 1 rax
+		    loadInt 1 rbx
+		    sjmp doFactorial1)
 
 doFactorial1 = defun "doFactorial1" $
      do isCode
-	loadInt 1 rbx
-	isOne <- cmp rdi rbx
-	sje isOne allDone (do
-		mul rax rdi
-		sub rbx rdi
-		sjmp doFactorial1)
+	compare rdi rbx
+		(JZ allDone)
+		(do mul rdi rax
+		    sub rbx rdi
+		    sjmp doFactorial1)
 
 allDone = defun "allDone" $
      do isCode

@@ -59,21 +59,26 @@ data CS a
 incCmp :: a -> (CS a)
 incCmp _ = undefined
 
-data CF a
-data PF a
-data AF a
-data ZF a
-data SF a
-data OF a
+data CF
+defineDataSize ''CF 1
+data PF
+defineDataSize ''PF 1
+data AF
+defineDataSize ''AF 1
+data ZF
+defineDataSize ''ZF 1
+data SF
+defineDataSize ''SF 1
+data OVF
+defineDataSize ''OVF 1
 
 applyCmp ::
-     c -> EFlagsRegister cf pf af zf sf tf if' df of' iopl rf ac vif vip id
-       -> EFlagsRegister (CF c) (PF c) (AF c) (ZF c) (SF c) tf if' df (OF c)
-			 iopl rf ac vif vip id
-applyCmp _ _ = undefined
+	EFlagsRegister cf pf af zf sf tf ief df ovf iopl rf ac vif vip idf
+     -> EFlagsRegister CF PF AF ZF SF tf ief df OVF iopl rf ac vif vip idf
+applyCmp _ = undefined
 
-assertZF :: a -> ZF a -> ()
-assertZF _ _ = ()
+assertZF :: IxMonad m => ZF -> m Unmodeled x x ()
+assertZF _ = return ()
 
 
 data PrivLevelUser   = PrivLevelUser
@@ -86,35 +91,26 @@ assertPrivLevelKernel =
 	assertType (proj_EFlagsRegister_iopl fl) PrivLevelKernel
 	return ()
 
-cmp r1 r2 =
-     do instr $ Cmp (arg r1) (arg r2)
-	-- verify we've got integers in these registers
-	dr1 <- get r1
-	dr2 <- get r2
-	assertInt64 dr1
-	assertInt64 dr2
-	-- increment the machine state's cmp
-	c <- get rcmp
-	let c' = incCmp c
-	set rcmp c'
-	-- update the flags register to reflect this
-	f <- get rflags
-	let f' = applyCmp c' f
-	set rflags f'
-	get rcmp
-	-- return c' -- does not work for some reason
+data JmpStyle a = JZ a | JNZ a
 
-sje c ifZ ifNZ =
+compare r1 r2 jmper rest =
+     do -- Verify these registers contain integers
+	a <- get r1
+	b <- get r2
+	assertInt64 a
+	assertInt64 b
+	-- Perform the comparison
+	instr $ Cmp (arg r1) (arg r2)
+	-- Now run down the cases
+	case jmper of
+	  JZ a  -> sje a rest
+	  JNZ a -> sjne a rest
+
+sje ifZ ifNZ =
      do instr $ SJe ifZ
-	fl <- get rflags
-	let zf = proj_EFlagsRegister_zf fl
-	    _  = assertZF c zf
 	primCondJmp (body ifZ) ifNZ
 
-sjne c ifNZ ifZ =
+sjne ifNZ ifZ =
      do instr $ SJne ifNZ
-	fl <- get rflags
-	let zf = proj_EFlagsRegister_zf fl
-	    _  = assertZF c zf
 	primCondJmp (body ifNZ) ifZ
 

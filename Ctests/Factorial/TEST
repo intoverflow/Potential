@@ -1,5 +1,4 @@
-Render TestAdd.hs to add2.S
-Compile with gcc adder.c add2.S
+Render DoFactorial.hs to doFactorial.S
+Compile with gcc factorial.c doFactorial.S
 
-Execution of a.out should yield the number 7 twice: once by a call to a C
-function, once by a call to a Potential function.
+Execution of a.out should yield a couple factorials.

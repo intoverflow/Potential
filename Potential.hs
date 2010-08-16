@@ -12,7 +12,7 @@ module Potential
 	, isCode, isMemRegion, isMemSubRegion
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, add, sub, mul, loadInt
-	, cmp, sje, sjne, assertPrivLevelKernel
+	, compare, JmpStyle(..), sje, sjne, assertPrivLevelKernel
 	, array
 	, struct, struct_diagram
 	, assertType
@@ -42,5 +42,5 @@ import Potential.Stack
 
 import Potential.Arch.Amd64.Machine.Flags
 
-import Prelude hiding (undefined, (>>), (>>=), return, fail)
+import Prelude hiding (undefined, (>>), (>>=), return, fail, compare)
 
