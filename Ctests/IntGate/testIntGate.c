@@ -60,9 +60,13 @@ int main() {
 
   intDescs[8].Offset32_64 = 0;
   offset_hi = getDoubleFaultOffsetHi2(intDescs);
-  printf("offset_hi of doubleFault: 0x%.8x (0x%.8lx)\n", intDescs[8].Offset32_64, offset_hi);
+  printf("offset_hi of doubleFault: 0x%.8x (0x%.8lx)\n",
+	intDescs[8].Offset32_64, offset_hi);
+
   changeDoubleFaultOffsetHi2(0xdeadbeef, intDescs);
-  printf("offset_hi of doubleFault: 0x%.8x (0x%.8lx)\n", intDescs[8].Offset32_64, offset_hi);
+  offset_hi = getDoubleFaultOffsetHi2(intDescs);
+  printf("offset_hi of doubleFault: 0x%.8x (0x%.8lx)\n",
+  	intDescs[8].Offset32_64, offset_hi);
 
   return 0;
 }

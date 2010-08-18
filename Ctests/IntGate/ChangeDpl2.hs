@@ -59,7 +59,7 @@ _getDoubleFaultOffsetHi2 = defun "_getDoubleFaultOffsetHi2" $
 	comment "return offset_hi into rax, rdi *IDT"
 	
 	comment "Getting the doubleFault cell into r12"
-	proj_InterruptDescriptionTable_doubleFault rsi r12
+	proj_InterruptDescriptionTable_doubleFault rdi r12
 
 	comment "Projecting 8-bytes in to rbx"
 	proj_InterruptGate_8 r12 rax

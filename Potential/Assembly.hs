@@ -61,6 +61,7 @@ data Instr =
     Cmt String
  |  Ld Deref Reg
  |  Sto Reg Deref
+ |  Lea Deref Reg
  |  Mov Reg Reg
  |  MovC Word64 Reg
  |  Push Reg

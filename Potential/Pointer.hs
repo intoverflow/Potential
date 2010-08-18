@@ -149,7 +149,7 @@ primFieldInj inj field_label src dst tmp =
 
 -- Projects from an array pointer to a cell pointer
 primArrayProj proj offset src dst =
-     do instr $ Ld (Deref2 offset (arg src)) (arg dst)
+     do instr $ Lea (Deref2 offset (arg src)) (arg dst)
 	arrayPtr <- get src
 	belongsHere arrayPtr
 	array <- fromPtr64 arrayPtr

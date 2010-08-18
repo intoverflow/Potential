@@ -40,6 +40,7 @@ instance Show Instr where
   show (Cmt s)     = "// " ++ s
   show (Ld s d)    = "mov " ++ show s ++ ", " ++ show d
   show (Sto s d)   = "mov " ++ show s ++ ", " ++ show d
+  show (Lea s d)   = "lea " ++ show s ++ ", " ++ show d
   show (Mov r1 r2) = "mov " ++ show r1 ++ ", " ++ show r2
   show (MovC c r)   = "mov $0x" ++ (showHex c "") ++ ", " ++ show r
   show (Push r)    = "push " ++ show r
