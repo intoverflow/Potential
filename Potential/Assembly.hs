@@ -80,6 +80,7 @@ data Instr =
  |  And Reg Reg
  |  Or Reg Reg
  |  Add Reg Reg
+ |  AddC Word64 Reg
  |  Sub Reg Reg
  |  Mul Reg Reg
  |  Enter Word16

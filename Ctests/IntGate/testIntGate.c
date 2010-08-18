@@ -2,20 +2,20 @@
 #include <stdio.h>
 
 struct IntDesc_t {
-  unsigned short Offset0_15;
-  unsigned short SegmentSel;
+  unsigned long Offset0_15 : 16;
+  unsigned long SegmentSel : 16;
 
-  unsigned short IST     : 3;   // Set to 0
-  unsigned short Unused0 : 5;   // Set to 0
-  unsigned short type    : 4;   // GateType_t, use 1110b for interrupt gate
-  unsigned short Unused1 : 1;   // Set to 0
-  unsigned short dpl     : 2;   // dpl
-  unsigned short p       : 1;   // present
+  unsigned long IST     : 3;   // Set to 0
+  unsigned long Unused0 : 5;   // Set to 0
+  unsigned long type    : 4;   // GateType_t, use 1110b for interrupt gate
+  unsigned long Unused1 : 1;   // Set to 0
+  unsigned long dpl     : 2;   // dpl
+  unsigned long p       : 1;   // present
 
-  unsigned short        Offset16_31;
+  unsigned short        Offset16_31 : 16;
 
-  unsigned long         Offset32_64;
-  unsigned long         Reserved;
+  unsigned long         Offset32_64 : 32;
+  unsigned long         Reserved : 32;
 } __attribute__((packed));
 
 void changeDpl1(int dpl, struct IntDesc_t *pIntDesc) {
@@ -24,9 +24,20 @@ void changeDpl1(int dpl, struct IntDesc_t *pIntDesc) {
 
 void changeDpl2(int dpl, struct IntDesc_t *pIntDesc);
 
+void changeDoubleFaultOffsetHi1(unsigned long offsethi, struct IntDesc_t *pIntDescs) {
+  struct IntDesc_t *pDoubleFault = &pIntDescs[8];
+  pDoubleFault->Offset32_64 = offsethi;
+}
+
+void changeDoubleFaultOffsetHi2(unsigned long offsethi, struct IntDesc_t *pIntDescs);
+
 int main() {
   struct IntDesc_t intDesc;
+  struct IntDesc_t intDescs[32];
   unsigned short dpl;
+
+  printf("an intgate has size %ld bytes, so that entry 8 has offset 0x%lx\n",
+		sizeof(intDesc), (unsigned long)&intDescs[8] - (unsigned long)intDescs);
 
   changeDpl1(0, &intDesc);
   dpl = getDpl2(&intDesc);
@@ -44,6 +55,10 @@ int main() {
   dpl = getDpl2(&intDesc);
   printf("dpl: %d (%d)\n", intDesc.dpl, dpl);
 
+  intDescs[8].Offset32_64 = 0;
+  printf("offset_hi of doubleFault: 0x%.8x\n", intDescs[8].Offset32_64);
+  changeDoubleFaultOffsetHi2(0xdeadbeef, intDescs);
+  printf("offset_hi of doubleFault: 0x%.8x\n", intDescs[8].Offset32_64);
 
   return 0;
 }

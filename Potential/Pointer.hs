@@ -149,9 +149,8 @@ primFieldInj inj field_label src dst tmp =
 
 -- Projects from an array pointer to a cell pointer
 primArrayProj proj offset src dst =
-     do comment $ "lea from " ++ show (arg src) ++ "+" ++ show offset ++
-		  " to " ++ show (arg dst)
-	-- TODO: do a real instr with the right offset
+     do instr $ Mov (arg src) (arg dst)
+	instr $ AddC (fromIntegral offset) (arg dst)
 	arrayPtr <- get src
 	belongsHere arrayPtr
 	array <- fromPtr64 arrayPtr
@@ -164,9 +163,7 @@ primArrayProj proj offset src dst =
 
 primArrayInj inj offset src dst =
      do instr TxOwnership
-	comment $ "inj from " ++ show (arg src) ++ " to " ++ show (arg dst) ++
-		  "+" ++ show offset
-	-- TODO: a real instr with the right offset
+	instr $ Sto (arg src) (Deref2 offset (arg dst))
 	partial  <- get src
 	arrayPtr <- get dst
 	forget dst

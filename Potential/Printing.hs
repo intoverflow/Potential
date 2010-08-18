@@ -59,6 +59,7 @@ instance Show Instr where
   show (And r1 r2) = "and " ++ show r1 ++ ", " ++ show r2
   show (Or r1 r2)  = "or " ++ show r1 ++ ", " ++ show r2
   show (Add r1 r2) = "add " ++ show r1 ++ ", " ++ show r2
+  show (AddC c r2) = "add 0x" ++ (showHex c "") ++ ", " ++ show r2
   show (Sub r1 r2) = "sub " ++ show r1 ++ ", " ++ show r2
   show (Mul r1 r2) = "imul " ++ show r1 ++ ", " ++ show r2
   show (Enter l)   = "enter 0x" ++ (showHex l "")

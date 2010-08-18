@@ -143,8 +143,9 @@ reifyInjector f astCell ua (fs, poffset) =
 				    (TH.AppT (TH.AppT TH.ArrowT arrayT)
 				     arrayT'))
 	    injector = TH.SigE injectorUntyped signature
-	    offset   = field_pos f
-	theFunction <- TH.appE [| \inj -> primArrayInj inj offset |]
-				(return injector)
+	offset      <- TH.appE [| \sz -> sz * field_pos f + poffset |]
+				(genericCellSize astCell)
+	theFunction <- foldl TH.appE [| \inj offset -> primArrayInj inj offset |]
+				[return injector, return offset]
 	return [ TH.ValD (TH.VarP inj_name) (TH.NormalB theFunction) [] ]
 
