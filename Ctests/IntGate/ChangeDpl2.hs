@@ -27,3 +27,11 @@ _changeDpl2 = defun "_changeDpl2" $
 	pop rax
 	ret
 
+getDpl2 = defun "_getDpl2" $
+     do isMemRegion $ isCode
+	comment "rdi is *intDesc"
+	comment "return the dpl into rax"
+	proj_InterruptGate_0 rdi rax
+	proj_InterruptGate_0_dpl rax rbx
+	ret
+

@@ -26,18 +26,23 @@ void changeDpl2(int dpl, struct IntDesc_t *pIntDesc);
 
 int main() {
   struct IntDesc_t intDesc;
+  unsigned short dpl;
 
   changeDpl1(0, &intDesc);
-  printf("dpl: %d\n", intDesc.dpl);
+  dpl = getDpl2(&intDesc);
+  printf("dpl: %d (%d)\n", intDesc.dpl, dpl);
 
   changeDpl1(1, &intDesc);
-  printf("dpl: %d\n", intDesc.dpl);
+  dpl = getDpl2(&intDesc);
+  printf("dpl: %d (%d)\n", intDesc.dpl, dpl);
 
   changeDpl2(3, &intDesc);
-  printf("dpl: %d\n", intDesc.dpl);
+  dpl = getDpl2(&intDesc);
+  printf("dpl: %d (%d)\n", intDesc.dpl, dpl);
 
   changeDpl2(2, &intDesc);
-  printf("dpl: %d\n", intDesc.dpl);
+  dpl = getDpl2(&intDesc);
+  printf("dpl: %d (%d)\n", intDesc.dpl, dpl);
 
 
   return 0;
