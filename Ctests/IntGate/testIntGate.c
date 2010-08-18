@@ -31,10 +31,13 @@ void changeDoubleFaultOffsetHi1(unsigned long offsethi, struct IntDesc_t *pIntDe
 
 void changeDoubleFaultOffsetHi2(unsigned long offsethi, struct IntDesc_t *pIntDescs);
 
+unsigned long getDoubleFaultOffsetHi2(struct IntDesc_t *pIntDescs);
+
 int main() {
   struct IntDesc_t intDesc;
   struct IntDesc_t intDescs[32];
   unsigned short dpl;
+  unsigned long offset_hi;
 
   printf("an intgate has size %ld bytes, so that entry 8 has offset 0x%lx\n",
 		sizeof(intDesc), (unsigned long)&intDescs[8] - (unsigned long)intDescs);
@@ -56,9 +59,10 @@ int main() {
   printf("dpl: %d (%d)\n", intDesc.dpl, dpl);
 
   intDescs[8].Offset32_64 = 0;
-  printf("offset_hi of doubleFault: 0x%.8x\n", intDescs[8].Offset32_64);
+  offset_hi = getDoubleFaultOffsetHi2(intDescs);
+  printf("offset_hi of doubleFault: 0x%.8x (0x%.8lx)\n", intDescs[8].Offset32_64, offset_hi);
   changeDoubleFaultOffsetHi2(0xdeadbeef, intDescs);
-  printf("offset_hi of doubleFault: 0x%.8x\n", intDescs[8].Offset32_64);
+  printf("offset_hi of doubleFault: 0x%.8x (0x%.8lx)\n", intDescs[8].Offset32_64, offset_hi);
 
   return 0;
 }

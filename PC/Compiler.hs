@@ -76,11 +76,16 @@ doCompile mod outdir outfile fns =
 			hPutStrLn h $ " *"
 			hPutStrLn h $ " * Initial source module: `" ++ mod ++"'"
 			hPutStrLn h $ " */"
+			hPutStrLn h $ ""
+			hPutStrLn h $ ""
 			mapM_ (doCompileFile h) fns
 
 doCompileFile h fn =
      do putStrLn $ "  " ++ fname fn ++ "..."
 	let indent = replicate 4 ' '
+	hPutStrLn h $ "/* Function `" ++ fname fn ++ "' with type"
+	hPutStrLn h (ftyp fn)
+	hPutStrLn h "*/"
 	hPutStrLn h $ ".globl " ++ fname fn
 	hPutStrLn h $ fname fn ++ ":"
 	hPutStrLn h $ indent ++ "// Defined at " ++ floc fn

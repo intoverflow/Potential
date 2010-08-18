@@ -39,19 +39,33 @@ _getDpl2 = defun "_getDpl2" $
 _changeDoubleFaultOffsetHi2 = defun "_changeDoubleFaultOffsetHi2" $
      do isMemSubRegion $ isMemRegion $ isCode
 	comment "rdi is new offset_hi, rsi is *IDT"
-	push rax
 
-	comment "Getting the doubleFault cell into rax"
-	lift $ proj_InterruptDescriptionTable_doubleFault rsi rax
+	comment "Getting the doubleFault cell into r12"
+	lift $ proj_InterruptDescriptionTable_doubleFault rsi r12
+
 	comment "Projecting 8-bytes in to rbx"
-	proj_InterruptGate_8 rax rbx
-	comment "Upading offset_hi using rcx as a temp"
-	push rcx
-	inj_InterruptGate_8_offset_hi rdi rbx rcx
-	pop rcx
+	proj_InterruptGate_8 r12 rbx
+
+	comment "Upading offset_hi using r13 as a temp"
+	inj_InterruptGate_8_offset_hi rdi rbx r13
+
 	comment "Injecting our partial into the doubleFault"
 	inj_doubleFault_InterruptGate_8 rbx rsi
 
-	pop rax
+	ret
+
+_getDoubleFaultOffsetHi2 = defun "_getDoubleFaultOffsetHi2" $
+     do isMemRegion $ isCode
+	comment "return offset_hi into rax, rdi *IDT"
+	
+	comment "Getting the doubleFault cell into r12"
+	proj_InterruptDescriptionTable_doubleFault rsi r12
+
+	comment "Projecting 8-bytes in to rbx"
+	proj_InterruptGate_8 r12 rax
+
+	comment "Projecting offset_hi into rax"
+	proj_InterruptGate_8_offset_hi rax rbx
+
 	ret
 
