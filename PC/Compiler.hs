@@ -17,7 +17,7 @@ import PC.Config
 import PC.Base
 import PC.Source
 
-import Potential.Printing
+import Language.Potential.Printing
 
 compiler :: Mode -> IO ()
 compiler cfg =

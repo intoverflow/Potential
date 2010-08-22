@@ -1,6 +1,6 @@
 module Tests.TestCode where
 
-import Potential
+import Language.Potential
 
 -- a useful macro
 swap r1 r2 =

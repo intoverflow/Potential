@@ -1,8 +1,8 @@
 module Tests.TestFailure where
 
-import Potential
-import Potential.Flow (primCondJmp)
-import Potential.Assembly (body)
+import Language.Potential
+import Language.Potential.Flow (primCondJmp)
+import Language.Potential.Assembly (body)
 
 testCmpFails = defun "testCmpFails" $
      do isCode

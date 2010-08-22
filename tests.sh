@@ -6,11 +6,11 @@ function compile {
   time runhaskell "-package ghc" PC.Main $1
 }
 
-compile 'compile Tests.TestArray'
-compile 'compile Tests.TestCode'
-compile 'compile Tests.TestStruct'
+compile 'compile --outdir=Tests --outfile=TestArray.S Tests.TestArray'
+compile 'compile --outdir=Tests --outfile=TestCode.S Tests.TestCode'
+compile 'compile --outdir=Tests --outfile=TestStruct.S Tests.TestStruct'
 
-compile 'compile --outdir=Ctests/Add --outfile=add2.S Ctests.Add.Add2'
-compile 'compile --outdir=Ctests/IntGate --outfile=changeDpl2.S Ctests.IntGate.ChangeDpl2'
-compile 'compile --outdir=Ctests/Factorial --outfile="doFactorial.S" Ctests.Factorial.DoFactorial'
+compile 'compile --outdir=Tests/C/Add --outfile=add2.S Tests.C.Add.Add2'
+compile 'compile --outdir=Tests/C/IntGate --outfile=changeDpl2.S Tests.C.IntGate.ChangeDpl2'
+compile 'compile --outdir=Tests/C/Factorial --outfile=doFactorial.S Tests.C.Factorial.DoFactorial'
 

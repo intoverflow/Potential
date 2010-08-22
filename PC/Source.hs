@@ -6,7 +6,7 @@ import Language.Haskell.Interpreter hiding (get)
 import qualified GHC as GHC
 import qualified FastString as FS
 
-import Potential.Assembly (Instr)
+import Language.Potential.Assembly (Instr)
 
 import PC.Config
 import PC.Base
@@ -35,8 +35,8 @@ doAnalyzeFile targetFile =
 	let mod = head loaded
 	-- load into scope
 	setTopLevelModules [mod]
-	setImportsQ [ ("Potential", Just "Potential")
-		    , ("Potential.Assembly", Just "Potential.Assembly") ]
+	setImportsQ [ ("Language.Potential", Just "Language.Potential")
+		    , ("Language.Potential.Assembly", Just "Language.Potential.Assembly") ]
 	-- analyze the module
 	-- say $ "Module " ++ mod ++ " defines functions:"
 	exports <- getModuleExports mod
@@ -44,11 +44,11 @@ doAnalyzeFile targetFile =
 	return $ concat fns
 
 analyzeExport export =
-   do isFn <- typeChecks $ "Potential.isFn " ++ (name export)
+   do isFn <- typeChecks $ "Language.Potential.isFn " ++ (name export)
       if not isFn
 	then return []
 	else do let strname = name export
-		strname' <- interpret ("Potential.funName " ++ strname)
+		strname' <- interpret ("Language.Potential.funName " ++ strname)
 				      (as :: String)
 		-- say $ strname' ++ ":"
 		inDepth $ inDepth $
@@ -59,7 +59,7 @@ analyzeExport export =
 			-- say $ "  type: " ++ typ
 			loc <- getExportLoc export
 			-- say $ "// Defined at: " ++ loc
-			code <- interpret ("Potential.getAssembly " ++ strname)
+			code <- interpret ("Language.Potential.getAssembly " ++ strname)
 					  (as :: [Instr])
 			-- mapM_ (say . show) code
 			return [ AssemblyCode { fname = strname'

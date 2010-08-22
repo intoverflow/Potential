@@ -1,6 +1,6 @@
 module Tests.TestStruct where
 
-import Potential
+import Language.Potential
 
 [$struct| FlagsRegister where
     cf :: 1     -- carry
