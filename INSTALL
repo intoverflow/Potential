@@ -14,6 +14,9 @@ To build the compiler (this requires the standard library):
   $ runhaskell Setup.lhs build
   $ runhaskell Setup.lhs install
 
-These arguments (particularly --prefix=$HOME) assume that your system is
-configured to look for libraries in $HOME/lib and binaries in $HOME/bin.
+This will install the Potential Standard Library into $HOME/lib and the
+Potential Compiler into $HOME/bin.  ghc will be able to use the Potential
+Standard Library without any changes to your system configuration; use of
+the Potential Compiler will require you to explicitly reference $HOME/bin/pc
+or modify your system's PATH variable to include $HOME/bin.
 
