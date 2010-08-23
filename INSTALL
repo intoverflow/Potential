@@ -1,0 +1,19 @@
+Potential is built on top of the Haskell Platform.
+Requires GHC 6.12 and the Haskell Platform.  Download from:
+        http://hackage.haskell.org/platform/
+
+To build the standard library:
+  $ cd libpotential
+  $ runhaskell Setup.lhs configure --prefix=$HOME --user
+  $ runhaskell Setup.lhs build
+  $ runhaskell Setup.lhs install
+
+To build the compiler (this requires the standard library):
+  $ cd compiler
+  $ runhaskell Setup.lhs configure --prefix=$HOME --user
+  $ runhaskell Setup.lhs build
+  $ runhaskell Setup.lhs install
+
+These arguments (particularly --prefix=$HOME) assume that your system is
+configured to look for libraries in $HOME/lib and binaries in $HOME/bin.
+

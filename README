@@ -2,15 +2,6 @@ Potential is a systems programming language designed for high reliability.
 It is currently in active development and should be considered HIGHLY
 EXPERIMENTAL.
 
-Potential is built on top of the Haskell Platform.
-Requires GHC 6.12 and the Haskell Platform.  Download from:
-	http://hackage.haskell.org/platform/
-Requires packages:
-  * cmdargs, command line argument processing
-  * hint, the Haskell Interpreter
-  * th-lift, deriving instances of Language.Haskell.TH.Syntax.Lift
-Available by cabal install hint th-lift cmdargs.
-
 Key features:
 * Automatically manages pointer aliases, invalidating aliases when changes are
   made to data that have an effect on the underlying type
@@ -20,10 +11,6 @@ Key features:
   provides the ability to inspect the types of functions to ensure that the code
   you write has the effect you want
 * Easy to extend and modify the language to suit your application's needs
-
-To get a feel, launch ghci -fcontext-stack=160 Tests.TestCode
-* Potential functions can be rendered to assembly by the renderFn command
-* Inspect types using :t evaluateTypes <function name>
 
 For more information, visit us:
 http://potential-lang.org
