@@ -1,0 +1,13 @@
+Render ChangeDpl2.hs to changeDpl2.S
+Compile with gcc testIntGate.c changeDpl2.S
+
+Execution of a.out should yield:
+
+an intgate has size 16 bytes, so that entry 8 has offset 0x80
+dpl: 0 (0)
+dpl: 1 (1)
+dpl: 3 (3)
+dpl: 2 (2)
+offset_hi of doubleFault: 0x00000000 (0x00000000)
+offset_hi of doubleFault: 0xdeadbeef (0xdeadbeef)
+

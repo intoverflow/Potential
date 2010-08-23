@@ -1,0 +1,30 @@
+Name:		potential-compiler
+Version:	0.1
+Cabal-Version:  >= 1.8
+License:	GPL 3
+License-File:	COPYING
+Copyright:	(c) 2010 Timothy Carstens
+Author:		Tim Carstens
+Maintainer:	carstens@math.utah.edu
+Stability:	experimental
+Homepage:	http://potential-lang.org/
+Category:	Compiler
+Synopsis:	The compiler for the Potential Programming Language
+
+Executable program1
+  Main-Is:	Main.hs
+  Build-Depends:
+	base >= 4.2,
+	potential >= 0.1,
+	hint == 0.3.2.3
+  Compiler: GHC >= 6.12
+  Extensions:
+	MultiParamTypeClasses,
+	FlexibleContexts,
+	FlexibleInstances,
+	DeriveDataTypeable
+
+source-repository head
+  type:         git
+  location:     git://github.com/intoverflow/potential.git
+
