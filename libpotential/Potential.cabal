@@ -25,6 +25,8 @@ Library
         Language.Potential.Printing,
         Language.Potential.Assembly
         Language.Potential.Size,
+        Language.Potential.Array,
+        Language.Potential.DataStructure,
         Language.Potential.Arch.Amd64.Model,
         Language.Potential.Arch.Amd64.Machine.Flags,
         Language.Potential.Arch.Amd64.Machine.IDT,
@@ -33,7 +35,6 @@ Library
         Language.Potential.Bit,
         Language.Potential.Constraints,
         Language.Potential.Core,
-        Language.Potential.DataStructure,
         Language.Potential.Flow,
         Language.Potential.Functions,
         Language.Potential.Integer,
