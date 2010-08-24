@@ -51,7 +51,7 @@ compiler cfg =
   where printInterpreterError (GhcError errMsg) = putStrLn errMsg
 	compiler =
 	     do -- set our flags
-		unsafeSetGhcOption "-fcontext-stack=160"
+		unsafeSetGhcOption "-fcontext-stack=1024"
 		set [ languageExtensions :=
 			[ NoImplicitPrelude
 			, NoMonomorphismRestriction
