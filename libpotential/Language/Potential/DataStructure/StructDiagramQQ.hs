@@ -63,10 +63,14 @@ structDiagramParser =
 					compare a b)
 				   structFields
 	eof
-	if any (\p -> partitionSize p /= 64) structFields'
-	  then fail $ "Not all partitions are 64 bits in size.  Partitions: " ++
-			show structFields'
-	  else return $ UserStruct structName structFields'
+	let none f l = not (any f l)
+	if none (\p -> partitionSize p /= 64) structFields'
+	  then return $ UserStruct structName structFields'
+	  else fail $ "Not all partitions are 64 bits in size.  " ++
+		      "Partitions:\n" ++
+			(concatMap (\p -> "  " ++ show (partitionSize p) ++
+					  ": " ++ show p ++ "\n")
+				   structFields')
   where whiteSpace' = try parse_diagram_comment <|> whiteSpace
 	bitpos = do digits <- many1 digit
 		    return $ fromIntegral $ convert 0 digits
