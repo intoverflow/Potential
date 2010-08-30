@@ -19,7 +19,8 @@ Library
         th-lift == 0.3,
         template-haskell >= 2.4,
         syb >= 0.1,
-        parsec >= 2.1
+        parsec >= 2.1,
+        wl-pprint >= 1.0
   Exposed-modules:
         Language.Potential,
         Language.Potential.Printing,

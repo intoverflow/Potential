@@ -43,20 +43,7 @@ structParser =
 				   whiteSpace
 				   return f
 	eof
-	-- now verify that the struct can be broken up into chunks of 64
-	-- bits
-	let ps = partition structFields [] []
-	    valid = not $ any (\p -> 64 /= partition_size p) ps
-	if valid
-	  then return $ UserStruct structName ps
-	  else fail $ "Fields for struct " ++ show structName ++
-		      " fail to partition into 64-bit chunks!\n" ++
-		      "  Partitions: \n" ++
-		      (concat $ concat $
-		       map (\p -> ["   size: " ++
-				   show (partition_size p) ++
-				   " bits\n"] ++
-				  map pretty_field_show p) ps)
+	return $ UserStruct structName structFields
   where parse_field =
 	     do f <- (try parse_field_const)
 			<|> (try parse_field_reserved)
@@ -78,13 +65,6 @@ structParser =
 		whiteSpace
 		size <- integer
 		return $ VarField name size
-	partition_size p = sum $ map field_size p
-	partition [] p' ps = filter (\p -> 0 /= partition_size p) (ps ++ [p'])
-	partition (f:fs) p' ps
-		| psize == 64 = partition fs [] (ps ++ [p'++[f]])
-		| psize <  64 = partition fs (p' ++ [f]) ps
-		| psize > 64  = ps ++ [p' ++ [f]]
-	  where psize = partition_size (f:p')
 
 
 struct = QuasiQuoter (parseStructExp parseStruct)

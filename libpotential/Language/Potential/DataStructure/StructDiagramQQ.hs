@@ -39,18 +39,6 @@ parseStructDiagram fname line col s =
 		Left err -> fail $ show err
 		Right e -> return e
 
-partitionSize :: [Field] -> Integer
-partitionSize as = sum $ map field_size as
-
-partition :: [Field] -> [[Field]]
-partition fs = partition64 fs [] []
-
-partition64 :: [Field] -> [Field] -> [[Field]] -> [[Field]]
-partition64 [] p' ps = filter (not . null) $ ps ++ [p']
-partition64 (f:fs) p' ps
-    | partitionSize p' >= 64 = partition64 (f:fs) []          (ps ++ [p'])
-    | otherwise              = partition64 fs     (p' ++ [f]) ps
-
 structDiagramParser =
      do whiteSpace'
 	structName   <- typeName
@@ -63,14 +51,7 @@ structDiagramParser =
 					compare a b)
 				   structFields
 	eof
-	let none f l = not (any f l)
-	if none (\p -> partitionSize p /= 64) structFields'
-	  then return $ UserStruct structName structFields'
-	  else fail $ "Not all partitions are 64 bits in size.  " ++
-		      "Partitions:\n" ++
-			(concatMap (\p -> "  " ++ show (partitionSize p) ++
-					  ": " ++ show p ++ "\n")
-				   structFields')
+	return $ UserStruct structName structFields'
   where whiteSpace' = try parse_diagram_comment <|> whiteSpace
 	bitpos = do digits <- many1 digit
 		    return $ fromIntegral $ convert 0 digits
@@ -92,8 +73,7 @@ structDiagramParser =
 		(ranges :: [[Integer]]) <- sepEndBy1 (try parse_top') (char '|')
 		whiteSpace'
 		-- now we make sure the ranges are actually a partition.
-		-- We do *not* enforce that the last bit is 31, or that the
-		-- first bit is 0.  We only enforce that the numbers are
+		-- we do this *simply* by enforcing that the numbers are
 		-- decreasing.
 		let ranges' = concat ranges
 		if decreasing ranges'
