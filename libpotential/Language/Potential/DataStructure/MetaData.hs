@@ -16,24 +16,48 @@
     along with the Potential Standard Library.  If not, see
     <http://www.gnu.org/licenses/>.
 -}
-{-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses #-}
+{-# LANGUAGE
+	FunctionalDependencies,
+	MultiParamTypeClasses,
+	FlexibleInstances,
+	FlexibleContexts,
+	UndecidableInstances #-}
 module Language.Potential.DataStructure.MetaData where
 
-import Prelude (Integer)
+import Prelude (Integer, undefined, (++))
 import Data.Word (Word64(..))
+
+import Language.Potential.Size
 
 class IsFieldOf typ field_label field_type
   | field_label -> typ
   , typ field_label -> field_type
  where
-  forgetMask  :: typ -> field_label -> Word64
-  isolateMask :: typ -> field_label -> Word64
-  bitOffset   :: typ -> field_label -> Integer
+  forgetMask  :: typ -> field_label -> [Word64]
+  isolateMask :: typ -> field_label -> [Word64]
+  bitOffset   :: typ -> field_label -> [Integer]
   projField   :: typ -> field_label -> field_type
+  projField _ _ = undefined
   injField    :: (IsFieldOf typ' field_label field_type')
 			=> typ' -> field_label -> field_typ -> typ
+  injField _ _ _ = undefined
 
 class NumConstructors typ c | typ -> c
 
 
+data SubField a b = SubField a b
+(-->) :: ( IsFieldOf typ1 f1 typ2
+	 , IsFieldOf typ2 f2 typ3
+	 , NumConstructors typ1 D0)
+		=> f1 -> f2 -> SubField f1 f2
+a --> b = SubField a b
+
+instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
+ IsFieldOf typ1 (SubField f1 f2) typ3 where
+  forgetMask typ1 (SubField f1 f2) = (forgetMask typ1 f1) ++
+					(forgetMask (projField typ1 f1) f2)
+  isolateMask typ1 (SubField f1 f2) = (isolateMask typ1 f1) ++
+					(isolateMask (projField typ1 f1) f2)
+  bitOffset typ1 (SubField f1 f2) = (bitOffset typ1 f1) ++
+					(bitOffset (projField typ1 f1) f2)
 

@@ -104,11 +104,9 @@ reifyFieldLabels us =
 			in return $ TH.DataD [] lblname [] [constr] []
 	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
 	    mkRelation n =
-		     do forgetMask'  <- [| \x y -> undefined |]
-			isolateMask' <- [| \x y -> undefined |]
-			bitOffset'   <- [| \x y -> undefined |]
-			projField'   <- [| \x y -> undefined |]
-			injField'    <- [| \x y z -> undefined |]
+		     do forgetMask'  <- [| \x y -> [ undefined ] |]
+			isolateMask' <- [| \x y -> [ undefined ] |]
+			bitOffset'   <- [| \x y -> [ undefined ] |]
 			let struct_typ = typeFromStruct us id
 			    lbl        = TH.ConT $ TH.mkName $ labelName n
 			    field_typ  = TH.VarT $ TH.mkName n
@@ -117,9 +115,7 @@ reifyFieldLabels us =
 			    defs = map mkFun
 					[ ('forgetMask, forgetMask')
 					, ('isolateMask, isolateMask')
-					, ('bitOffset, bitOffset')
-					, ('projField, projField')
-					, ('injField, injField') ]
+					, ('bitOffset, bitOffset') ]
 			return $ TH.InstanceD [] inst defs
 	decls <- mapM mkLabel varFields
 	relations <- mapM mkRelation varFields

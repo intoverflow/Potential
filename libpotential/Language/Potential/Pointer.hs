@@ -144,9 +144,12 @@ primFieldProj field_label src tmp =
      do forget tmp
 	partial <- get src
 	forget src
+	-- TODO
+	{-
 	instr $ MovC (isolateMask partial field_label) (arg tmp)
 	instr $ And (arg tmp) (arg src)
 	instr $ ShR (bitOffset partial field_label) (arg src)
+	-}
 	let field = projField partial field_label
 	set src field
 
@@ -155,12 +158,15 @@ primFieldInj inj field_label src dst tmp =
      do constraints <- getConstraints
 	forget tmp
 	partial <- get dst
+	-- TODO
+	{-
 	instr $ ShL (bitOffset partial field_label) (arg src)
 	instr $ MovC (forgetMask partial field_label) (arg tmp)
 	instr $ And (arg tmp) (arg dst)
 	instr $ Or (arg src) (arg dst)
 	-- this last right shift restores src to its original contents
 	instr $ ShR (bitOffset partial field_label) (arg src)
+	-}
 	field <- get src
 	set dst $ inj constraints field partial
 
