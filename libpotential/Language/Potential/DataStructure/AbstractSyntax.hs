@@ -18,17 +18,12 @@
 {-# LANGUAGE
 	TemplateHaskell,
 	DeriveDataTypeable #-}
-module Language.Potential.DataStructure.AbstractSyntax
-	( ByteOffset, BitOffset, Partial, FieldWithBitOffset
-	, UserStruct(..)
-	, Field(..)
-	, isVarField
-	, Bit(..)
-	) where
+module Language.Potential.DataStructure.AbstractSyntax where
 
 import Prelude
 import Data.Typeable
 import Data.Data
+import Data.List (nub)
 import Text.PrettyPrint.Leijen
 import qualified Language.Haskell.TH as TH
 import qualified Language.Haskell.TH.Syntax as THS
@@ -83,9 +78,6 @@ instance Pretty Field where
   pretty f@ReservedField{} = pretty "(reserved)" <+> char ':'
 				<+> pretty (field_size f)
 
-isVarField (a@VarField{}) = True
-isVarField _ = False
-
 
 
 data Bit = ConstBit0 | ConstBit1
@@ -94,6 +86,23 @@ data Bit = ConstBit0 | ConstBit1
 instance Pretty Bit where
   pretty ConstBit0 = char '0'
   pretty ConstBit1 = char '1'
+
+
+
+-- |Returns true if the given field is a VarField, else returns false.
+isVarField :: Field -> Bool
+isVarField a@VarField{} = True
+isVarField _ = False
+
+-- |Returns the list of var field names for a given list of fields.  Does not
+-- contain repeats.
+varFieldNames :: [Field] -> [String]
+varFieldNames fs  = let varfs = filter isVarField fs
+		    in nub $ map field_name varfs
+
+-- |Given a UserStruct, yields the list of all fields across all constructors
+allFields :: UserStruct -> [Field]
+allFields us = concat $ map fields (constructors us)
 
 
 

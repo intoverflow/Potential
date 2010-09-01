@@ -19,7 +19,8 @@
 	NoImplicitPrelude,
 	UndecidableInstances,
 	MultiParamTypeClasses,
-	FlexibleInstances
+	FlexibleInstances,
+	TypeFamilies
 	#-}
 module Language.Potential.IxMonad
 	( Composition(..)
