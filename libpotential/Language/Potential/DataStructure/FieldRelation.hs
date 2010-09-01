@@ -21,12 +21,14 @@ module Language.Potential.DataStructure.FieldRelation (IsFieldOf(..)) where
 import Prelude (Integer)
 import Data.Word (Word64(..))
 
-class IsFieldOf partial field_label field_type
-  | field_label -> partial
-  , partial field_label -> field_type
+class IsFieldOf typ field_label field_type
+  | field_label -> typ
+  , typ field_label -> field_type
  where
-  forgetMask  :: partial -> field_label -> Word64
-  isolateMask :: partial -> field_label -> Word64
-  bitOffset   :: partial -> field_label -> Integer
-  projField   :: partial -> field_label -> field_type
+  forgetMask  :: typ -> field_label -> Word64
+  isolateMask :: typ -> field_label -> Word64
+  bitOffset   :: typ -> field_label -> Integer
+  projField   :: typ -> field_label -> field_type
+  injField    :: (IsFieldOf typ' field_label field_type')
+			=> typ' -> field_label -> field_typ -> typ
 

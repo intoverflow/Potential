@@ -65,7 +65,6 @@ Library
         Language.Potential.DataStructure.CommonParser,
         Language.Potential.DataStructure.CommonQQ,
         Language.Potential.DataStructure.FieldRelation,
-        Language.Potential.DataStructure.PartialRelation,
         Language.Potential.DataStructure.StructDiagramQQ,
         Language.Potential.DataStructure.StructQQ
   Extensions:

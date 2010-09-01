@@ -20,11 +20,37 @@ module Language.Potential.DataStructure.CodeGenerator where
 
 import Prelude
 import qualified Language.Haskell.TH as TH
+import Data.Char (toUpper)
 
 import Language.Potential.THLiftDecls
 import Language.Potential.DataStructure.AbstractSyntax
+import Language.Potential.DataStructure.FieldRelation
 import Language.Potential.Pointer
 	( newPtr64 , primPtrProj, primPtrInj , primFieldProj, primFieldInj )
+
+
+
+-- |Given a UserStruct, constructs a Template Haskell Type instance of the type
+-- modeled by the given struct.  Type variables are *not* quantified.  They are
+-- named according to their corresponding field labels.
+typeFromStruct :: UserStruct
+		-> (String -> String) -- ^ A function which transforms the names
+				      -- of fields before they are made into
+				      -- type variables.  'id' means no
+				      -- transformation will be made.
+		-> TH.Type
+typeFromStruct us t =
+     foldl TH.AppT (TH.ConT $ TH.mkName $ struct_name us)
+	   (map (TH.VarT . TH.mkName . t) (varFieldNames $ allFields us))
+
+
+-- |A handy function for making a string start with an upper-case character.
+upperCase :: String -> String
+upperCase (n:ns) = toUpper n : ns
+
+-- |Given the name of a field, generates the name of its corresponding label.
+labelName :: String -> String
+labelName n = upperCase n
 
 
 -- |Yields Template Haskell top-level declarations to define the given data
@@ -32,7 +58,8 @@ import Language.Potential.Pointer
 reifyStruct :: UserStruct -> TH.ExpQ
 reifyStruct us =
      do decls <- mapM (\f -> f us)
-			[ reifyType ]
+			[ reifyType
+			, reifyFieldLabels ]
 	[| return $ concat decls |]
 
 
@@ -48,4 +75,36 @@ reifyType us =
 	    mkConstr c = let vars = map non_strict (varFieldNames $ fields c)
 			 in TH.NormalC (TH.mkName $ constr_name c) vars
 	return [TH.DataD [] name type_vars (map mkConstr $ constructors us) []]
+
+
+-- |Defines the (Haskell-level) field labels for all of the VarFields in this
+-- type.  Also defines the IsFieldOf relation for each of these labels.
+reifyFieldLabels :: UserStruct -> TH.Q [TH.Dec]
+reifyFieldLabels us =
+     do let varFields = varFieldNames (allFields us)
+	    mkLabel n = let lblname = TH.mkName $ labelName n
+			    constr  = TH.NormalC lblname []
+			in return $ TH.DataD [] lblname [] [constr] []
+	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
+	    mkRelation n =
+		     do forgetMask'  <- [| \x y -> undefined |]
+			isolateMask' <- [| \x y -> undefined |]
+			bitOffset'   <- [| \x y -> undefined |]
+			projField'   <- [| \x y -> undefined |]
+			injField'    <- [| \x y z -> undefined |]
+			let struct_typ = typeFromStruct us id
+			    lbl        = TH.ConT $ TH.mkName $ labelName n
+			    field_typ  = TH.VarT $ TH.mkName n
+			    inst = foldl TH.AppT (TH.ConT ''IsFieldOf)
+						[struct_typ, lbl, field_typ]
+			    defs = map mkFun
+					[ ('forgetMask, forgetMask')
+					, ('isolateMask, isolateMask')
+					, ('bitOffset, bitOffset')
+					, ('projField, projField')
+					, ('injField, injField') ]
+			return $ TH.InstanceD [] inst defs
+	decls <- mapM mkLabel varFields
+	relations <- mapM mkRelation varFields
+	return (decls ++ relations)
 

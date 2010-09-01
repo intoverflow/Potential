@@ -100,7 +100,8 @@ varFieldNames :: [Field] -> [String]
 varFieldNames fs  = let varfs = filter isVarField fs
 		    in nub $ map field_name varfs
 
--- |Given a UserStruct, yields the list of all fields across all constructors
+-- |Given a UserStruct, yields the list of all fields across all constructors.
+-- May contain repeats if multiple constructors have some fields in common.
 allFields :: UserStruct -> [Field]
 allFields us = concat $ map fields (constructors us)
 
