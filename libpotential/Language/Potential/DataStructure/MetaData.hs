@@ -44,13 +44,9 @@ class IsFieldOf typ field_label field_type
 
 class NumConstructors typ c | typ -> c
 
+class AllConstructorsField typ field_label
 
 data SubField a b = SubField a b
-(-->) :: ( IsFieldOf typ1 f1 typ2
-	 , IsFieldOf typ2 f2 typ3
-	 , NumConstructors typ1 D0)
-		=> f1 -> f2 -> SubField f1 f2
-a --> b = SubField a b
 
 instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
  IsFieldOf typ1 (SubField f1 f2) typ3 where
@@ -60,4 +56,14 @@ instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
 					(isolateMask (projField typ1 f1) f2)
   bitOffset typ1 (SubField f1 f2) = (bitOffset typ1 f1) ++
 					(bitOffset (projField typ1 f1) f2)
+
+
+-- |Used to describe a sub-field.  Only valid when the parent has exactly one
+-- constructor, since this provides no way to determine which constructor has
+-- been used.
+(-->) :: ( IsFieldOf typ1 f1 typ2
+	 , IsFieldOf typ2 f2 typ3
+	 , NumConstructors typ1 D0)
+		=> f1 -> f2 -> SubField f1 f2
+a --> b = SubField a b
 

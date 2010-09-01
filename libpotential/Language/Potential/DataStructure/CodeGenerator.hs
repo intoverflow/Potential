@@ -22,6 +22,7 @@ module Language.Potential.DataStructure.CodeGenerator where
 import Prelude
 import qualified Language.Haskell.TH as TH
 import Data.Char (toUpper)
+import Data.Maybe (catMaybes)
 
 import Language.Potential.THLiftDecls
 import Language.Potential.DataStructure.AbstractSyntax
@@ -95,29 +96,44 @@ countConstructors typ n =
 
 
 -- |Defines the (Haskell-level) field labels for all of the VarFields in this
--- type.  Also defines the IsFieldOf relation for each of these labels.
+-- type.  Also defines the IsFieldOf relation for each of these labels.  If the
+-- type has more than one constructor, for fields which are present in all
+-- constructors instances of the AllConstructorsField relation will be defined.
 reifyFieldLabels :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldLabels us =
      do let varFields = varFieldNames (allFields us)
+	    struct_typ = typeFromStruct us id
 	    mkLabel n = let lblname = TH.mkName $ labelName n
 			    constr  = TH.NormalC lblname []
 			in return $ TH.DataD [] lblname [] [constr] []
 	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
-	    mkRelation n =
-		     do forgetMask'  <- [| \x y -> [ undefined ] |]
-			isolateMask' <- [| \x y -> [ undefined ] |]
-			bitOffset'   <- [| \x y -> [ undefined ] |]
-			let struct_typ = typeFromStruct us id
-			    lbl        = TH.ConT $ TH.mkName $ labelName n
-			    field_typ  = TH.VarT $ TH.mkName n
-			    inst = foldl TH.AppT (TH.ConT ''IsFieldOf)
-						[struct_typ, lbl, field_typ]
-			    defs = map mkFun
-					[ ('forgetMask, forgetMask')
-					, ('isolateMask, isolateMask')
-					, ('bitOffset, bitOffset') ]
-			return $ TH.InstanceD [] inst defs
-	decls <- mapM mkLabel varFields
-	relations <- mapM mkRelation varFields
-	return (decls ++ relations)
+	    mkIFORelation n =
+	     do forgetMask'  <- [| \x y -> [ undefined ] |]
+		isolateMask' <- [| \x y -> [ undefined ] |]
+		bitOffset'   <- [| \x y -> [ undefined ] |]
+		let lbl        = TH.ConT $ TH.mkName $ labelName n
+		    field_typ  = TH.VarT $ TH.mkName n
+		    clss = foldl TH.AppT (TH.ConT ''IsFieldOf)
+					[struct_typ, lbl, field_typ]
+		    defs = map mkFun
+				[ ('forgetMask, forgetMask')
+				, ('isolateMask, isolateMask')
+				, ('bitOffset, bitOffset') ]
+		return $ TH.InstanceD [] clss defs
+	    mkACFRelation n =
+		let constrHasF c = any (\f -> n == field_name f)
+				       (filter isVarField $ fields c)
+		    lbl        = TH.ConT $ TH.mkName $ labelName n
+		    clss = foldl TH.AppT (TH.ConT ''AllConstructorsField)
+					[ struct_typ, lbl ]
+		in if all constrHasF (constructors us)
+			then return $ Just (TH.InstanceD [] clss [])
+			else return Nothing
+	labelDecls   <- mapM mkLabel varFields
+	ifoRelations <- mapM mkIFORelation varFields
+	acfRelations <- mapM mkACFRelation varFields >>= \ms ->
+				if length (constructors us) > 1
+					then return $ catMaybes ms
+					else return []
+	return $ labelDecls ++ ifoRelations ++ acfRelations
 
