@@ -17,21 +17,28 @@
 -}
 {-# LANGUAGE
 	TemplateHaskell,
+	TypeOperators,
 	MultiParamTypeClasses,
 	FlexibleInstances,
-	TypeOperators,
-	GADTs,
-	ScopedTypeVariables,
 	FlexibleContexts,
-	TypeFamilies #-}
-module Language.Potential.Size where
+	TypeFamilies,
+	UndecidableInstances #-}
+module Language.Potential.Size
+	( D0, D1, D2, D3, D4
+	, D5, D6, D7, D8, D9
+	, toInt
+	, (:*), HasSZ(..), MaybeHasSZ
+	, (:<), (:<?), (:==), (:==?)
+	, dataSize, dataSizeT, mkSize
+	) where
 
 import Language.Haskell.TH
+import Data.TypeLevel
 
 import Prelude
 import Language.Potential.Constraints
 
-class (ToInt (SZ a)) => HasSZ a where
+class (Nat (SZ a)) => HasSZ a where
   type SZ a
   sz :: a -> SZ a
   sz _ = undefined
@@ -41,99 +48,48 @@ dataSizeT t = return $ AppE (VarE 'dataSize)
                             (SigE (VarE 'undefined)
                                   (ConT t))
 
-mkT 0 = ConT ''T0
-mkT 1 = ConT ''T1
-mkT 2 = ConT ''T2
-mkT 16 = ConT ''T16
-mkT 32 = ConT ''T32
-mkT 64 = ConT ''T64
-mkT 128 = ConT ''T128
-mkT n = AppT (ConT ''S)
-             (mkT $ n - 1)
+mkSize 0 = ConT ''D0
+mkSize 1 = ConT ''D1
+mkSize 2 = ConT ''D2
+mkSize 3 = ConT ''D3
+mkSize 4 = ConT ''D4
+mkSize 5 = ConT ''D5
+mkSize 6 = ConT ''D6
+mkSize 7 = ConT ''D7
+mkSize 8 = ConT ''D8
+mkSize 9 = ConT ''D9
+mkSize n = let ones = n `Prelude.mod` 10
+	       rest = n `Prelude.div` 10
+	       ones_rep = mkSize ones
+	   in if rest (Prelude.==) 0
+		then ones_rep
+		else AppT (AppT (ConT ''(:*)) (mkSize rest)) ones_rep
 
 class MaybeHasSZ a c
 instance (HasSZ a) => MaybeHasSZ a ConstraintsOn
 instance MaybeHasSZ a ConstraintsOff
 
-class a :<= b
-instance (:<=) Z b
-instance (a :<= b) => (:<=) (S a) (S b)
-
-class (:<=?) a b c
-instance (a :<= b) => (:<=?) a b ConstraintsOn
-instance (:<=?) a b ConstraintsOff
-
 class a :< b
-instance (:<) Z (S Z)
-instance (a :< b) => (:<) (S a) (S b)
+instance (Trich a b LT) => (:<) a b
 
 class (:<?) a b c
 instance (a :< b) => (:<?) a b ConstraintsOn
 instance (:<?) a b ConstraintsOff
 
 class a :== b
-instance (:==) Z Z
-instance (a :== b) => (:==) (S a) (S b)
+instance (Trich a b EQ) => (:==) a b
 
 class (:==?) a b c
 instance (a :== b) => (:==?) a b ConstraintsOn
 instance (:==?) a b ConstraintsOff
 
-class HasIntSZ c where
-  intSZ :: c -> Int
+{- This causes "duplicate instance declarations."
+class a :<= b
+instance (Trich a b LT) => (:<=) a b
+instance (Trich a b EQ) => (:<=) a b
 
-data SZAsserted a s where
-  SZA :: (SZ a ~ s) => a -> SZAsserted a (SZ a)
-
-instance (ToInt s, HasSZ a) => HasSZ (SZAsserted a s) where
-  type SZ (SZAsserted a s) = s
-
-
--- Stuff for describing representation size
-data Z = Z
-data S a = S a
-
-class ToInt a where
-  toInt :: a -> Integer
-instance ToInt Z where
-  toInt _ = 0
-instance (ToInt a) => ToInt (S a) where
-  toInt (w::(S a)) = 1 + (toInt (undefined :: a))
-
-{- requires undecidable instances
-class Add a b where
-  type a :+: b
-
-instance Add Z b where
-  type Z :+: b = b
-instance Add a b => Add (S a) b where
-  type (S a) :+: b = a :+: (S b)
-
-class Mul a b where
-  type a :*: b
-
-instance Mul Z b where
-  type Z :*: b = Z
-instance Mul a b => Mul (S a) b where
-  type (S a) :*: b = (a :*: b) :+: b
+class (:<=?) a b c
+instance (a :<= b) => (:<=?) a b ConstraintsOn
+instance (:<=?) a b ConstraintsOff
 -}
 
-type T0 = Z
-type T1 = S Z
-type T2 = S (S Z)
-type T16 = S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (Z))))))))))))))))
-type T32 = S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	   S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (Z))))))))))))))))))))))))))))))))
-type T64 = S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	   S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	   S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	   S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (Z))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
-
-type T128 = S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	    S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	    S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	    S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	    S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	    S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	    S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (
-	    S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (Z))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))

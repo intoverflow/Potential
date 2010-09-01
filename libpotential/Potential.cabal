@@ -20,7 +20,8 @@ Library
         template-haskell >= 2.4,
         syb >= 0.1,
         parsec >= 2.1,
-        wl-pprint >= 1.0
+        wl-pprint >= 1.0,
+	type-level >= 0.2.4
   Exposed-modules:
         Language.Potential,
         Language.Potential.Printing,

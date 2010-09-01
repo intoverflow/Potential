@@ -27,7 +27,8 @@
 	FlexibleContexts,
 	FlexibleInstances,
 	UndecidableInstances,
-	ExistentialQuantification
+	ExistentialQuantification,
+	TypeOperators
 	#-}
 module Language.Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
@@ -83,7 +84,7 @@ instance (ASMable m, IxMonadRegion m, RegionType m ~ Memory, RegionLabel m ~ s)
 
 -- A pointer, bound to region r
 data Ptr64 r t = Ptr64 t
-instance HasSZ (Ptr64 r t) where type SZ (Ptr64 r t) = T64
+instance HasSZ (Ptr64 r t) where type SZ (Ptr64 r t) = D6 :* D4
 
 getPtrData :: Ptr64 r t -> t
 getPtrData _ = undefined

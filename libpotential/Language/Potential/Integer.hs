@@ -17,7 +17,8 @@
 -}
 {-# LANGUAGE
 	TypeFamilies,
-	NoImplicitPrelude
+	NoImplicitPrelude,
+	TypeOperators
 	#-}
 module Language.Potential.Integer
 	( Int64, assertInt64, add, sub, mul, loadInt ) where
@@ -28,7 +29,7 @@ import Language.Potential.Size
 import Language.Potential.Core
 
 data Int64 = Int64
-instance HasSZ Int64 where type SZ Int64 = T64
+instance HasSZ Int64 where type SZ Int64 = D6 :* D4
 
 assertInt64 :: Int64 -> Code c Unmodeled x x ()
 assertInt64 _ = unmodeled $ return ()

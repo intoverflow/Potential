@@ -19,7 +19,8 @@
 	NoMonomorphismRestriction,
 	NoImplicitPrelude,
 	TypeFamilies,
-	FlexibleContexts #-}
+	FlexibleContexts,
+	TypeOperators #-}
 module Language.Potential.Stack
 	( push, pop
 	, enter, leave
@@ -37,7 +38,7 @@ import Language.Potential.Core
 
 -- Stacks
 data Stack a b = Stack a b
-instance HasSZ (Stack a b) where type SZ (Stack a b) = T64
+instance HasSZ (Stack a b) where type SZ (Stack a b) = D6 :* D4
 
 assertStack :: Stack a b -> Stack a b
 assertStack = id
@@ -48,7 +49,7 @@ splitStack _ = (undefined, undefined)
 asStack :: a -> b -> Stack a b
 asStack _ _ = undefined
 
-assertPushableSize :: (IxCode m, (SZ a' :<=? T64) (Constraints m))
+assertPushableSize :: (IxCode m, (SZ a' :<? D6 :* D5) (Constraints m))
 			=> a' -> m Unmodeled x x ()
 assertPushableSize _ = return ()
 
@@ -66,7 +67,8 @@ primPop sp =
 
 -- Stack frames
 data FrameBasePtr64 h s t = FrameBasePtr64 s t
-instance HasSZ (FrameBasePtr64 h s t) where type SZ (FrameBasePtr64 h s t) = T64
+instance HasSZ (FrameBasePtr64 h s t) where
+  type SZ (FrameBasePtr64 h s t) = D6 :* D4
 
 getBPStack :: FrameBasePtr64 h s t -> s
 getBPStack _ = undefined
