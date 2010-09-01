@@ -24,7 +24,8 @@ import Data.Char (toUpper)
 
 import Language.Potential.THLiftDecls
 import Language.Potential.DataStructure.AbstractSyntax
-import Language.Potential.DataStructure.FieldRelation
+import Language.Potential.DataStructure.MetaData
+import Language.Potential.Size (mkTypeNum)
 import Language.Potential.Pointer
 	( newPtr64 , primPtrProj, primPtrInj , primFieldProj, primFieldInj )
 
@@ -66,6 +67,8 @@ reifyStruct us =
 -- |Defines a (Haskell-level) data definition for the given user structure.
 -- Includes a free variable for every field label; if a field label is used
 -- by multiple constructors, each instance will have the same free variable.
+-- Also creates an instance of the NumConstructors relation to indicate how
+-- many constructors the type has.
 reifyType :: UserStruct -> TH.Q [TH.Dec]
 reifyType us =
      do let name = TH.mkName $ struct_name us
@@ -74,7 +77,20 @@ reifyType us =
 	    non_strict n = (TH.NotStrict, TH.VarT $ TH.mkName n)
 	    mkConstr c = let vars = map non_strict (varFieldNames $ fields c)
 			 in TH.NormalC (TH.mkName $ constr_name c) vars
-	return [TH.DataD [] name type_vars (map mkConstr $ constructors us) []]
+	    def = TH.DataD [] name type_vars (map mkConstr $ constructors us) []
+	    numconstr = countConstructors (typeFromStruct us id)
+					  (length $ constructors us)
+	return [def, numconstr]
+
+
+-- |Given a type, creates an instance of the NumConstructors relation
+-- for that type
+countConstructors :: TH.Type -> Int -> TH.Dec
+countConstructors typ n =
+     let clss = foldl TH.AppT (TH.ConT ''NumConstructors)
+				[typ, mkTypeNum n]
+	 inst = TH.InstanceD [] clss []
+     in inst
 
 
 -- |Defines the (Haskell-level) field labels for all of the VarFields in this

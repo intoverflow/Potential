@@ -29,7 +29,7 @@ module Language.Potential.Size
 	, toInt
 	, (:*), HasSZ(..), MaybeHasSZ
 	, (:<), (:<?), (:==), (:==?)
-	, dataSize, dataSizeT, mkSize
+	, dataSize, dataSizeT, mkSize, mkTypeNum
 	) where
 
 import Language.Haskell.TH
@@ -59,11 +59,15 @@ mkSize 7 = ConT ''D7
 mkSize 8 = ConT ''D8
 mkSize 9 = ConT ''D9
 mkSize n = let ones = n `Prelude.mod` 10
-	       rest = n `Prelude.div` 10
+	       higher = n `Prelude.div` 10
 	       ones_rep = mkSize ones
-	   in if rest (Prelude.==) 0
+	       higher_rep = mkSize higher
+	   in if ((Prelude.==) 0 higher)
 		then ones_rep
-		else AppT (AppT (ConT ''(:*)) (mkSize rest)) ones_rep
+		else foldl AppT (ConT ''(:*)) [higher_rep, ones_rep]
+
+mkTypeNum k = mkSize k
+
 
 class MaybeHasSZ a c
 instance (HasSZ a) => MaybeHasSZ a ConstraintsOn

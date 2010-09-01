@@ -16,7 +16,7 @@
     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE FunctionalDependencies, MultiParamTypeClasses #-}
-module Language.Potential.DataStructure.FieldRelation (IsFieldOf(..)) where
+module Language.Potential.DataStructure.MetaData where
 
 import Prelude (Integer)
 import Data.Word (Word64(..))
@@ -31,4 +31,6 @@ class IsFieldOf typ field_label field_type
   projField   :: typ -> field_label -> field_type
   injField    :: (IsFieldOf typ' field_label field_type')
 			=> typ' -> field_label -> field_typ -> typ
+
+class NumConstructors typ c | typ -> c
 

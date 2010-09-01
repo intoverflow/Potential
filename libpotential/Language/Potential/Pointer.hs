@@ -45,7 +45,7 @@ import Prelude( ($) )
 import Language.Potential.Size
 import Language.Potential.Core
 import Language.Potential.Assembly
-import Language.Potential.DataStructure.FieldRelation
+import Language.Potential.DataStructure.MetaData
 
 import Language.Potential.IxMonad.Region
 import Language.Potential.IxMonad.Reader
