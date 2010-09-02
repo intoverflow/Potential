@@ -17,12 +17,15 @@
     <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE TemplateHaskell #-}
-module Language.Potential.DataStructure (struct_diagram, defineDataSize) where
-	-- ( struct, struct_diagram, defineDataSize ) where
+module Language.Potential.DataStructure
+	( struct_diagram, defineDataSize
+	, projField, injField
+	) where
 
 import qualified Language.Haskell.TH as TH
 
 -- import Language.Potential.DataStructure.StructQQ
 import Language.Potential.DataStructure.StructDiagramQQ
 import Language.Potential.DataStructure.CodeGenerator
+import Language.Potential.DataStructure.MetaData
 

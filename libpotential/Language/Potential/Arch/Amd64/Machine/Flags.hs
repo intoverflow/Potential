@@ -104,9 +104,9 @@ defineDataSize ''PrivLevelUser   2
 defineDataSize ''PrivLevelKernel 2
 
 assertPrivLevelKernel =
-     do fl <- get rflags
-	-- TODO
-	-- assertType (proj_EFlagsRegister_iopl fl) PrivLevelKernel
+     do flags <- get rflags
+	let cpl = projField flags Iopl
+	assertType cpl PrivLevelKernel
 	return ()
 
 data JmpStyle a = JZ a | JNZ a
