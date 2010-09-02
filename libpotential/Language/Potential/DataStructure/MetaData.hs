@@ -63,12 +63,24 @@ instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
 -- been used.
 (-->) :: ( IsFieldOf typ1 f1 typ2
 	 , IsFieldOf typ2 f2 typ3
-	 , NumConstructors typ1 D1)
-		=> f1 -> f2 -> SubField f1 f2
+	 , NumConstructors typ1 D1
+	 ) => f1 -> f2 -> SubField f1 f2
 a --> b = SubField a b
 
 
 data SubFieldC a b c = SubFieldC a b c
+
+data Constructor a = Constructor
+data Constructed a c = Constructed c
+
+instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
+ IsFieldOf typ1 (SubFieldC f1 c f2) typ3 where
+  forgetMask typ1 (SubFieldC f1 c f2) = (forgetMask typ1 f1) ++
+					(forgetMask (projField typ1 f1) f2)
+  isolateMask typ1 (SubFieldC f1 c f2) = (isolateMask typ1 f1) ++
+					(isolateMask (projField typ1 f1) f2)
+  bitOffset typ1 (SubFieldC f1 c f2) = (bitOffset typ1 f1) ++
+					(bitOffset (projField typ1 f1) f2)
 
 -- |Used to describe a sub-field in the situation where every constructor has
 -- this field.  Example syntax:
@@ -76,11 +88,15 @@ data SubFieldC a b c = SubFieldC a b c
 -- where 'Vbe_info_p' models the constructor.  The fields 'Vbe_info' and
 -- 'Vbe_info_p' both live in the same structure (as fields), while 'Colors'
 -- lives within the Vbe_info structure.
-(--/) :: f1 -> f2 -> (f1, f2)
-f1 --/ f2 = (f1, f2)
+(--/) :: f1 -> c -> (f1, c)
+f1 --/ c = (f1, c)
 infix 9 --/
 
-(/-->) :: (f1, f2) -> f3 -> SubFieldC f1 f2 f3
-(f1, f2) /--> f3 = SubFieldC f1 f2 f3
+(/-->) :: ( IsFieldOf typ1 c (Constructor a)
+	  , IsFieldOf typ1 f1 typ2
+	  , IsFieldOf typ2 f2 typ3
+	  , AllConstructorsField typ1 f2
+	  ) => (f1, c) -> f2 -> SubFieldC f1 c f2
+(f1, c) /--> f2 = SubFieldC f1 c f2
 infix 8 /-->
 

@@ -104,9 +104,9 @@ countConstructors typ n =
 
 
 -- |Defines the (Haskell-level) field labels for all of the VarFields in this
--- type.  Also defines the IsFieldOf relation for each of these labels.  If the
--- type has more than one constructor, for fields which are present in all
--- constructors instances of the AllConstructorsField relation will be defined.
+-- type.  Also defines the IsFieldOf relation for each of these labels.  For
+-- fields which are present in all constructors instances of the
+-- AllConstructorsField relation will be defined.
 reifyFieldLabels :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldLabels us =
      do let varFields = varFieldNames (allFields us)
@@ -139,9 +139,6 @@ reifyFieldLabels us =
 			else return Nothing
 	labelDecls   <- mapM mkLabel varFields
 	ifoRelations <- mapM mkIFORelation varFields
-	acfRelations <- mapM mkACFRelation varFields >>= \ms ->
-				if length (constructors us) > 1
-					then return $ catMaybes ms
-					else return []
+	acfRelations <- mapM mkACFRelation varFields >>= return . catMaybes
 	return $ labelDecls ++ ifoRelations ++ acfRelations
 
