@@ -27,10 +27,18 @@ import Data.Maybe (catMaybes)
 import Language.Potential.THLiftDecls
 import Language.Potential.DataStructure.AbstractSyntax
 import Language.Potential.DataStructure.MetaData
-import Language.Potential.Size (mkTypeNum)
+import Language.Potential.Size (mkTypeNum, HasSZ(..), mkSize)
 import Language.Potential.Pointer
 	( newPtr64 , primPtrProj, primPtrInj , primFieldProj, primFieldInj )
 
+
+-- |Given a type and an Int, defines an instance of HasSZ ascribing the given
+-- size to the given type.
+defineDataSize :: TH.Name -> Int -> TH.Q [TH.Dec]
+defineDataSize typname sz =
+	let typ = TH.ConT typname
+	in return [ TH.InstanceD [] (TH.AppT (TH.ConT ''HasSZ) typ)
+			[ TH.TySynInstD ''SZ [typ] (mkSize sz) ] ]
 
 
 -- |Given a UserStruct, constructs a Template Haskell Type instance of the type

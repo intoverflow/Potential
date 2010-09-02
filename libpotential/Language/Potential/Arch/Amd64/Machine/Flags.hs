@@ -36,7 +36,7 @@ import Language.Potential.Flow
 
 import Language.Potential.DataStructure
 
-[$struct_diagram|
+[$struct_diagram| EFlagsRegister
 
 		    EFlagsRegister
 
@@ -105,7 +105,8 @@ defineDataSize ''PrivLevelKernel 2
 
 assertPrivLevelKernel =
      do fl <- get rflags
-	assertType (proj_EFlagsRegister_iopl fl) PrivLevelKernel
+	-- TODO
+	-- assertType (proj_EFlagsRegister_iopl fl) PrivLevelKernel
 	return ()
 
 data JmpStyle a = JZ a | JNZ a

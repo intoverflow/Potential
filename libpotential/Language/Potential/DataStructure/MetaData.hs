@@ -63,7 +63,7 @@ instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
 -- been used.
 (-->) :: ( IsFieldOf typ1 f1 typ2
 	 , IsFieldOf typ2 f2 typ3
-	 , NumConstructors typ1 D0)
+	 , NumConstructors typ1 D1)
 		=> f1 -> f2 -> SubField f1 f2
 a --> b = SubField a b
 

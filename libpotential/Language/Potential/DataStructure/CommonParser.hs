@@ -18,7 +18,7 @@
 module Language.Potential.DataStructure.CommonParser
 	( whiteSpace
 	, identifier
-	, integer
+	, integer, float
 	, typeName
 	, bit
 	, fieldName
@@ -35,6 +35,7 @@ lexer = P.makeTokenParser haskellDef
 whiteSpace = P.whiteSpace lexer
 identifier = P.identifier lexer
 integer    = P.integer lexer
+float      = P.float lexer
 typeName   = do structName' <- upper
 		structName'' <- identifier
 		let structName = structName' : structName''

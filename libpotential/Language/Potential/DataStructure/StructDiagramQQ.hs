@@ -7,13 +7,14 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.Potential.DataStructure.StructDiagramQQ (struct_diagram) where
@@ -39,43 +40,29 @@ parseStructDiagram fname line col s =
 		Left err -> fail $ show err
 		Right e -> return e
 
-partitionSize :: [Field] -> Integer
-partitionSize as = sum $ map field_size as
-
-partition :: [Field] -> [[Field]]
-partition fs = partition64 fs [] []
-
-partition64 :: [Field] -> [Field] -> [[Field]] -> [[Field]]
-partition64 [] p' ps = filter (not . null) $ ps ++ [p']
-partition64 (f:fs) p' ps
-    | partitionSize p' >= 64 = partition64 (f:fs) []          (ps ++ [p'])
-    | otherwise              = partition64 fs     (p' ++ [f]) ps
-
 structDiagramParser =
      do whiteSpace'
 	structName   <- typeName
 	whiteSpace'
-	structFields <- many1 parse_diagram_field
-	let structFields' = partition $
-			    concat $
-			    map fst $
-			    sortBy (\(_, a :: Integer) (_, b :: Integer) ->
-					compare a b)
-				   structFields
+	constructors <- many1 parse_constructor
 	eof
-	let none f l = not (any f l)
-	if none (\p -> partitionSize p /= 64) structFields'
-	  then return $ UserStruct structName structFields'
-	  else fail $ "Not all partitions are 64 bits in size.  " ++
-		      "Partitions:\n" ++
-			(concatMap (\p -> "  " ++ show (partitionSize p) ++
-					  ": " ++ show p ++ "\n")
-				   structFields')
+	return $ UserStruct { struct_name = structName
+			    , constructors = constructors }
   where whiteSpace' = try parse_diagram_comment <|> whiteSpace
 	bitpos = do digits <- many1 digit
 		    return $ fromIntegral $ convert 0 digits
 	  where convert n [] = n
 		convert n (d:ds) = convert (10*n + digitToInt d) ds
+	parse_constructor =
+	     do constr_name     <- typeName
+		fields_unsorted <- many1 parse_diagram_field
+		let fields = concat $
+			     map fst $ sortBy (\(_, a :: Integer)
+						(_, b :: Integer)
+					       -> compare a b)
+					      fields_unsorted
+		return $ Constructor { constr_name = constr_name
+				     , fields = fields }
 	parse_diagram_comment =
 	     do whiteSpace
 		char '('

@@ -30,9 +30,9 @@ module Language.Potential
 	, isCode, isMemRegion, isMemSubRegion
 	, comment, mov, push, pop, sjmp, scall, ret, enter, leave
 	, add, sub, mul, loadInt
-	-- , compare, JmpStyle(..), sje, sjne, assertPrivLevelKernel
+	, compare, JmpStyle(..), sje, sjne, assertPrivLevelKernel
 	-- , array
-	-- , struct, struct_diagram
+	, struct_diagram -- , struct
 	, assertType
 	, (:==), (:<)
 	, (>>), (>>=), return, fail, lift
@@ -58,7 +58,7 @@ import Language.Potential.Printing
 import Language.Potential.Size
 import Language.Potential.Stack
 
--- import Language.Potential.Arch.Amd64.Machine.Flags
+import Language.Potential.Arch.Amd64.Machine.Flags
 
 import Prelude hiding (undefined, (>>), (>>=), return, fail, compare)
 

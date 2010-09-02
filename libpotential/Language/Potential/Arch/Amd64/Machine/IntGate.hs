@@ -36,7 +36,7 @@ import Language.Potential.Mov
 import Language.Potential.Functions (defun)
 import Language.Potential.DataStructure
 
-[$struct_diagram|
+[$struct_diagram| InterruptGate
 
                         InterruptGate
 

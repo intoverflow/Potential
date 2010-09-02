@@ -7,21 +7,22 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE TemplateHaskell #-}
-module Language.Potential.DataStructure where
+module Language.Potential.DataStructure (struct_diagram, defineDataSize) where
 	-- ( struct, struct_diagram, defineDataSize ) where
 
 import qualified Language.Haskell.TH as TH
 
 -- import Language.Potential.DataStructure.StructQQ
--- import Language.Potential.DataStructure.StructDiagramQQ
+import Language.Potential.DataStructure.StructDiagramQQ
 import Language.Potential.DataStructure.CodeGenerator
 
