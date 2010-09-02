@@ -67,3 +67,20 @@ instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
 		=> f1 -> f2 -> SubField f1 f2
 a --> b = SubField a b
 
+
+data SubFieldC a b c = SubFieldC a b c
+
+-- |Used to describe a sub-field in the situation where every constructor has
+-- this field.  Example syntax:
+-- > Vbe_info --/ Vbe_info_p /--> Colors
+-- where 'Vbe_info_p' models the constructor.  The fields 'Vbe_info' and
+-- 'Vbe_info_p' both live in the same structure (as fields), while 'Colors'
+-- lives within the Vbe_info structure.
+(--/) :: f1 -> f2 -> (f1, f2)
+f1 --/ f2 = (f1, f2)
+infix 9 --/
+
+(/-->) :: (f1, f2) -> f3 -> SubFieldC f1 f2 f3
+(f1, f2) /--> f3 = SubFieldC f1 f2 f3
+infix 8 /-->
+
