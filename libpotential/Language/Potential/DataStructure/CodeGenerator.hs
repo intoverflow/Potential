@@ -85,7 +85,8 @@ reifyStruct us =
 			, reifyConstructorLabels
 			, reifyFieldLabels
 			, reifyFieldRelations
-			, reifyAllConstructorsRelations ]
+			, reifyAllConstructorsRelations
+			, reifyAccessors ]
 	[| return $ concat decls |]
 
 
@@ -125,17 +126,15 @@ reifyConstructorLabels us =
 
 
 -- |Defines the (Haskell-level) field labels for all of the VarFields in this
--- type.  Also defines the IsFieldOf (or IsFieldofC) relation for each of these
--- labels.  For fields which are present in all constructors, instances of the
--- AllConstructorsField relation will be defined.
+-- type.
 reifyFieldLabels :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldLabels us =
      do let varFields = varFieldNames (allFields us)
 	mapM reifyLabel varFields
 
 
--- |Defines the IsFieldOf/IsFieldOfC relations for all of the fields for the
--- given structure.
+-- |Defines the IsFieldOf relations for all of the fields for the given
+-- structure.
 reifyFieldRelations :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldRelations us =
      do let structTyp = typeFromStruct us id
@@ -152,23 +151,8 @@ reifyFieldRelations us =
 				, ('bitOffset, bitOffset') ]
 				-}
 		return $ TH.InstanceD [] clss defs
-	    mkIFOCRelation c n =
-	     do let clbl = TH.ConT $ TH.mkName $ constructorLabelName c
-		    lbl  = TH.ConT $ TH.mkName $ fieldLabelName n
-		    fieldTyp = TH.VarT $ TH.mkName n
-		    clss = foldl TH.AppT (TH.ConT ''IsFieldOfC)
-					[structTyp, clbl, lbl, fieldTyp]
-		    defs = map mkFun []
-		return $ TH.InstanceD [] clss defs
-	if length (constructors us) == 1
-		then do let varFields = varFieldNames (allFields us)
-			mapM mkIFORelation varFields
-		else do rels <- mapM (\c -> mapM (\f -> mkIFOCRelation
-							  (constr_name c)
-							  (field_name f))
-						 (fields c))
-				     (constructors us)
-			return $ concat rels
+	    varFields = varFieldNames (allFields us)
+	mapM mkIFORelation varFields
 
 
 -- |Defines the AllConstructorsField relation for all applicable fields of the
@@ -187,4 +171,14 @@ reifyAllConstructorsRelations us =
 			then return $ Just (TH.InstanceD [] clss [])
 			else return Nothing
 	mapM mkACFRelation varFields >>= return . catMaybes
+
+
+-- |Defines instances of Access1/AccessN for the given structure.
+reifyAccessors :: UserStruct -> TH.Q [TH.Dec]
+reifyAccessors us =
+     do let structTyp = typeFromStruct us id
+	    clss1 = TH.AppT (TH.ConT ''Access1) structTyp
+	    clssN = TH.AppT (TH.ConT ''AccessN) structTyp
+	    clss = if length (constructors us) == 1 then clss1 else clssN
+	return [TH.InstanceD [] clss []]
 

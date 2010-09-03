@@ -26,7 +26,7 @@
 module Language.Potential.DataStructure.MetaData
 	( NumConstructors(..), AllConstructorsField(..)
 	, IsFieldOf(..), (-->)
-	, IsFieldOfC(..)
+	, Access1(..), AccessN(..)
 	) where
 
 import Prelude (Integer, undefined, (++))
@@ -42,9 +42,8 @@ type family NumConstructors typ
 class AllConstructorsField typ field_label
 
 -- |Used to describe that the label 'field_label' describes a field of type
--- 'field_typ' for the structure 'typ'.  Can only be used for structures with
--- only one constructor.
-class (NumConstructors typ :== D1) => IsFieldOf typ field_label field_type
+-- 'field_typ' for the structure 'typ'.
+class IsFieldOf typ field_label field_type
   | field_label -> typ
   , typ field_label -> field_type
  where
@@ -70,41 +69,28 @@ instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
 	 ) => f1 -> f2 -> SubField f1 f2
 a --> b = SubField a b
 
--- |Used to describe that the label 'field_label' describes a field of type
--- 'field_typ' for the structure 'typ', under the constructor 'constr'.  Can
--- only be used for structures with more than one constructor.
-class (D1 :< NumConstructors typ) =>
- IsFieldOfC typ constr field_label field_typ
-  | field_label constr -> typ
-  , typ field_label constr -> field_typ
- where
-  projFieldC :: typ -> constr -> field_label -> field_typ
-  projFieldC _ _ _ = undefined
+
+-- |Used to access a field in a structure which has precisely one constructor.
+class (D1 :== NumConstructors typ) => Access1 typ where
+  access1 :: (IsFieldOf typ field_label field_type)
+		=> typ -> field_label -> field_type
+  access1 _ _ = undefined
 
 
-data SubFieldC a b c = SubFieldC a b c
+-- |Used to access a field in a structure which has more than one constructor.
+class (D1 :< NumConstructors typ) => AccessN typ where
+  accessN :: (IsFieldOf typ field_label field_type)
+		=> Constructed c typ -> field_label -> field_type
+  accessN _ _ = undefined
 
-data Constructor a = Constructor
-data Constructed a c = Constructed c
 
-instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
- IsFieldOf typ1 (SubFieldC f1 c f2) typ3 where
-
--- |Used to describe a sub-field in the situation where every constructor has
--- this field.  Example syntax:
--- > Vbe_info --/ Vbe_info_p /--> Colors
--- where 'Vbe_info_p' models the constructor.  The fields 'Vbe_info' and
--- 'Vbe_info_p' both live in the same structure (as fields), while 'Colors'
--- lives within the Vbe_info structure.
-(--/) :: f1 -> c -> (f1, c)
-f1 --/ c = (f1, c)
-infix 9 --/
-
-(/-->) :: ( IsFieldOf typ1 c (Constructor a)
-	  , IsFieldOf typ1 f1 typ2
-	  , IsFieldOf typ2 f2 typ3
-	  , AllConstructorsField typ1 f2
-	  ) => (f1, c) -> f2 -> SubFieldC f1 c f2
-(f1, c) /--> f2 = SubFieldC f1 c f2
-infix 8 /-->
+-- |When 'typ' is a child of another structure, 'c' is the name of the field
+-- where the constructor of 'typ' is being stored.  Example:
+--
+--             |---------------|-----------|
+--    mod_rep: |    modules    | modules_c |
+--             |---------------|-----------|
+--
+-- We'd expect 'modules' to have type Constructed Modules_c Modules
+data Constructed c typ = Constructed c typ
 
