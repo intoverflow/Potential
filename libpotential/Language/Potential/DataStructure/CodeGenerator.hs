@@ -60,9 +60,21 @@ upperCase :: String -> String
 upperCase (n:ns) = toUpper n : ns
 
 -- |Given the name of a field, generates the name of its corresponding label.
-labelName :: String -> String
-labelName n = upperCase n
+fieldLabelName :: String -> String
+fieldLabelName n = upperCase n
 
+-- Given the name fo a constructor, generates the name of its corresponding
+-- label.
+constructorLabelName :: String -> String
+constructorLabelName n = 'C' : n
+
+
+-- Given the name of a label, creates a data definition for the corresponding
+-- label.
+reifyLabel :: String -> TH.Q TH.Dec
+reifyLabel n = let lblname = TH.mkName $ fieldLabelName n
+		   constr  = TH.NormalC lblname []
+	       in return $ TH.DataD [] lblname [] [constr] []
 
 -- |Yields Template Haskell top-level declarations to define the given data
 -- structure.
@@ -70,7 +82,10 @@ reifyStruct :: UserStruct -> TH.ExpQ
 reifyStruct us =
      do decls <- mapM (\f -> f us)
 			[ reifyType
-			, reifyFieldLabels ]
+			, reifyConstructorLabels
+			, reifyFieldLabels
+			, reifyFieldRelations
+			, reifyAllConstructorsRelations ]
 	[| return $ concat decls |]
 
 
@@ -97,48 +112,79 @@ reifyType us =
 -- for that type
 countConstructors :: TH.Type -> Int -> TH.Dec
 countConstructors typ n =
-     let clss = foldl TH.AppT (TH.ConT ''NumConstructors)
-				[typ, mkTypeNum n]
-	 inst = TH.InstanceD [] clss []
-     in inst
+	TH.TySynInstD ''NumConstructors [typ] (mkTypeNum n)
+
+
+-- |Defines the (Haskell-level) constructor labels for all of the constructors
+-- of teh given structure.
+reifyConstructorLabels :: UserStruct -> TH.Q [TH.Dec]
+reifyConstructorLabels us =
+     do let constrNames = map (constructorLabelName . constr_name)
+			      (constructors us)
+	mapM reifyLabel constrNames
 
 
 -- |Defines the (Haskell-level) field labels for all of the VarFields in this
--- type.  Also defines the IsFieldOf relation for each of these labels.  For
--- fields which are present in all constructors instances of the
+-- type.  Also defines the IsFieldOf (or IsFieldofC) relation for each of these
+-- labels.  For fields which are present in all constructors, instances of the
 -- AllConstructorsField relation will be defined.
 reifyFieldLabels :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldLabels us =
      do let varFields = varFieldNames (allFields us)
-	    struct_typ = typeFromStruct us id
-	    mkLabel n = let lblname = TH.mkName $ labelName n
-			    constr  = TH.NormalC lblname []
-			in return $ TH.DataD [] lblname [] [constr] []
+	mapM reifyLabel varFields
+
+
+-- |Defines the IsFieldOf/IsFieldOfC relations for all of the fields for the
+-- given structure.
+reifyFieldRelations :: UserStruct -> TH.Q [TH.Dec]
+reifyFieldRelations us =
+     do let structTyp = typeFromStruct us id
 	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
 	    mkIFORelation n =
-	     do forgetMask'  <- [| \x y -> [ undefined ] |]
-		isolateMask' <- [| \x y -> [ undefined ] |]
-		bitOffset'   <- [| \x y -> [ undefined ] |]
-		let lbl        = TH.ConT $ TH.mkName $ labelName n
-		    field_typ  = TH.VarT $ TH.mkName n
+	     do let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n
+		    fieldTyp = TH.VarT $ TH.mkName n
 		    clss = foldl TH.AppT (TH.ConT ''IsFieldOf)
-					[struct_typ, lbl, field_typ]
-		    defs = map mkFun
+					[structTyp, lbl, fieldTyp]
+		    defs = map mkFun []
+				{-
 				[ ('forgetMask, forgetMask')
 				, ('isolateMask, isolateMask')
 				, ('bitOffset, bitOffset') ]
+				-}
 		return $ TH.InstanceD [] clss defs
+	    mkIFOCRelation c n =
+	     do let clbl = TH.ConT $ TH.mkName $ constructorLabelName c
+		    lbl  = TH.ConT $ TH.mkName $ fieldLabelName n
+		    fieldTyp = TH.VarT $ TH.mkName n
+		    clss = foldl TH.AppT (TH.ConT ''IsFieldOfC)
+					[structTyp, clbl, lbl, fieldTyp]
+		    defs = map mkFun []
+		return $ TH.InstanceD [] clss defs
+	if length (constructors us) == 1
+		then do let varFields = varFieldNames (allFields us)
+			mapM mkIFORelation varFields
+		else do rels <- mapM (\c -> mapM (\f -> mkIFOCRelation
+							  (constr_name c)
+							  (field_name f))
+						 (fields c))
+				     (constructors us)
+			return $ concat rels
+
+
+-- |Defines the AllConstructorsField relation for all applicable fields of the
+-- given structure.
+reifyAllConstructorsRelations :: UserStruct -> TH.Q [TH.Dec]
+reifyAllConstructorsRelations us =
+     do let varFields = varFieldNames (allFields us)
+	    structTyp = typeFromStruct us id
 	    mkACFRelation n =
 		let constrHasF c = any (\f -> n == field_name f)
 				       (filter isVarField $ fields c)
-		    lbl        = TH.ConT $ TH.mkName $ labelName n
+		    lbl        = TH.ConT $ TH.mkName $ fieldLabelName n
 		    clss = foldl TH.AppT (TH.ConT ''AllConstructorsField)
-					[ struct_typ, lbl ]
+					[ structTyp, lbl ]
 		in if all constrHasF (constructors us)
 			then return $ Just (TH.InstanceD [] clss [])
 			else return Nothing
-	labelDecls   <- mapM mkLabel varFields
-	ifoRelations <- mapM mkIFORelation varFields
-	acfRelations <- mapM mkACFRelation varFields >>= return . catMaybes
-	return $ labelDecls ++ ifoRelations ++ acfRelations
+	mapM mkACFRelation varFields >>= return . catMaybes
 
