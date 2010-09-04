@@ -17,7 +17,10 @@
     <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE
+	TemplateHaskell,
 	TypeFamilies,
+	TypeOperators,
+	GADTs,
 	FunctionalDependencies,
 	MultiParamTypeClasses,
 	FlexibleInstances,
@@ -25,14 +28,19 @@
 	UndecidableInstances #-}
 module Language.Potential.DataStructure.MetaData
 	( NumConstructors(..), AllConstructorsField(..)
-	, IsFieldOf(..), (-->)
+	, IsFieldOf(..), (:->)
+	, Constructed
 	, Access1(..), AccessN(..)
 	) where
 
-import Prelude (Integer, undefined, (++))
+import Prelude (Integer, undefined, (++), foldl, ($), Maybe(..), fromIntegral)
 import Data.Word (Word64(..))
 
+import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.TH.Syntax as THS
+
 import Language.Potential.Size
+import Language.Potential.DataStructure.AbstractSyntax (Bit(..))
 
 -- |Type-level tracking of how many constructors the structure 'typ' has.
 type family NumConstructors typ
@@ -41,46 +49,51 @@ type family NumConstructors typ
 -- 'typ' has the field 'field_label'.
 class AllConstructorsField typ field_label
 
+-- |Given a field label, we need a way to locate the corresponding field.  This
+-- structure carries the relevant data in both cases: the case where the
+-- structure has only one constructor (so it's unambiguous how to access the
+-- field) and where it has many constructors (in which case we'll need to
+-- determine which constructor was used in order to figure out how to access
+-- the field, if the field is present at all).
+data AccessStrategy =
+     OneConstr { maskIsolate :: Word64
+	       , maskForget  :: Word64
+	       , bytesIn     :: Word64
+	       , bitsIn      :: Integer }
+   | ManyConstr { constrIn :: AccessStrategy
+		, strategies :: [ ([Bit], Maybe AccessStrategy) ] }
+
 -- |Used to describe that the label 'field_label' describes a field of type
--- 'field_typ' for the structure 'typ'.
-class IsFieldOf typ field_label field_type
-  | field_label -> typ
-  , typ field_label -> field_type
+-- 'FieldType typ field_label' for the structure 'typ'.
+class IsFieldOf typ field_label | field_label -> typ
  where
-  projField :: typ -> field_label -> field_type
+  type FieldType typ field_label
+  projField :: typ -> field_label -> FieldType typ field_label
   projField _ _ = undefined
-  injField :: (IsFieldOf typ' field_label field_type')
-		=> typ' -> field_label -> field_typ -> typ
-  injField _ _ _ = undefined
+  access :: field_label -> [ AccessStrategy ]
 
--- |A type for modeling the composition of field labels.  Part of the security
--- kernel.
-data SubField a b = SubField a b
+-- |A type for modeling the composition of field labels.
+data a :-> b where
+ (:->) :: ( IsFieldOf typ1 a , IsFieldOf (FieldType typ1 a) b )
+		=> a -> b -> (a :-> b)
 
-instance (IsFieldOf typ1 f1 typ2, IsFieldOf typ2 f2 typ3) =>
- IsFieldOf typ1 (SubField f1 f2) typ3 where
-
--- |Used to describe a sub-field.  Only valid when the parent has exactly one
--- constructor, since this provides no way to determine which constructor has
--- been used.
-(-->) :: ( IsFieldOf typ1 f1 typ2
-	 , IsFieldOf typ2 f2 typ3
-	 , NumConstructors typ1 ~ D1
-	 ) => f1 -> f2 -> SubField f1 f2
-a --> b = SubField a b
+instance (IsFieldOf typ1 f1, IsFieldOf (FieldType typ1 f1) f2)
+ => IsFieldOf typ1 (f1 :-> f2) where
+  type FieldType typ1 (f1 :-> f2) = FieldType (FieldType typ1 f1) f2
+  access (f1 :-> f2) = access f1 ++ access f2
 
 
 -- |Used to access a field in a structure which has precisely one constructor.
 class (D1 :== NumConstructors typ) => Access1 typ where
-  access1 :: (IsFieldOf typ field_label field_type)
-		=> typ -> field_label -> field_type
+  access1 :: (IsFieldOf typ field_label)
+		=> typ -> field_label -> FieldType typ field_label
   access1 _ _ = undefined
 
 
 -- |Used to access a field in a structure which has more than one constructor.
 class (D1 :< NumConstructors typ) => AccessN typ where
-  accessN :: (IsFieldOf typ field_label field_type)
-		=> Constructed c typ -> field_label -> field_type
+  accessN :: (IsFieldOf typ field_label)
+		=> Constructed c typ -> field_label -> FieldType typ field_label
   accessN _ _ = undefined
 
 
@@ -93,4 +106,16 @@ class (D1 :< NumConstructors typ) => AccessN typ where
 --
 -- We'd expect 'modules' to have type Constructed Modules_c Modules
 data Constructed c typ = Constructed c typ
+
+
+instance THS.Lift AccessStrategy where
+  lift a@OneConstr{} = foldl TH.appE [| OneConstr |]
+			[ THS.lift (fromIntegral $ maskIsolate a :: Integer)
+			, THS.lift (fromIntegral $ maskForget a :: Integer)
+			, THS.lift (fromIntegral $ bytesIn a :: Integer)
+			, THS.lift $ bitsIn a ]
+  lift a@ManyConstr{} = foldl TH.appE [| ManyConstr |]
+			[ THS.lift $ constrIn a
+			, THS.lift $ strategies a ]
+
 

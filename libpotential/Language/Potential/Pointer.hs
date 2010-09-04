@@ -32,7 +32,6 @@
 	#-}
 module Language.Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
-	, FieldUpdate(..)
 	, primPtrProj, primPtrInj
 	, primFieldProj, primFieldInj
 	, primArrayProj, primArrayInj
@@ -50,10 +49,6 @@ import Language.Potential.DataStructure.MetaData
 import Language.Potential.IxMonad.Region
 import Language.Potential.IxMonad.Reader
 import Language.Potential.IxMonad.Writer
-
-data FieldUpdate partial =
-  forall field_label x reg . IsFieldOf partial field_label x
-  => field_label :<- reg
 
 data Memory -- used to tag a region as a Memory region
 type MemRegion r m = Region Memory r m

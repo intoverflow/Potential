@@ -137,19 +137,20 @@ reifyFieldLabels us =
 -- structure.
 reifyFieldRelations :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldRelations us =
-     do let structTyp = typeFromStruct us id
+     do constr <- TH.newName "constr"
+	let structTyp = if length (constructors us) == 1
+			  then typeFromStruct us id
+			  else foldl TH.AppT (TH.ConT ''Constructed)
+					[ TH.VarT constr, typeFromStruct us id ]
 	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
 	    mkIFORelation n =
-	     do let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n
+	     do access' <- [| \_ -> [ undefined ] |]
+		let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n
 		    fieldTyp = TH.VarT $ TH.mkName n
 		    clss = foldl TH.AppT (TH.ConT ''IsFieldOf)
-					[structTyp, lbl, fieldTyp]
-		    defs = map mkFun []
-				{-
-				[ ('forgetMask, forgetMask')
-				, ('isolateMask, isolateMask')
-				, ('bitOffset, bitOffset') ]
-				-}
+					[structTyp, lbl]
+		    defs = TH.TySynInstD ''FieldType [structTyp, lbl] fieldTyp :
+			   map mkFun [ ('access, access') ]
 		return $ TH.InstanceD [] clss defs
 	    varFields = varFieldNames (allFields us)
 	mapM mkIFORelation varFields

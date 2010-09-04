@@ -19,8 +19,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Language.Potential.DataStructure
 	( struct_diagram, defineDataSize
-	, projField, injField
-	, (-->)
+	, projField
+	, (:->)
 	, access1, accessN
 	) where
 
