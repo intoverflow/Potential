@@ -21,19 +21,19 @@
 	TypeFamilies,
 	TypeOperators,
 	GADTs,
-	FunctionalDependencies,
+	Rank2Types,
 	MultiParamTypeClasses,
 	FlexibleInstances,
 	FlexibleContexts,
 	UndecidableInstances #-}
 module Language.Potential.DataStructure.MetaData
 	( NumConstructors(..), AllConstructorsField(..)
-	, IsFieldOf(..), (:->)
-	, Constructed
-	, Access1(..), AccessN(..)
+	, IsField(..), (:->)
+	, AccessStrategy(..)
+	, Constructed, constructor, accessConstructor
 	) where
 
-import Prelude (Integer, undefined, (++), foldl, ($), Maybe(..), fromIntegral)
+import Prelude
 import Data.Word (Word64(..))
 
 import qualified Language.Haskell.TH as TH
@@ -59,42 +59,33 @@ data AccessStrategy =
      OneConstr { maskIsolate :: Word64
 	       , maskForget  :: Word64
 	       , bytesIn     :: Word64
-	       , bitsIn      :: Integer }
-   | ManyConstr { constrIn :: AccessStrategy
-		, strategies :: [ ([Bit], Maybe AccessStrategy) ] }
+	       , bitsIn      :: Integer
+	       , accessor_name  :: String }
+   | ManyConstr { constrIn :: [ AccessStrategy ]
+		, strategies :: [ ([Bit], Maybe AccessStrategy) ]
+		, accessor_name :: String }
 
 -- |Used to describe that the label 'field_label' describes a field of type
--- 'FieldType typ field_label' for the structure 'typ'.
-class IsFieldOf typ field_label | field_label -> typ
+-- 'FieldType field_label' for the structure 'StructType field_label'.  A
+-- minimal definition defines 'access' and 'FieldType'.
+class IsField struct_type field_label
  where
-  type FieldType typ field_label
-  projField :: typ -> field_label -> FieldType typ field_label
+  type FieldType struct_type field_label
+  projField :: struct_type -> field_label -> FieldType struct_type field_label
   projField _ _ = undefined
-  access :: field_label -> [ AccessStrategy ]
+  assertIsFieldOf :: struct_type -> field_label -> ()
+  assertIsFieldOf _ _ = ()
+  access :: struct_type -> field_label -> [ AccessStrategy ]
 
 -- |A type for modeling the composition of field labels.
 data a :-> b where
- (:->) :: ( IsFieldOf typ1 a , IsFieldOf (FieldType typ1 a) b )
+ (:->) :: ( IsField sa a, IsField (FieldType sa a) b )
 		=> a -> b -> (a :-> b)
 
-instance (IsFieldOf typ1 f1, IsFieldOf (FieldType typ1 f1) f2)
- => IsFieldOf typ1 (f1 :-> f2) where
-  type FieldType typ1 (f1 :-> f2) = FieldType (FieldType typ1 f1) f2
-  access (f1 :-> f2) = access f1 ++ access f2
-
-
--- |Used to access a field in a structure which has precisely one constructor.
-class (D1 :== NumConstructors typ) => Access1 typ where
-  access1 :: (IsFieldOf typ field_label)
-		=> typ -> field_label -> FieldType typ field_label
-  access1 _ _ = undefined
-
-
--- |Used to access a field in a structure which has more than one constructor.
-class (D1 :< NumConstructors typ) => AccessN typ where
-  accessN :: (IsFieldOf typ field_label)
-		=> Constructed c typ -> field_label -> FieldType typ field_label
-  accessN _ _ = undefined
+instance (IsField sa a, IsField (FieldType sa a) b)
+ => IsField sa (a :-> b) where
+  type FieldType sa (a :-> b)  = FieldType (FieldType sa a) b
+  access sa (a :-> b) = access sa a ++ access (projField sa a) b
 
 
 -- |When 'typ' is a child of another structure, 'c' is the name of the field
@@ -105,17 +96,26 @@ class (D1 :< NumConstructors typ) => AccessN typ where
 --             |---------------|-----------|
 --
 -- We'd expect 'modules' to have type Constructed Modules_c Modules
-data Constructed c typ = Constructed c typ
+data Constructed c typ = forall sc . IsField sc c => Constructed sc c typ
 
+-- |A type-level function for getting the label for a constructor
+constructor :: Constructed c typ -> c
+constructor _ = undefined
+
+-- |Given a Constructed c typ, get the access strategy for the constructor
+accessConstructor :: Constructed c typ -> [ AccessStrategy ]
+accessConstructor (Constructed sc c typ) = access sc c
 
 instance THS.Lift AccessStrategy where
   lift a@OneConstr{} = foldl TH.appE [| OneConstr |]
 			[ THS.lift (fromIntegral $ maskIsolate a :: Integer)
 			, THS.lift (fromIntegral $ maskForget a :: Integer)
 			, THS.lift (fromIntegral $ bytesIn a :: Integer)
-			, THS.lift $ bitsIn a ]
+			, THS.lift $ bitsIn a
+			, THS.lift $ accessor_name a ]
   lift a@ManyConstr{} = foldl TH.appE [| ManyConstr |]
 			[ THS.lift $ constrIn a
-			, THS.lift $ strategies a ]
+			, THS.lift $ strategies a
+			, THS.lift $ accessor_name a ]
 
 

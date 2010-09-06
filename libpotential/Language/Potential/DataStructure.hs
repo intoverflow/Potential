@@ -19,9 +19,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Language.Potential.DataStructure
 	( struct_diagram, defineDataSize
-	, projField
+	, projField, access, assertIsFieldOf, Constructed(..)
 	, (:->)
-	, access1, accessN
 	) where
 
 import qualified Language.Haskell.TH as TH

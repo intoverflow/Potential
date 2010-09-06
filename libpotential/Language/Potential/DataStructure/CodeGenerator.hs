@@ -85,8 +85,7 @@ reifyStruct us =
 			, reifyConstructorLabels
 			, reifyFieldLabels
 			, reifyFieldRelations
-			, reifyAllConstructorsRelations
-			, reifyAccessors ]
+			, reifyAllConstructorsRelations ]
 	[| return $ concat decls |]
 
 
@@ -138,17 +137,32 @@ reifyFieldLabels us =
 reifyFieldRelations :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldRelations us =
      do constr <- TH.newName "constr"
-	let structTyp = if length (constructors us) == 1
-			  then typeFromStruct us id
-			  else foldl TH.AppT (TH.ConT ''Constructed)
-					[ TH.VarT constr, typeFromStruct us id ]
+	let oneConstructor = length (constructors us) == 1
+	    structTyp = let structTyp' = typeFromStruct us id
+			in if oneConstructor
+				then structTyp'
+				else foldl TH.AppT (TH.ConT ''Constructed)
+					[ TH.VarT constr, structTyp' ]
 	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
 	    mkIFORelation n =
-	     do access' <- [| \_ -> [ undefined ] |]
+	     do access' <- if oneConstructor
+				then [| \_ _ ->
+					    [OneConstr
+						{ maskIsolate = undefined
+						, maskForget  = undefined
+						, bytesIn     = undefined
+						, bitsIn      = undefined
+						, accessor_name = n
+						}] |]
+				else [| \s l ->
+					    [ManyConstr
+						{ constrIn = accessConstructor s
+						, strategies = undefined
+						, accessor_name = n
+						}] |]
 		let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n
 		    fieldTyp = TH.VarT $ TH.mkName n
-		    clss = foldl TH.AppT (TH.ConT ''IsFieldOf)
-					[structTyp, lbl]
+		    clss = foldl TH.AppT (TH.ConT ''IsField) [structTyp, lbl]
 		    defs = TH.TySynInstD ''FieldType [structTyp, lbl] fieldTyp :
 			   map mkFun [ ('access, access') ]
 		return $ TH.InstanceD [] clss defs
@@ -173,13 +187,4 @@ reifyAllConstructorsRelations us =
 			else return Nothing
 	mapM mkACFRelation varFields >>= return . catMaybes
 
-
--- |Defines instances of Access1/AccessN for the given structure.
-reifyAccessors :: UserStruct -> TH.Q [TH.Dec]
-reifyAccessors us =
-     do let structTyp = typeFromStruct us id
-	    clss1 = TH.AppT (TH.ConT ''Access1) structTyp
-	    clssN = TH.AppT (TH.ConT ''AccessN) structTyp
-	    clss = if length (constructors us) == 1 then clss1 else clssN
-	return [TH.InstanceD [] clss []]
 
