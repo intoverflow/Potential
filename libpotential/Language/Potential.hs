@@ -60,5 +60,7 @@ import Language.Potential.Stack
 
 import Language.Potential.Arch.Amd64.Machine.Flags
 
+import Language.Potential.GRUB.Multiboot
+
 import Prelude hiding (undefined, (>>), (>>=), return, fail, compare)
 

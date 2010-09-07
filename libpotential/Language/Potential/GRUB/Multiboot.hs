@@ -1,9 +1,43 @@
-module Tests.Multiboot where
+{-
+  Copyright 2010 Timothy Carstens    carstens@math.utah.edu
 
-import Language.Potential
+  This file is part of the Potential Standard Library.
+
+    The Potential Standard Library is free software: you can redistribute it
+    and/or modify it under the terms of the GNU Lesser General Public License as
+    published by the Free Software Foundation, version 3 of the License.
+
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
+-}
+{-# LANGUAGE
+	EmptyDataDecls,
+        NoImplicitPrelude,
+        NoMonomorphismRestriction,
+        MultiParamTypeClasses,
+        FlexibleInstances,
+        FlexibleContexts,
+        ScopedTypeVariables,
+        TypeFamilies,
+        TemplateHaskell,
+        QuasiQuotes
+	#-}
+module Language.Potential.GRUB.Multiboot where
+
+import Language.Potential.Core
+import Language.Potential.DataStructure
 
 
-[$struct_diagram|
+[$struct_diagram| VideoHeader
+
+                          NoVideoHeader
+
                            VideoHeader
 
     |63-----------------------32|31------------------------0|
@@ -16,7 +50,10 @@ import Language.Potential
 
 |]
 
-[$struct_diagram|
+[$struct_diagram| EntryHeader
+
+                          NoEntryHeader
+
                            EntryHeader
 
     |63-----------------------32|31------------------------0|
@@ -29,7 +66,8 @@ import Language.Potential
 
 |]
 
-[$struct_diagram|
+[$struct_diagram| MultibootHeader
+
 			MultibootHeader
 
     |127---------------------------------------------------0|
@@ -73,7 +111,10 @@ import Language.Potential
 |]
 
 
-[$struct_diagram|
+[$struct_diagram| VBEInformation
+
+                         NoVBEInformation
+
                           VBEInformation
 
     |31-----------------------16|15------------------------0|
@@ -90,7 +131,10 @@ import Language.Potential
 
 |]
 
-[$struct_diagram|
+[$struct_diagram| BootDevice
+
+			 NoBootDevice
+
 			  BootDevice
 
     |31---------24|23--------12|11-----------8|7-----------0|
@@ -98,11 +142,14 @@ import Language.Potential
     |-------------|------------|--------------|-------------|
 |]
 
-[$struct_diagram|
+[$struct_diagram| Module
+
+			    NoModule
+
 			     Module
 
     |63----------------------32|31-------------------------0|
-    |          reserved        |            string          | 8
+    |          reserved        |          mod_string        | 8
     |--------------------------|----------------------------|
 
     |63----------------------32|31-------------------------0|
@@ -111,7 +158,10 @@ import Language.Potential
 
 |]
 
-[$struct_diagram|
+[$struct_diagram| DrivesInfo
+
+                           NoDrivesInfo
+
                             DrivesInfo
 
     |63-----------------------32|31------------------------0|
@@ -120,7 +170,10 @@ import Language.Potential
 
 |]
 
-[$struct_diagram|
+[$struct_diagram| MMapInfo
+
+                            NoMMapInfo
+
                              MMapInfo
 
     |63-----------------------32|31------------------------0|
@@ -129,26 +182,28 @@ import Language.Potential
 
 |]
 
-[$struct_diagram|
-                             SymInfo
+[$struct_diagram| SymInfo
 
                             NoSymInfo
 
                            AOutSymInfo
 
     |127--------96|95---------64|63---------32|31----------0|
-    |             |             |             |             | 0
+    |  reserved   |     addr    |   strsize   |   tabsize   | 0
     |-------------|-------------|-------------|-------------|
 
                             ElfSymInfo
 
     |127--------96|95---------64|63---------32|31----------0|
-    |             |             |             |             | 0
+    |    shndx    |     addr    |     size    |     num     | 0
     |-------------|-------------|-------------|-------------|
 
 |]
 
-[$struct_diagram|
+[$struct_diagram| ModsInfo
+
+                            NoModsInfo
+
                              ModsInfo
 
     |63-----------------------32|31------------------------0|
@@ -157,7 +212,10 @@ import Language.Potential
 
 |]
 
-[$struct_diagram|
+[$struct_diagram| MemInfo
+
+                            NoMemInfo
+
                              MemInfo
 
     |63-----------------------32|31------------------------0|
@@ -166,7 +224,8 @@ import Language.Potential
 
 |]
 
-[$struct_diagram|
+[$struct_diagram| MultibootInformation
+
 			MultibootInformation
 
     |159----------------------32|31------------------------0|

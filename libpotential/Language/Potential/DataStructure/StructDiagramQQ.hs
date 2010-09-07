@@ -55,10 +55,10 @@ structDiagramParser =
 		convert n (d:ds) = convert (10*n + digitToInt d) ds
 	parse_constructor =
 	     do constr_name     <- typeName
-		fields_unsorted <- many1 parse_diagram_field
+		fields_unsorted <- many parse_diagram_field
 		let fields = concat $
-			     map fst $ sortBy (\(_, a :: Integer)
-						(_, b :: Integer)
+			     map fst $ sortBy (\(_, a :: Double)
+						(_, b :: Double)
 					       -> compare a b)
 					      fields_unsorted
 		return $ Constructor { constr_name = constr_name
@@ -106,7 +106,8 @@ structDiagramParser =
 			     parse_middle' rs []
 	  where parse_middle' [] fs =
 		     do whiteSpace
-			byte_offset <- integer
+			byte_offset <- (try float) <|>
+				       (integer >>= return . fromIntegral)
 			whiteSpace'
 			return (fs, byte_offset)
 		parse_middle' (r:rs) fs =
