@@ -7,13 +7,14 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE
 	ScopedTypeVariables,
@@ -32,9 +33,8 @@
 	#-}
 module Language.Potential.Pointer
 	( Ptr64, newPtr64, fromPtr64
-	, primPtrProj, primPtrInj
-	, primFieldProj, primFieldInj
-	, primArrayProj, primArrayInj
+	, assertPtrType
+	, getStruct
 	, MemRegion, isMemRegion, isMemSubRegion
 	, withMemoryRegion, nestMemoryRegion
 	) where
@@ -112,6 +112,26 @@ belongsInSubRegion _ = return ()
 belongsHere :: (IxMonadRegion m, RegionType m ~ Memory)
 		=> Ptr64 (RegionLabel m) t ->  m Unmodeled x x ()
 belongsHere _ = return ()
+
+-- |Uses a type-assertion function to validate that the given pointer does
+-- in fact contain the right type
+assertPtrType :: (IxMonadRegion m, RegionType m ~ Memory)
+			=> (t -> t) -> Ptr64 (RegionLabel m) t
+			-> m Unmodeled x x ()
+assertPtrType f t = return ()
+
+-- |Takes the given field from src and puts it into dst, assuming the field is
+-- small enough to fit into the destination register.
+getStruct src f dst =
+     do -- TODO: generate instrutions!
+	comment "getStruct:"
+	structPtr <- get src
+	belongsHere structPtr
+	struct <- fromPtr64 structPtr
+	comment $ show $ access struct f
+	let fieldContents = projField struct f
+	sizeBoundedBy64Bits fieldContents
+	set dst fieldContents
 
 -- For projecting from Ptr64 r Type to Type_Offset
 -- Types are encoded by the proj function

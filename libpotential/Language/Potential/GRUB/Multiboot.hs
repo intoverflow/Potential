@@ -32,6 +32,9 @@ module Language.Potential.GRUB.Multiboot where
 
 import Language.Potential.Core
 import Language.Potential.DataStructure
+import Language.Potential.Pointer (assertPtrType, getStruct, isMemRegion)
+import Language.Potential.Functions (defun)
+import Language.Potential.Flow (ret)
 
 
 [$struct_diagram| VideoHeader
@@ -195,7 +198,7 @@ import Language.Potential.DataStructure
                             ElfSymInfo
 
     |127--------96|95---------64|63---------32|31----------0|
-    |    shndx    |     addr    |     size    |     num     | 0
+    |    shndx    |     addr    |     size    |   shdr_num  | 0
     |-------------|-------------|-------------|-------------|
 
 |]
@@ -271,14 +274,37 @@ assertSymInfo ::
 	drives_p cfg_table_p loader_name_p apm_table_p vbe_p
 	sym_info_p
 	boot_device cmd_line mods_info
-	(Constructed Sym_info_p (SymInfo tabsize strsize addr num size shndx))
+	(Constructed
+		(MultibootInformation
+			mem_p boot_dev_p cmd_line_p mods_p sym_info_p mmap_p
+			drives_p cfg_table_p loader_name_p apm_table_p vbe_p
+			sym_info_p boot_device cmd_line mods_info sym_info
+			mmap_info drives_info config_table boot_loader_name
+			apm_table vbe_info)
+		Sym_info_p
+		(SymInfo tabsize strsize addr num size shndx))
 	mmap_info drives_info config_table boot_loader_name apm_table vbe_info
   -> MultibootInformation
 	mem_p boot_dev_p cmd_line_p mods_p sym_info_p mmap_p
 	drives_p cfg_table_p loader_name_p apm_table_p vbe_p
 	sym_info_p
 	boot_device cmd_line mods_info
-	(Constructed Sym_info_p (SymInfo tabsize strsize addr num size shndx))
+	(Constructed
+		(MultibootInformation
+			mem_p boot_dev_p cmd_line_p mods_p sym_info_p mmap_p
+			drives_p cfg_table_p loader_name_p apm_table_p vbe_p
+			sym_info_p boot_device cmd_line mods_info sym_info
+			mmap_info drives_info config_table boot_loader_name
+			apm_table vbe_info)
+		Sym_info_p
+		(SymInfo tabsize strsize addr num size shndx))
 	mmap_info drives_info config_table boot_loader_name apm_table vbe_info
 assertSymInfo x = x
+
+testAccess = defun "testAccess" $
+     do isMemRegion $ isCode
+	raxt <- lift $ get rax
+	assertPtrType (assertSymInfo) raxt
+	getStruct rax (Sym_info --> Addr) rbx
+	ret
 

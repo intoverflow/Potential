@@ -28,8 +28,6 @@ import Language.Potential.THLiftDecls
 import Language.Potential.DataStructure.AbstractSyntax
 import Language.Potential.DataStructure.MetaData
 import Language.Potential.Size (mkTypeNum, HasSZ(..), mkSize)
-import Language.Potential.Pointer
-	( newPtr64 , primPtrProj, primPtrInj , primFieldProj, primFieldInj )
 
 
 -- |Given a type and an Int, defines an instance of HasSZ ascribing the given
@@ -137,12 +135,15 @@ reifyFieldLabels us =
 reifyFieldRelations :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldRelations us =
      do constr <- TH.newName "constr"
+	constrContainer <- TH.newName "constr_container"
 	let oneConstructor = length (constructors us) == 1
 	    structTyp = let structTyp' = typeFromStruct us id
 			in if oneConstructor
 				then structTyp'
 				else foldl TH.AppT (TH.ConT ''Constructed)
-					[ TH.VarT constr, structTyp' ]
+					[ TH.VarT constrContainer
+					, TH.VarT constr
+					, structTyp' ]
 	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
 	    mkIFORelation n =
 	     do access' <- if oneConstructor
@@ -162,10 +163,15 @@ reifyFieldRelations us =
 						}] |]
 		let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n
 		    fieldTyp = TH.VarT $ TH.mkName n
+		    assuming = if oneConstructor
+				then []
+				else [ TH.ClassP ''IsField
+					[ TH.VarT constrContainer
+					, TH.VarT constr] ]
 		    clss = foldl TH.AppT (TH.ConT ''IsField) [structTyp, lbl]
 		    defs = TH.TySynInstD ''FieldType [structTyp, lbl] fieldTyp :
 			   map mkFun [ ('access, access') ]
-		return $ TH.InstanceD [] clss defs
+		return $ TH.InstanceD assuming clss defs
 	    varFields = varFieldNames (allFields us)
 	mapM mkIFORelation varFields
 

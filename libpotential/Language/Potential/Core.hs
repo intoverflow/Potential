@@ -7,19 +7,21 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE
 	NoMonomorphismRestriction,
 	NoImplicitPrelude,
 	FlexibleContexts,
-	TypeFamilies
+	TypeFamilies,
+	TypeOperators
 	#-}
 module Language.Potential.Core
 	(
@@ -32,8 +34,9 @@ module Language.Potential.Core
 	, instr, forget, get, set, getConstraints, withConstraints
 	, assertType, assertRegister, assertFunction
 	, evaluateTypes
+        , sizeBoundedBy64Bits
 
-	-- stuff that comes from Potential.Assembly
+	-- stuff that comes from Assembly
 	, Reg(..), Instr(..), Deref(..), Function(..)
 	, Unmodeled, Composable, Terminal, unmodeled, composable, terminal
 
@@ -43,6 +46,14 @@ module Language.Potential.Core
 	-- stuff that comes from IxMonad
 	, Composition(..)
 	, IxFunctor(..), IxMonad(..), IxMonadTrans(..)
+
+	-- stuff that comes from Size
+	, D0, D1, D2, D3, D4
+        , D5, D6, D7, D8, D9
+        , toInt, Num, Nat
+        , (:*), HasSZ(..), MaybeHasSZ
+        , (:<), (:<?), (:==), (:==?)
+        , dataSize, dataSizeT, mkSize, mkTypeNum
 
 	-- stuff that comes from Model
 	, rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, rflags
@@ -104,20 +115,28 @@ set field new =
      do isUsingMS
 	psModify (\ms -> set' field new ms)
 
+-- |Type level function for getting constraints
 getConstraints :: IxCode m => m Unmodeled x x (Constraints m)
 getConstraints = return undefined
 
+-- |Enables constraints
 withConstraints :: (IxCode m, Constraints m ~ ConstraintsOn)
 			=> m ct x y b
 			-> m ct x y b
 withConstraints p = p
 
--- For logging instructions
+-- |Type level function for asserting that a type's representation size is <=
+-- 64 bits.
+sizeBoundedBy64Bits :: (IxCode m, (:<?) (SZ a) (D6 :* D4) (Constraints m))
+			=> a -> m Unmodeled x x ()
+sizeBoundedBy64Bits _ = return ()
+
+-- |For logging instructions
 instr :: (IxMonadWriter [Instr] m) => Instr -> m Unmodeled x x ()
 instr i = tell [i]
 
 
--- Code comments in the rendered code
+-- |Code comments in the rendered code
 comment s = instr $ Cmt s
 
 

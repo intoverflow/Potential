@@ -66,6 +66,10 @@ data AccessStrategy =
 		, strategies :: [ ([Bit], Maybe AccessStrategy) ]
 		, accessor_name :: String }
 
+instance Show AccessStrategy where
+  show as@OneConstr{} = accessor_name as
+  show as@ManyConstr{} = accessor_name as ++ " via " ++ show (constrIn as)
+
 -- |Used to describe that the label 'field_label' describes a field of type
 -- 'FieldType field_label' for the structure 'StructType field_label'.  A
 -- minimal definition defines 'access' and 'FieldType'.
@@ -99,15 +103,20 @@ instance (IsField sa a, IsField (FieldType sa a) b)
 --             |---------------|-----------|
 --
 -- We'd expect 'modules' to have type Constructed Modules_c Modules
-data Constructed c typ = forall sc . IsField sc c => Constructed sc c typ
+data (IsField cs c) => Constructed cs c typ = Constructed c typ
 
 -- |A type-level function for getting the label for a constructor
-constructor :: Constructed c typ -> c
+constructor :: Constructed cs c typ -> c
 constructor _ = undefined
 
+-- |A type-level function for getting the generic type of the struct which holds
+-- the container
+container :: Constructed cs c typ -> cs
+container _ = undefined
+
 -- |Given a Constructed c typ, get the access strategy for the constructor
-accessConstructor :: Constructed c typ -> [ AccessStrategy ]
-accessConstructor (Constructed sc c typ) = access sc c
+accessConstructor :: (IsField cs c) => Constructed cs c typ -> [AccessStrategy]
+accessConstructor c = access (container c) (constructor c)
 
 instance THS.Lift AccessStrategy where
   lift a@OneConstr{} = foldl TH.appE [| OneConstr |]
