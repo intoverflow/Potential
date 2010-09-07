@@ -256,13 +256,29 @@ import Language.Potential.DataStructure
     |   vbe_p   | apm_table_p | loader_name_p | cfg_table_p | 0.5
     |-----------|-------------|---------------|-------------|
 
-    |------7-----|-----6------|-------5------|------4-------|
-    |  drives_p  |   mmap_p   |   sym_elf_p  |  sym_aout_p  | 0.25
-    |------------|------------|--------------|--------------|
+    |------7-----|-----6------|5---------------------------4|
+    |  drives_p  |   mmap_p   |          sym_info_p         | 0.25
+    |------------|------------|-----------------------------|
 
     |------3-----|--------2-------|--------1-------|----0---|
     |   mods_p   |   cmd_line_p   |   boot_dev_p   |  mem_p | 0
     |------------|----------------|----------------|--------|
 |]
 
+assertSymInfo ::
+     MultibootInformation
+	mem_p boot_dev_p cmd_line_p mods_p sym_info_p mmap_p
+	drives_p cfg_table_p loader_name_p apm_table_p vbe_p
+	sym_info_p
+	boot_device cmd_line mods_info
+	(Constructed Sym_info_p (SymInfo tabsize strsize addr num size shndx))
+	mmap_info drives_info config_table boot_loader_name apm_table vbe_info
+  -> MultibootInformation
+	mem_p boot_dev_p cmd_line_p mods_p sym_info_p mmap_p
+	drives_p cfg_table_p loader_name_p apm_table_p vbe_p
+	sym_info_p
+	boot_device cmd_line mods_info
+	(Constructed Sym_info_p (SymInfo tabsize strsize addr num size shndx))
+	mmap_info drives_info config_table boot_loader_name apm_table vbe_info
+assertSymInfo x = x
 

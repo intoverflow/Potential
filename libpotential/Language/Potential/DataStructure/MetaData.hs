@@ -17,6 +17,7 @@
     <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE
+	FunctionalDependencies,
 	TemplateHaskell,
 	TypeFamilies,
 	TypeOperators,
@@ -68,7 +69,7 @@ data AccessStrategy =
 -- |Used to describe that the label 'field_label' describes a field of type
 -- 'FieldType field_label' for the structure 'StructType field_label'.  A
 -- minimal definition defines 'access' and 'FieldType'.
-class IsField struct_type field_label
+class IsField struct_type field_label | field_label -> struct_type
  where
   type FieldType struct_type field_label
   projField :: struct_type -> field_label -> FieldType struct_type field_label
@@ -85,7 +86,8 @@ a --> b = SubField a b
 
 instance (IsField sa a, IsField (FieldType sa a) b)
  => IsField sa (a :-> b) where
-  type FieldType sa (a :-> b)  = FieldType (FieldType sa a) b
+  type FieldType sa (a :-> b) = FieldType (FieldType sa a) b
+  projField sa (SubField a b) = projField (projField sa a) b
   access sa (SubField a b) = access sa a ++ access (projField sa a) b
 
 
