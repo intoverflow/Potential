@@ -28,7 +28,7 @@
 	UndecidableInstances #-}
 module Language.Potential.DataStructure.MetaData
 	( NumConstructors(..), AllConstructorsField(..)
-	, IsField(..), (:->)
+	, IsField(..), (:->), (-->)
 	, AccessStrategy(..)
 	, Constructed, constructor, accessConstructor
 	) where
@@ -79,13 +79,15 @@ class IsField struct_type field_label
 
 -- |A type for modeling the composition of field labels.
 data a :-> b where
- (:->) :: ( IsField sa a, IsField (FieldType sa a) b )
-		=> a -> b -> (a :-> b)
+  SubField :: (IsField sa a, IsField (FieldType sa a) b) => a -> b -> a :-> b
+
+-- |A wrapper for the 'SubField' constructor of ':->'
+a --> b = SubField a b
 
 instance (IsField sa a, IsField (FieldType sa a) b)
  => IsField sa (a :-> b) where
   type FieldType sa (a :-> b)  = FieldType (FieldType sa a) b
-  access sa (a :-> b) = access sa a ++ access (projField sa a) b
+  access sa (SubField a b) = access sa a ++ access (projField sa a) b
 
 
 -- |When 'typ' is a child of another structure, 'c' is the name of the field

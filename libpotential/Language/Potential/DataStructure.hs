@@ -20,7 +20,7 @@
 module Language.Potential.DataStructure
 	( struct_diagram, defineDataSize
 	, projField, access, assertIsFieldOf, Constructed(..)
-	, (:->)
+	, (:->), (-->)
 	) where
 
 import qualified Language.Haskell.TH as TH
