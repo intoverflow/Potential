@@ -19,7 +19,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Language.Potential.DataStructure
 	( struct_diagram, defineDataSize
-	, projField, access, assertIsFieldOf, Constructed(..)
+	, projField, access, assertIsFieldOf, boundType
 	, (:->), (-->)
 	) where
 

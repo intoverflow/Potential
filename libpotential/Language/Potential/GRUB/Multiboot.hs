@@ -268,6 +268,7 @@ import Language.Potential.Flow (ret)
     |------------|----------------|----------------|--------|
 |]
 
+{-
 assertSymInfo ::
      MultibootInformation
 	mem_p boot_dev_p cmd_line_p mods_p sym_info_p mmap_p
@@ -300,11 +301,21 @@ assertSymInfo ::
 		(SymInfo tabsize strsize addr num size shndx))
 	mmap_info drives_info config_table boot_loader_name apm_table vbe_info
 assertSymInfo x = x
+-}
 
 testAccess = defun "testAccess" $
      do isMemRegion $ isCode
 	raxt <- lift $ get rax
-	assertPtrType (assertSymInfo) raxt
+	assertPtrType (boundType Sym_info
+				 (undefined  :: SymInfo tabsize
+							strsize
+							addr
+							num
+							size
+							shndx)
+				Sym_info_p
+				(undefined :: MultibootInformation mem_p boot_dev_p cmd_line_p mods_p sym_info_p mmap_p drives_p cfg_table_p loader_name_p apm_table_p vbe_p sym_info_p boot_device cmd_line mods_info sym_info mmap_info drives_info config_table boot_loader_name apm_table vbe_info))
+		      raxt
 	getStruct rax (Sym_info --> Addr) rbx
 	ret
 

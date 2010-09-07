@@ -31,7 +31,8 @@ module Language.Potential.DataStructure.MetaData
 	( NumConstructors(..), AllConstructorsField(..)
 	, IsField(..), (:->), (-->)
 	, AccessStrategy(..)
-	, Constructed, constructor, accessConstructor
+	, Constructed, constructor, Constructor, accessConstructor
+	, boundType
 	) where
 
 import Prelude
@@ -99,11 +100,23 @@ instance (IsField sa a, IsField (FieldType sa a) b)
 -- where the constructor of 'typ' is being stored.  Example:
 --
 --             |---------------|-----------|
---    mod_rep: |    modules    | modules_c |
+--    Mod_rep: |    modules    | modules_c |
 --             |---------------|-----------|
 --
--- We'd expect 'modules' to have type Constructed Modules_c Modules
+-- We'd expect 'modules' to have type
+-- 'Constructed (Mod_rep a b) Modules_c ModulesTyp'.
 data (IsField cs c) => Constructed cs c typ = Constructed c typ
+
+-- |Used to indicate that the field with this type carries a constructor for
+-- field 'l'.  Example:
+--
+--             |---------------|-----------|
+--    Mod_rep: |    modules    | modules_c |
+--             |---------------|-----------|
+--
+-- We'd expect 'modules_c' to have type
+-- 'Constructor (Mod_rep a b) Modules'
+data (IsField cs l) => Constructor cs l = Constructor l
 
 -- |A type-level function for getting the label for a constructor
 constructor :: Constructed cs c typ -> c
@@ -113,6 +126,13 @@ constructor _ = undefined
 -- the container
 container :: Constructed cs c typ -> cs
 container _ = undefined
+
+-- |A type-level function for validating that a Constructor/Constructed pair
+-- matches
+boundType :: ( FieldType a l ~ Constructed cs c typ
+	     , FieldType a c ~ Constructor cs l
+	     ) => l -> typ -> c -> cs -> a -> a
+boundType _ _ _ _ a = a
 
 -- |Given a Constructed c typ, get the access strategy for the constructor
 accessConstructor :: (IsField cs c) => Constructed cs c typ -> [AccessStrategy]
