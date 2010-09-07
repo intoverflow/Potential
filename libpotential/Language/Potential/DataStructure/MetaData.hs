@@ -78,8 +78,7 @@ class IsField struct_type field_label
   access :: struct_type -> field_label -> [ AccessStrategy ]
 
 -- |A type for modeling the composition of field labels.
-data a :-> b where
-  SubField :: (IsField sa a, IsField (FieldType sa a) b) => a -> b -> a :-> b
+data a :-> b where SubField :: a -> b -> a :-> b
 
 -- |A wrapper for the 'SubField' constructor of ':->'
 a --> b = SubField a b
