@@ -29,10 +29,11 @@
 	UndecidableInstances #-}
 module Language.Potential.DataStructure.MetaData
 	( NumConstructors(..), AllConstructorsField(..)
-	, IsField(..), (:->), (-->)
+	, IsField(..), ProjField(..), GetConstructorData(..)
+	, AccessWithConstr(..), DeepAccess(..)
 	, AccessStrategy(..)
-	, Constructed, constructor, Constructor, accessConstructor
-	, boundType
+	, (:->), (-->)
+	, Constructed(..), Constructor(..), NotConstructed(..)
 	) where
 
 import Prelude
@@ -43,6 +44,31 @@ import qualified Language.Haskell.TH.Syntax as THS
 
 import Language.Potential.Size
 import Language.Potential.DataStructure.AbstractSyntax (Bit(..))
+
+-- |When 'typ' is a child of another structure, 'c' is the name of the field
+-- where the constructor of 'typ' is being stored.  Example:
+--
+--             |---------------|-----------|
+--    Mod_rep: |    modules    | modules_c |
+--             |---------------|-----------|
+--
+-- We'd expect 'modules' to have type
+-- 'Constructed Modules_c ModulesTyp'.
+data (D1 :< NumConstructors typ) => Constructed c typ = Constructed c typ
+
+-- |Used to indicate that the field with this type carries a constructor for
+-- field 'l'.  Example:
+--
+--             |---------------|-----------|
+--    Mod_rep: |    modules    | modules_c |
+--             |---------------|-----------|
+--
+-- We'd expect 'modules_c' to have type
+-- 'Constructor Modules'
+data Constructor l = Constructor l
+
+-- |Used to indicate that the given type has no constructors.
+data (D1 :== NumConstructors typ) => NotConstructed typ = NotConstructed typ
 
 -- |Type-level tracking of how many constructors the structure 'typ' has.
 type family NumConstructors typ
@@ -63,82 +89,112 @@ data AccessStrategy =
 	       , bytesIn     :: Word64
 	       , bitsIn      :: Integer
 	       , accessor_name  :: String }
-   | ManyConstr { constrIn :: [ AccessStrategy ]
-		, strategies :: [ ([Bit], Maybe AccessStrategy) ]
+   | ManyConstr { strategies :: [ ([Bit], Maybe AccessStrategy) ]
+		, accessor_name :: String }
+   | WithConstr { constr_access :: AccessStrategy
+		, accessor      :: AccessStrategy
 		, accessor_name :: String }
 
 instance Show AccessStrategy where
   show as@OneConstr{} = accessor_name as
-  show as@ManyConstr{} = accessor_name as ++ " via " ++ show (constrIn as)
+  show as@ManyConstr{} = accessor_name as ++ " (with strategies)"
+  show as@WithConstr{} = accessor_name as ++
+			 " via (" ++ show (constr_access as) ++ ")"
+
+-- |The sub-field relation.  Used to access deep within sub-fields of a
+-- structure.
+data a :-> b = SubField a b
+
+-- |A prettier looking wrapper for the 'SubField' constructor.
+(-->) :: a -> b -> a :-> b
+a --> b = SubField a b
+
+-- |This class encodes how to locate constructor data for a field.
+class GetConstructorData parent_type field_type
+ where
+  type ConstructorLabel parent_type field_type
+  constructorLabel :: parent_type -> field_type
+			-> ConstructorLabel parent_type field_type
+  constructorLabel _ _ = undefined
+  accessConstructor :: parent_type -> field_type -> Maybe AccessStrategy
+
+instance (IsField parent_type constr_label)
+ => GetConstructorData parent_type (Constructed constr_label typ)
+ where
+  type ConstructorLabel parent_type (Constructed constr_label typ) =constr_label
+  accessConstructor ps ft = Just $ access ps (constructorLabel ps ft)
+
+-- |A dummy type to be used when there is no constructor for the type we are
+-- using.
+data NoConstructorLabel = NoConstructorLabel
+
+instance GetConstructorData parent_type (NotConstructed typ)
+ where
+  type ConstructorLabel parent_type (NotConstructed typ) = NoConstructorLabel
+  accessConstructor _ _ = Nothing
+
 
 -- |Used to describe that the label 'field_label' describes a field of type
 -- 'FieldType field_label' for the structure 'StructType field_label'.  A
 -- minimal definition defines 'access' and 'FieldType'.
-class IsField struct_type field_label | field_label -> struct_type
+class IsField struct_type field_label
+ | field_label -> struct_type
+ where
+  assertIsFieldOf :: struct_type -> field_label -> ()
+  assertIsFieldOf _ _ = ()
+  access :: struct_type -> field_label -> AccessStrategy
+
+-- |Type-level functions for accessing sub-field types
+class ProjField struct_type field_label
  where
   type FieldType struct_type field_label
   projField :: struct_type -> field_label -> FieldType struct_type field_label
   projField _ _ = undefined
-  assertIsFieldOf :: struct_type -> field_label -> ()
-  assertIsFieldOf _ _ = ()
-  access :: struct_type -> field_label -> [ AccessStrategy ]
 
--- |A type for modeling the composition of field labels.
-data a :-> b where SubField :: a -> b -> a :-> b
+instance ( ProjField struct_type a
+	 , ProjField (FieldType struct_type a) b )
+ => ProjField struct_type (a :-> b)
+ where type FieldType struct_type (a :-> b) =
+	FieldType (FieldType struct_type a) b
 
--- |A wrapper for the 'SubField' constructor of ':->'
-a --> b = SubField a b
+-- |This class augments the usual 'access' method of 'IsField' with information
+-- about constructors.
+class ( IsField struct_type field_label
+      , ProjField struct_type field_label
+      , GetConstructorData struct_type (FieldType struct_type field_label) )
+ => AccessWithConstr struct_type field_label
+ where
+  accessWithConstr :: struct_type -> field_label -> AccessStrategy
+  accessWithConstr st fl =
+    let a = access st fl
+	field_type = projField st fl
+    in case (accessConstructor st field_type) of
+	  Nothing -> a
+	  Just c  -> WithConstr { constr_access = c
+				, accessor = a
+				, accessor_name = accessor_name a
+				}
 
-instance (IsField sa a, IsField (FieldType sa a) b)
- => IsField sa (a :-> b) where
-  type FieldType sa (a :-> b) = FieldType (FieldType sa a) b
-  projField sa (SubField a b) = projField (projField sa a) b
-  access sa (SubField a b) = access sa a ++ access (projField sa a) b
+instance ( IsField struct_type field_label
+	 , ProjField struct_type field_label
+	 , GetConstructorData struct_type (FieldType struct_type field_label) )
+ => AccessWithConstr struct_type field_label
 
+-- |The general purpose, multi-layered field accessor class.
+class DeepAccess struct_type field_label
+ where
+  deepAccess :: struct_type -> field_label -> [ AccessStrategy ]
 
--- |When 'typ' is a child of another structure, 'c' is the name of the field
--- where the constructor of 'typ' is being stored.  Example:
---
---             |---------------|-----------|
---    Mod_rep: |    modules    | modules_c |
---             |---------------|-----------|
---
--- We'd expect 'modules' to have type
--- 'Constructed (Mod_rep a b) Modules_c ModulesTyp'.
-data (IsField cs c) => Constructed cs c typ = Constructed c typ
+instance ( ProjField struct_type a
+	 , DeepAccess struct_type a
+	 , AccessWithConstr (FieldType struct_type a) b )
+ => DeepAccess struct_type (a :-> b)
+ where
+  deepAccess st (SubField a b) = (deepAccess st a) ++
+				 [accessWithConstr (projField st a) b]
 
--- |Used to indicate that the field with this type carries a constructor for
--- field 'l'.  Example:
---
---             |---------------|-----------|
---    Mod_rep: |    modules    | modules_c |
---             |---------------|-----------|
---
--- We'd expect 'modules_c' to have type
--- 'Constructor (Mod_rep a b) Modules'
-data (IsField cs l) => Constructor cs l = Constructor l
-
--- |A type-level function for getting the label for a constructor
-constructor :: Constructed cs c typ -> c
-constructor _ = undefined
-
--- |A type-level function for getting the generic type of the struct which holds
--- the container
-container :: Constructed cs c typ -> cs
-container _ = undefined
-
--- |A type-level function for validating that a Constructor/Constructed pair
--- matches
-boundType :: ( FieldType a l ~ Constructed cs c typ
-	     , FieldType a c ~ Constructor cs l
-	     ) => l -> typ -> c -> cs -> a -> a
-boundType _ _ _ _ a = a
-
--- |Given a Constructed c typ, get the access strategy for the constructor
-accessConstructor :: (IsField cs c) => Constructed cs c typ -> [AccessStrategy]
-accessConstructor c = access (container c) (constructor c)
-
-instance THS.Lift AccessStrategy where
+instance THS.Lift AccessStrategy
+ where
   lift a@OneConstr{} = foldl TH.appE [| OneConstr |]
 			[ THS.lift (fromIntegral $ maskIsolate a :: Integer)
 			, THS.lift (fromIntegral $ maskForget a :: Integer)
@@ -146,8 +202,10 @@ instance THS.Lift AccessStrategy where
 			, THS.lift $ bitsIn a
 			, THS.lift $ accessor_name a ]
   lift a@ManyConstr{} = foldl TH.appE [| ManyConstr |]
-			[ THS.lift $ constrIn a
-			, THS.lift $ strategies a
+			[ THS.lift $ strategies a
 			, THS.lift $ accessor_name a ]
-
+  lift a@WithConstr{} = foldl TH.appE [| WithConstr |]
+			[ THS.lift $ constr_access a
+			, THS.lift $ accessor a
+			, THS.lift $ accessor_name a ]
 

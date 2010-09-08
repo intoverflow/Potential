@@ -25,6 +25,7 @@
 	FlexibleContexts,
 	ScopedTypeVariables,
 	TypeFamilies,
+	UndecidableInstances,
 	TemplateHaskell,
 	QuasiQuotes #-}
 module Language.Potential.Arch.Amd64.Machine.Flags where

@@ -128,7 +128,7 @@ getStruct src f dst =
 	structPtr <- get src
 	belongsHere structPtr
 	struct <- fromPtr64 structPtr
-	comment $ show $ access struct f
+	comment $ show $ deepAccess struct f
 	let fieldContents = projField struct f
 	sizeBoundedBy64Bits fieldContents
 	set dst fieldContents

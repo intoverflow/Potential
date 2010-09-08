@@ -21,6 +21,7 @@ module Language.Potential.DataStructure.CodeGenerator where
 
 import Prelude
 import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.TH.Syntax as THS
 import Data.Char (toUpper)
 import Data.Maybe (catMaybes)
 
@@ -68,11 +69,20 @@ constructorLabelName n = 'C' : n
 
 
 -- Given the name of a label, creates a data definition for the corresponding
--- label.
-reifyLabel :: String -> TH.Q TH.Dec
-reifyLabel n = let lblname = TH.mkName $ fieldLabelName n
-		   constr  = TH.NormalC lblname []
-	       in return $ TH.DataD [] lblname [] [constr] []
+-- label.  Also creates the corresponding (derived) instance for Show and Lift.
+reifyLabel :: String -> TH.Q [TH.Dec]
+reifyLabel n =
+     do let lblname = TH.mkName $ fieldLabelName n
+	    constr  = TH.NormalC lblname []
+	    datad   = TH.DataD [] lblname [] [constr] [''Show]
+	    lbl   = TH.ConT lblname
+	    clss  = TH.AppT (TH.ConT ''THS.Lift) lbl
+	lifter <- [| TH.ConE lblname |]
+	lifted <- TH.appE [| return |] [| TH.ConE lblname |]
+	let lift' = TH.FunD ('THS.lift)
+			    [TH.Clause [TH.WildP] (TH.NormalB lifted) []]
+	    lifti = TH.InstanceD [] clss [lift']
+	return [datad, lifti]
 
 -- |Yields Template Haskell top-level declarations to define the given data
 -- structure.
@@ -119,7 +129,7 @@ reifyConstructorLabels :: UserStruct -> TH.Q [TH.Dec]
 reifyConstructorLabels us =
      do let constrNames = map (constructorLabelName . constr_name)
 			      (constructors us)
-	mapM reifyLabel constrNames
+	mapM reifyLabel constrNames >>= return . concat
 
 
 -- |Defines the (Haskell-level) field labels for all of the VarFields in this
@@ -127,53 +137,70 @@ reifyConstructorLabels us =
 reifyFieldLabels :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldLabels us =
      do let varFields = varFieldNames (allFields us)
-	mapM reifyLabel varFields
+	mapM reifyLabel varFields >>= return . concat
 
 
--- |Defines the IsFieldOf relations for all of the fields for the given
--- structure.
+-- |Defines the IsField, ProjField, and DeepAccess relations for all of the
+-- fields for the given structure.
 reifyFieldRelations :: UserStruct -> TH.Q [TH.Dec]
 reifyFieldRelations us =
      do constr <- TH.newName "constr"
-	constrContainer <- TH.newName "constr_container"
 	let oneConstructor = length (constructors us) == 1
 	    structTyp = let structTyp' = typeFromStruct us id
 			in if oneConstructor
-				then structTyp'
+				then TH.AppT (TH.ConT ''NotConstructed)
+					structTyp'
 				else foldl TH.AppT (TH.ConT ''Constructed)
-					[ TH.VarT constrContainer
-					, TH.VarT constr
+					[ TH.VarT constr
 					, structTyp' ]
 	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
-	    mkIFORelation n =
+	    mkIFRelation n =
 	     do access' <- if oneConstructor
-				then [| \_ _ ->
-					    [OneConstr
-						{ maskIsolate = undefined
-						, maskForget  = undefined
-						, bytesIn     = undefined
-						, bitsIn      = undefined
-						, accessor_name = n
-						}] |]
-				else [| \s l ->
-					    [ManyConstr
-						{ constrIn = accessConstructor s
-						, strategies = undefined
-						, accessor_name = n
-						}] |]
+			     then [| \_ _ -> OneConstr
+					{ maskIsolate = undefined
+					, maskForget  = undefined
+					, bytesIn     = undefined
+					, bitsIn      = undefined
+					, accessor_name = n
+					} |]
+			     else [| \st fl -> ManyConstr
+				      { strategies = undefined
+				      , accessor_name = n
+				      } |]
 		let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n
 		    fieldTyp = TH.VarT $ TH.mkName n
 		    assuming = if oneConstructor
 				then []
-				else [ TH.ClassP ''IsField
-					[ TH.VarT constrContainer
-					, TH.VarT constr] ]
+				else [ TH.ClassP ''Show [TH.VarT constr]
+				     , TH.ClassP ''THS.Lift [TH.VarT constr] ]
 		    clss = foldl TH.AppT (TH.ConT ''IsField) [structTyp, lbl]
-		    defs = TH.TySynInstD ''FieldType [structTyp, lbl] fieldTyp :
-			   map mkFun [ ('access, access') ]
+		    defs = map mkFun [ ('access, access') ]
+		return $ TH.InstanceD [] clss defs
+	    mkPFRelation n =
+	     do let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n
+		    fieldTyp = TH.VarT $ TH.mkName n
+		    clss     = foldl TH.AppT (TH.ConT ''ProjField)
+				[structTyp, lbl]
+		    defs = [TH.TySynInstD ''FieldType [structTyp, lbl] fieldTyp]
+		return $ TH.InstanceD [] clss defs
+	    mkDARelation n =
+	     do deepAccess' <- [| \st l -> [ accessWithConstr st l ] |]
+		let lbl  = TH.ConT $ TH.mkName $ fieldLabelName n
+		    fieldTyp = TH.VarT $ TH.mkName n
+		    assuming = [TH.ClassP ''GetConstructorData
+				 [structTyp, foldl TH.AppT (TH.ConT ''FieldType)
+						 [structTyp, lbl]]
+			       ,TH.ClassP ''ProjField
+				 [structTyp, lbl] ]
+		    clss = foldl TH.AppT (TH.ConT ''DeepAccess)
+				[structTyp, lbl]
+		    defs = map mkFun [ ('deepAccess, deepAccess') ]
 		return $ TH.InstanceD assuming clss defs
 	    varFields = varFieldNames (allFields us)
-	mapM mkIFORelation varFields
+	ifrs <- mapM mkIFRelation varFields
+	pfrs <- mapM mkPFRelation varFields
+	dars <- mapM mkDARelation varFields
+	return $ ifrs ++ pfrs ++ dars
 
 
 -- |Defines the AllConstructorsField relation for all applicable fields of the
