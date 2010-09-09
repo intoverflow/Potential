@@ -44,7 +44,7 @@ structDiagramParser =
      do whiteSpace'
 	structName   <- typeName
 	whiteSpace'
-	constructors <- many1 parse_constructor
+	constructors <- many1 parse_constructor >>= return . (map fieldAccess)
 	eof
 	return $ UserStruct { struct_name = structName
 			    , constructors = constructors }

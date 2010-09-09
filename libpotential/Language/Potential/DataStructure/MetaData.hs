@@ -93,7 +93,7 @@ data AccessStrategy =
 		, accessor_name :: String }
 
 instance Show AccessStrategy where
-  show as@OneConstr{} = accessor_name as
+  show as@OneConstr{}  = accessor_name as
   show as@ManyConstr{} = accessor_name as ++ " (with strategies)"
   show as@WithConstr{} = accessor_name as ++
 			 " via (" ++ show (constr_access as) ++ ")"

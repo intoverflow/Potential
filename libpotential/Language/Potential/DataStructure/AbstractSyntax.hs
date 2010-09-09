@@ -26,6 +26,7 @@ import Data.Typeable
 import Data.Data
 import Data.List (nub)
 import Data.Word (Word64(..))
+import Data.Bits (complement, shiftL)
 import Numeric (showHex)
 import Text.PrettyPrint.Leijen
 import qualified Language.Haskell.TH as TH
@@ -123,6 +124,25 @@ varFieldNames fs  = let varfs = filter isVarField fs
 -- May contain repeats if multiple constructors have some fields in common.
 allFields :: UserStruct -> [Field]
 allFields us = concat $ map fields (constructors us)
+
+
+-- |Given a constructor, fills in the 'field_access' record for every field.
+-- Useful for struct definition parsers who don't want to calculate this stuff
+-- themselves.
+fieldAccess :: Constructor -> Constructor
+fieldAccess c = c{ fields = defineAccess (0 :: Integer) (fields c) }
+  where defineAccess bits [] = []
+	defineAccess bits (f:fs) =
+	    let f' = f{ field_access = a }
+		a  = FieldAccess
+			{ maskIsolate = im
+			, maskForget  = fm
+			, bytesIn = (fromIntegral bits) `div` 8
+			, bitsIn  = fromIntegral bi }
+		bi = (fromIntegral bits) `mod` 8
+		im = (2^(field_size f) - 1) `shiftL` bi
+		fm = complement im
+	    in f' : defineAccess (bits + field_size f) fs
 
 
 instance THS.Lift FieldAccess where
