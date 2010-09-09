@@ -157,10 +157,7 @@ reifyFieldRelations us =
 	    mkIFRelation n =
 	     do access' <- if oneConstructor
 			     then [| \_ _ -> OneConstr
-					{ maskIsolate = undefined
-					, maskForget  = undefined
-					, bytesIn     = undefined
-					, bitsIn      = undefined
+					{ access_params = undefined
 					, accessor_name = n
 					} |]
 			     else [| \st fl -> ManyConstr

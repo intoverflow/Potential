@@ -37,13 +37,13 @@ module Language.Potential.DataStructure.MetaData
 	) where
 
 import Prelude
-import Data.Word (Word64(..))
 
 import qualified Language.Haskell.TH as TH
 import qualified Language.Haskell.TH.Syntax as THS
 
 import Language.Potential.Size
-import Language.Potential.DataStructure.AbstractSyntax (Bit(..))
+import Language.Potential.DataStructure.AbstractSyntax
+	(FieldAccess(..), Bit(..))
 
 -- |When 'typ' is a child of another structure, 'c' is the name of the field
 -- where the constructor of 'typ' is being stored.  Example:
@@ -84,12 +84,9 @@ class AllConstructorsField typ field_label
 -- determine which constructor was used in order to figure out how to access
 -- the field, if the field is present at all).
 data AccessStrategy =
-     OneConstr { maskIsolate :: Word64
-	       , maskForget  :: Word64
-	       , bytesIn     :: Word64
-	       , bitsIn      :: Integer
+     OneConstr { access_params :: FieldAccess
 	       , accessor_name  :: String }
-   | ManyConstr { strategies :: [ ([Bit], Maybe AccessStrategy) ]
+   | ManyConstr { strategies :: [ ([Bit], Maybe FieldAccess) ]
 		, accessor_name :: String }
    | WithConstr { constr_access :: AccessStrategy
 		, accessor      :: AccessStrategy
@@ -196,10 +193,7 @@ instance ( ProjField struct_type a
 instance THS.Lift AccessStrategy
  where
   lift a@OneConstr{} = foldl TH.appE [| OneConstr |]
-			[ THS.lift (fromIntegral $ maskIsolate a :: Integer)
-			, THS.lift (fromIntegral $ maskForget a :: Integer)
-			, THS.lift (fromIntegral $ bytesIn a :: Integer)
-			, THS.lift $ bitsIn a
+			[ THS.lift $ access_params a
 			, THS.lift $ accessor_name a ]
   lift a@ManyConstr{} = foldl TH.appE [| ManyConstr |]
 			[ THS.lift $ strategies a

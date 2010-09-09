@@ -120,15 +120,17 @@ structDiagramParser =
 	parse_field r size =
 		(try $ do string "reserved"
 			  whiteSpace
-			  return $ ReservedField size)
+			  return $ ReservedField { field_size = size })
 	    <|> (try $ do name <- fieldName
 			  whiteSpace
-			  return $ VarField name size)
+			  return $ VarField { field_name = name
+					    , field_size =  size })
 	    <|> (do bits <- many1 bit
 		    whiteSpace
 		    let bl = fromIntegral $ length bits
 		    if size == bl
-			then return $ ConstField size bits
+			then return $ ConstField { field_size = size
+						 , field_val = bits }
 			else fail $ "Field is defined to be " ++ show size ++
 				    " bits, but there are " ++ show bl ++
 				    " bits in this field (location " ++

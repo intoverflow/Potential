@@ -25,6 +25,8 @@ import Prelude
 import Data.Typeable
 import Data.Data
 import Data.List (nub)
+import Data.Word (Word64(..))
+import Numeric (showHex)
 import Text.PrettyPrint.Leijen
 import qualified Language.Haskell.TH as TH
 import qualified Language.Haskell.TH.Syntax as THS
@@ -62,14 +64,30 @@ instance Pretty Constructor where
 	      pretty' c = char '|' <+> nest 1 (pretty c) <+> linebreak
 
 
+data FieldAccess =
+    FieldAccess { maskIsolate :: Word64
+		, maskForget  :: Word64
+		, bytesIn :: Integer
+		, bitsIn  :: Integer }
+  deriving (Eq, Show, Data, Typeable)
+
+instance Pretty FieldAccess where
+  pretty f = text "Access:" <$$> nest 2 access
+    where access =
+	    text ("Isolate: " ++ showHex (fromIntegral $ maskIsolate f) "") <$$>
+	    text ("Forget:  " ++ showHex (fromIntegral $ maskIsolate f) "") <$$>
+	    text ("Bytes in: " ++ show (maskIsolate f)) <$$>
+	    text ("Bits in:  " ++ show (maskIsolate f))
+
 data Field =
-    VarField { field_name :: String
-	     , field_size :: Integer
-	     }
-  | ConstField { field_size :: Integer
-	       , field_val :: [Bit]
-	       }
-  | ReservedField { field_size :: Integer }
+    VarField { field_name   :: String
+	     , field_size   :: Integer
+	     , field_access :: FieldAccess }
+  | ConstField { field_size   :: Integer
+	       , field_val    :: [Bit]
+	       , field_access :: FieldAccess }
+  | ReservedField { field_size   :: Integer
+		  , field_access :: FieldAccess }
   deriving (Eq, Show, Data, Typeable)
 
 instance Pretty Field where
@@ -107,6 +125,12 @@ allFields :: UserStruct -> [Field]
 allFields us = concat $ map fields (constructors us)
 
 
+instance THS.Lift FieldAccess where
+  lift a = foldl TH.appE [| FieldAccess |]
+		[ THS.lift (fromIntegral $ maskIsolate a :: Integer)
+		, THS.lift (fromIntegral $ maskForget a :: Integer)
+		, THS.lift $ bytesIn a
+		, THS.lift $ bitsIn a ]
 
 instance THS.Lift Bit where
   lift ConstBit0 = [| ConstBit0 |]
