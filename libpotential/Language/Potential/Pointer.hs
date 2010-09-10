@@ -120,8 +120,8 @@ assertPtrType :: (IxMonadRegion m, RegionType m ~ Memory)
 			-> m Unmodeled x x ()
 assertPtrType f t = return ()
 
--- |Takes the given field from src and puts it into dst, assuming the field is
--- small enough to fit into the destination register.
+-- |Takes the given field from 'src' and puts it into 'dst', assuming the field
+-- is small enough to fit into the destination register.
 getStruct src f dst =
      do -- TODO: generate instrutions!
 	comment "getStruct:"

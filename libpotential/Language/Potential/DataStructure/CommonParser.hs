@@ -16,12 +16,9 @@
     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 -}
 module Language.Potential.DataStructure.CommonParser
-	( whiteSpace
-	, identifier
-	, integer, float
-	, typeName
-	, bit
-	, fieldName
+	( whiteSpace, parens
+	, identifier, integer, float
+	, typeName, bit, fieldName
 	) where
 
 import Prelude
@@ -36,6 +33,7 @@ whiteSpace = P.whiteSpace lexer
 identifier = P.identifier lexer
 integer    = P.integer lexer
 float      = P.float lexer
+parens     = P.parens lexer
 typeName   = do structName' <- upper
 		structName'' <- identifier
 		let structName = structName' : structName''
@@ -47,7 +45,7 @@ fieldName =
      do name <- identifier
 	-- fail if name == "reserved" or name == "const"
 	case name of
-		"reserved" -> fail  "Variable fields cannot be named `reserved'"
+		"reserved" -> fail "Variable fields cannot be named `reserved'"
 		"const"    -> fail "Variable fields cannot be named `const'"
 		_ -> return name
 

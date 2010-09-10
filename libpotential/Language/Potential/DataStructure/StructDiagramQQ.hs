@@ -55,6 +55,7 @@ structDiagramParser =
 		convert n (d:ds) = convert (10*n + digitToInt d) ds
 	parse_constructor =
 	     do constr_name     <- typeName
+		bitRep          <- parens (many1 bit)
 		fields_unsorted <- many parse_diagram_field
 		let fields = concat $
 			     map fst $ sortBy (\(_, a :: Double)
@@ -62,7 +63,8 @@ structDiagramParser =
 					       -> compare a b)
 					      fields_unsorted
 		return $ Constructor { constr_name = constr_name
-				     , fields = fields }
+				     , fields = fields
+				     , rep_by = renderBits bitRep }
 	parse_diagram_comment =
 	     do whiteSpace
 		char '('

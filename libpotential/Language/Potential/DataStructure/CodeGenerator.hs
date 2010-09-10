@@ -155,13 +155,15 @@ reifyFieldRelations us =
 					, structTyp' ]
 	    mkFun (name, val) = TH.FunD name [TH.Clause [] (TH.NormalB val) []]
 	    mkIFRelation n =
-	     do access' <- if oneConstructor
+	     do let fa = getFieldAccess us n
+		access' <- if oneConstructor
 			     then [| \_ _ -> OneConstr
-					{ access_params = undefined
+					{ access_params = (snd . head) fa
 					, accessor_name = n
 					} |]
 			     else [| \st fl -> ManyConstr
-				      { strategies = undefined
+				      { strategies =
+					    map (\(c, a) -> (rep_by c, a)) fa
 				      , accessor_name = n
 				      } |]
 		let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n

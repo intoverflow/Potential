@@ -40,7 +40,7 @@ import Language.Potential.DataStructure
 
 [$struct_diagram| EFlagsRegister
 
-		    EFlagsRegister
+		    EFlagsRegister (0)
 
     |63---------------------------------------32|
     |                  reserved                 | 4

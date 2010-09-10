@@ -24,7 +24,8 @@ module Language.Potential.DataStructure.AbstractSyntax where
 import Prelude
 import Data.Typeable
 import Data.Data
-import Data.List (nub)
+import Data.Maybe (catMaybes)
+import Data.List (nub, find)
 import Data.Word (Word64(..))
 import Data.Bits (complement, shiftL)
 import Numeric (showHex)
@@ -53,12 +54,14 @@ instance Pretty UserStruct where
 data Constructor =
     Constructor { constr_name :: String
 		, fields :: [Field]
+		, rep_by :: Word64
 		}
   deriving (Eq, Show, Data, Typeable)
 
 instance Pretty Constructor where
-  pretty c = pretty (constr_name c) <+> space
-		<+> semiBraces (map pretty (fields c))
+  pretty c = pretty (constr_name c) <+> space <+>
+		parens (pretty $ show $ rep_by c) <+> space <+>
+		semiBraces (map pretty (fields c))
   prettyList [c] = nest 2 (pretty c)
   prettyList (c:cs) = prettyList [c] <$$> prettyList' cs
 	where prettyList' cs = foldl (<+>) empty (map pretty' cs)
@@ -108,6 +111,14 @@ instance Pretty Bit where
   pretty ConstBit1 = char '1'
 
 
+-- |Returns a list of 'Bit's into the corresponding 'Word64'.  Assumes the list
+-- is written with the most significant bit in the head.
+renderBits :: [Bit] -> Word64
+renderBits as = renderBits' as 0
+  where renderBits' [] n = n
+	renderBits' (ConstBit0:as) n = renderBits' as (n `shiftL` 1)
+	renderBits' (ConstBit1:as) n = renderBits' as ((n `shiftL` 1) + 1)
+
 
 -- |Returns true if the given field is a VarField, else returns false.
 isVarField :: Field -> Bool
@@ -145,6 +156,15 @@ fieldAccess c = c{ fields = defineAccess (0 :: Integer) (fields c) }
 	    in f' : defineAccess (bits + field_size f) fs
 
 
+-- |Given the name of a field, returns a list of pairs: the relevant constructor
+-- and the 'FieldAccess' for that constructor/field pair.
+getFieldAccess :: UserStruct -> String -> [(Constructor, FieldAccess)]
+getFieldAccess us fn = catMaybes $ (flip map) (constructors us) $ \c ->
+			     do f <- find (\f -> fn == field_name f) 
+					  (filter isVarField $ fields c)
+				return (c, field_access f)
+
+
 instance THS.Lift FieldAccess where
   lift a = foldl TH.appE [| FieldAccess |]
 		[ THS.lift (fromIntegral $ maskIsolate a :: Integer)
@@ -159,17 +179,21 @@ instance THS.Lift Bit where
 instance THS.Lift Field where
   lift f@VarField{} = foldl TH.appE [| VarField |]
 				[ THS.lift $ field_name f
-				, THS.lift $ field_size f]
+				, THS.lift $ field_size f
+				, THS.lift $ field_access f]
   lift f@ConstField{} = foldl TH.appE [| ConstField |]
 				[ THS.lift $ field_size f
-				, THS.lift $ field_val f ]
+				, THS.lift $ field_val f
+				, THS.lift $ field_access f ]
   lift f@ReservedField{} = foldl TH.appE [| ReservedField |]
-				[ THS.lift $ field_size f ]
+				[ THS.lift $ field_size f
+				, THS.lift $ field_access f ]
 
 instance THS.Lift Constructor where
   lift c = foldl TH.appE [| Constructor |]
 			[ THS.lift $ constr_name c
-			, THS.lift $ fields c ]
+			, THS.lift $ fields c
+			, THS.lift (fromIntegral $ rep_by c :: Integer) ]
 
 instance THS.Lift UserStruct where
   lift us = foldl TH.appE [| UserStruct |]

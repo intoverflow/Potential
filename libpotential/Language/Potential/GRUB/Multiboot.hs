@@ -40,9 +40,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| VideoHeader
 
-                          NoVideoHeader
+                          NoVideoHeader (0)
 
-                           VideoHeader
+                           VideoHeader (1)
 
     |63-----------------------32|31------------------------0|
     |           depth           |           height          | 8
@@ -56,9 +56,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| EntryHeader
 
-                          NoEntryHeader
+                          NoEntryHeader (0)
 
-                           EntryHeader
+                           EntryHeader (1)
 
     |63-----------------------32|31------------------------0|
     |       entry_addr          |        bss_end_addr       | 12
@@ -72,7 +72,7 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| MultibootHeader
 
-			MultibootHeader
+			MultibootHeader (0)
 
     |127---------------------------------------------------0|
     |                         video                         | 32
@@ -117,9 +117,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| VBEInformation
 
-                         NoVBEInformation
+                         NoVBEInformation (0)
 
-                          VBEInformation
+                          VBEInformation (1)
 
     |31-----------------------16|15------------------------0|
     |     vbe_interface_len     |     vbe_interface_off     | 12
@@ -137,9 +137,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| BootDevice
 
-			 NoBootDevice
+			 NoBootDevice (0)
 
-			  BootDevice
+			  BootDevice (1)
 
     |31---------24|23--------12|11-----------8|7-----------0|
     |    part3    |    part2   |    part1     |    drive    | 0
@@ -148,9 +148,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| Module
 
-			    NoModule
+			    NoModule (0)
 
-			     Module
+			     Module (1)
 
     |63----------------------32|31-------------------------0|
     |          reserved        |          mod_string        | 8
@@ -164,9 +164,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| DrivesInfo
 
-                           NoDrivesInfo
+                           NoDrivesInfo (0)
 
-                            DrivesInfo
+                            DrivesInfo (1)
 
     |63-----------------------32|31------------------------0|
     |        drives_addr        |        drives_length      | 0
@@ -176,9 +176,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| MMapInfo
 
-                            NoMMapInfo
+                            NoMMapInfo (0)
 
-                             MMapInfo
+                             MMapInfo (1)
 
     |63-----------------------32|31------------------------0|
     |         mmap_addr         |         mmap_length       | 0
@@ -188,15 +188,15 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| SymInfo
 
-                            NoSymInfo
+                            NoSymInfo (0)
 
-                           AOutSymInfo
+                           AOutSymInfo (01)
 
     |127--------96|95---------64|63---------32|31----------0|
     |  reserved   |     addr    |   strsize   |   tabsize   | 0
     |-------------|-------------|-------------|-------------|
 
-                            ElfSymInfo
+                            ElfSymInfo (10)
 
     |127--------96|95---------64|63---------32|31----------0|
     |    shndx    |     addr    |     size    |   shdr_num  | 0
@@ -206,9 +206,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| ModsInfo
 
-                            NoModsInfo
+                            NoModsInfo (0)
 
-                             ModsInfo
+                             ModsInfo (1)
 
     |63-----------------------32|31------------------------0|
     |         mods_addr         |         mods_length       | 0
@@ -218,9 +218,9 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| MemInfo
 
-                            NoMemInfo
+                            NoMemInfo (0)
 
-                             MemInfo
+                             MemInfo (1)
 
     |63-----------------------32|31------------------------0|
     |         mem_upper         |         mem_lower         | 0
@@ -230,7 +230,7 @@ import Language.Potential.Flow (ret)
 
 [$struct_diagram| MultibootInformation
 
-			MultibootInformation
+			MultibootInformation (0)
 
     |159----------------------32|31------------------------0|
     |          vbe_info         |         apm_table         | 68

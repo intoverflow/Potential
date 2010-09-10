@@ -40,6 +40,7 @@ import Prelude
 
 import qualified Language.Haskell.TH as TH
 import qualified Language.Haskell.TH.Syntax as THS
+import Data.Word (Word64)
 
 import Language.Potential.Size
 import Language.Potential.DataStructure.AbstractSyntax
@@ -86,7 +87,7 @@ class AllConstructorsField typ field_label
 data AccessStrategy =
      OneConstr { access_params :: FieldAccess
 	       , accessor_name  :: String }
-   | ManyConstr { strategies :: [ ([Bit], Maybe FieldAccess) ]
+   | ManyConstr { strategies :: [ (Word64, FieldAccess) ]
 		, accessor_name :: String }
    | WithConstr { constr_access :: AccessStrategy
 		, accessor      :: AccessStrategy
@@ -196,7 +197,9 @@ instance THS.Lift AccessStrategy
 			[ THS.lift $ access_params a
 			, THS.lift $ accessor_name a ]
   lift a@ManyConstr{} = foldl TH.appE [| ManyConstr |]
-			[ THS.lift $ strategies a
+			[ THS.lift $ map (\(r, a) -> (fromIntegral r :: Integer,
+						      a))
+					 (strategies a)
 			, THS.lift $ accessor_name a ]
   lift a@WithConstr{} = foldl TH.appE [| WithConstr |]
 			[ THS.lift $ constr_access a
