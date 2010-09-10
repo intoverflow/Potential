@@ -89,12 +89,22 @@ reifyLabel n =
 reifyStruct :: UserStruct -> TH.ExpQ
 reifyStruct us =
      do decls <- mapM (\f -> f us)
-			[ reifyType
+			[ reifyAST
+			, reifyType
 			, reifyConstructorLabels
 			, reifyFieldLabels
 			, reifyFieldRelations
 			, reifyAllConstructorsRelations ]
 	[| return $ concat decls |]
+
+
+-- |Saves the given user struct data
+reifyAST :: UserStruct -> TH.Q [TH.Dec]
+reifyAST us =
+     do us' <- [| us |]
+	let name = TH.mkName $ "ast_" ++ struct_name us
+	    def  = TH.ValD (TH.VarP name) (TH.NormalB us') []
+	return [def]
 
 
 -- |Defines a (Haskell-level) data definition for the given user structure.

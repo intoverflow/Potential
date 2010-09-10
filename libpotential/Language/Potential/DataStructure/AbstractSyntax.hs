@@ -47,8 +47,8 @@ data UserStruct =
   deriving (Eq, Show, Data, Typeable)
 
 instance Pretty UserStruct where
-  pretty us = (text "data " <+> pretty (struct_name us) <+> text " =")
-		<$$> (nest 2 (prettyList (constructors us)))
+  pretty us = (text "data" <+> pretty (struct_name us) <+> text "=")
+		<$> space <+> (align (prettyList (constructors us)))
 
 
 data Constructor =
@@ -59,13 +59,11 @@ data Constructor =
   deriving (Eq, Show, Data, Typeable)
 
 instance Pretty Constructor where
-  pretty c = pretty (constr_name c) <+> space <+>
-		parens (pretty $ show $ rep_by c) <+> space <+>
-		semiBraces (map pretty (fields c))
-  prettyList [c] = nest 2 (pretty c)
-  prettyList (c:cs) = prettyList [c] <$$> prettyList' cs
-	where prettyList' cs = foldl (<+>) empty (map pretty' cs)
-	      pretty' c = char '|' <+> nest 1 (pretty c) <+> linebreak
+  pretty c = pretty (constr_name c) <+>
+		parens (pretty $ show $ rep_by c) <+>
+		hang 4 (semiBraces (map pretty (fields c)))
+  prettyList (c:cs) = vcat $ pretty' ' ' c : map (pretty' '|') cs
+    where pretty' ch c = char ch <+> pretty c
 
 
 data FieldAccess =
@@ -76,12 +74,11 @@ data FieldAccess =
   deriving (Eq, Show, Data, Typeable)
 
 instance Pretty FieldAccess where
-  pretty f = text "Access:" <$$> nest 2 access
-    where access =
-	    text ("Isolate: " ++ showHex (fromIntegral $ maskIsolate f) "") <$$>
-	    text ("Forget:  " ++ showHex (fromIntegral $ maskIsolate f) "") <$$>
-	    text ("Bytes in: " ++ show (maskIsolate f)) <$$>
-	    text ("Bits in:  " ++ show (maskIsolate f))
+  pretty f = tupled
+		[text ("isolate: " ++ showHex (fromIntegral $ maskIsolate f) "")
+		,text ("forget: " ++ showHex (fromIntegral $ maskForget f) "")
+		,text ("bytes in: " ++ show (bytesIn f))
+		,text ("bits in: " ++ show (bitsIn f))]
 
 data Field =
     VarField { field_name   :: String
@@ -95,11 +92,14 @@ data Field =
   deriving (Eq, Show, Data, Typeable)
 
 instance Pretty Field where
-  pretty f@VarField{} = pretty (field_name f) <+> char ':'
+  pretty f@VarField{} = hang 4 $ pretty (field_name f) <+> char ':'
 				<+> pretty (field_size f)
-  pretty f@ConstField{} = pretty "const" <+> space <+> prettyList (field_val f)
-  pretty f@ReservedField{} = pretty "(reserved)" <+> char ':'
+				</> pretty (field_access f)
+  pretty f@ConstField{} = hang 4 $ pretty "const" <+> prettyList (field_val f)
+				</> pretty (field_access f)
+  pretty f@ReservedField{} = hang 4 $ pretty "(reserved)" <+> char ':'
 				<+> pretty (field_size f)
+				</> pretty (field_access f)
 
 
 
