@@ -75,8 +75,10 @@ data FieldAccess =
 
 instance Pretty FieldAccess where
   pretty f = tupled
-		[text ("isolate: " ++ showHex (fromIntegral $ maskIsolate f) "")
-		,text ("forget: " ++ showHex (fromIntegral $ maskForget f) "")
+		[text ("isolate: 0x" ++
+			showHex (fromIntegral $ maskIsolate f) "")
+		,text ("forget: 0x" ++
+			showHex (fromIntegral $ maskForget f) "")
 		,text ("bytes in: " ++ show (bytesIn f))
 		,text ("bits in: " ++ show (bitsIn f))]
 
