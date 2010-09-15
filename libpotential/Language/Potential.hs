@@ -38,6 +38,7 @@ module Language.Potential
 	, (>>), (>>=), return, fail, lift
 	, evaluateTypes
 	, fromIntegral, fromInteger, ($), show, (++), Char, String, Int, Integer
+	, putStrLn
 	) where
 
 -- import Language.Potential.Array

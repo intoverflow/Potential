@@ -7,13 +7,14 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE
 	TypeFamilies,
@@ -46,9 +47,10 @@ defun fnname c =
 
 -- renderFn :: (ASMable m i, Show i) => Function m assumes returns -> IO ()
 renderFn c =
-     let asmcode = (asm ConstraintsOff $ body c) :: [Instr]
+     let asmcode = asm ConstraintsOff (fnname c) (body c) :: [Instr]
      in unlines $ [fnname c ++ ":"] ++
 		  (map (\l -> "    " ++ show l) asmcode)
+
 
 
 getType :: Function (Code ConstraintsOn)

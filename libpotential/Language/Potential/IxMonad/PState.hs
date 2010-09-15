@@ -7,13 +7,14 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE
 	NoImplicitPrelude,
@@ -29,11 +30,12 @@ module Language.Potential.IxMonad.PState
 	( IxPState(..), PState, runCode, Code, isCode
 	) where
 
-import Prelude( undefined, ($) )
+import Prelude( undefined, ($), flip, String )
 import Language.Potential.IxMonad.IxMonad
 import Language.Potential.IxMonad.Constrained
 import Language.Potential.IxMonad.Writer
 import Language.Potential.Assembly
+import Language.Potential.Label
 
 class (IxMonad m) => IxPState m where
   psGet :: m Unmodeled x x x
@@ -57,21 +59,27 @@ instance IxPState PState where
   psGet   = unmodeled  $ PState $ \s -> (s, s)
   psPut s = composable $ PState $ \_ -> ((), s)
 
-type Code c = IxConstrainedT c (IxWriterT [Instr] PState)
+type Code c = LabelGen (IxConstrainedT c (IxWriterT [Instr] PState))
 
 isCode :: (Code c) Unmodeled x x ()
 isCode = return ()
 
+
 instance (IxMonadWriter [Instr] (Code c)) =>
   IxCode (Code c) where type Constraints (Code c) = c
-instance (IxMonadWriter [Instr] (Code c)) => ASMable (Code c) where
-  asm cnstrts code = let (_, asmcode, _) = runCode code cnstrts undefined
-		     in asmcode
+instance ( IxMonadWriter [Instr] (Code c) )
+ => ASMable (Code c) where
+  asm cnstrts nm code =
+	let (_, asmcode, _) = runCode nm code cnstrts undefined
+	in asmcode
 
-runCode :: Code c ct x y a -> c -> x -> (a, [Instr], y)
-runCode code constr input =
-	let ((a, w), y) =
-		runPState (runIxWriterT (runIxConstrainedT code constr)) input
+runCode :: String -> Code c ct x y a -> c -> x -> (a, [Instr], y)
+runCode nm code constr input =
+	let (((a,_), w), y) =
+		(flip runPState) input
+		$ runIxWriterT
+		$ (flip runIxConstrainedT) constr
+		$ runLabel nm code
 	in (a, w, y)
 
 

@@ -71,11 +71,11 @@ instance (IxCode m, IxMonadRegion m, RegionType m ~ Memory, RegionLabel m ~ s)
     type Constraints (IxReaderT (MemSubRegionWitness r s) m) = Constraints m
 
 instance ASMable m => ASMable (MemRegion r m) where
-  asm constraints mr = asm constraints (withRegion' memRegionMgr mr)
+  asm constraints s mr = asm constraints s (withRegion' memRegionMgr mr)
 
 instance (ASMable m, IxMonadRegion m, RegionType m ~ Memory, RegionLabel m ~ s)
   => ASMable (IxReaderT (MemSubRegionWitness r s) m) where
-    asm constraints mr = asm constraints (runIxReaderT mr undefined)
+    asm constraints s mr = asm constraints s (runIxReaderT mr undefined)
 
 -- A pointer, bound to region r
 data Ptr64 r t = Ptr64 t

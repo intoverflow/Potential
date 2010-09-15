@@ -7,18 +7,63 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
-module Language.Potential.Label where
+{-# LANGUAGE
+	NoImplicitPrelude,
+	MultiParamTypeClasses,
+	FlexibleContexts,
+	TypeFamilies
+	#-}
+module Language.Potential.Label
+	( PotentialLabel, LabelGen, runLabel
+	, label, mkLabel
+	) where
 
-import Language.Potential.Core
+import Prelude( String, Integer, fromInteger, ($), (+), (++), show )
 
-label s =
-     do instr $ Label s
+import Language.Potential.Assembly
+import Language.Potential.IxMonad.IxMonad
+import Language.Potential.IxMonad.State
+import Language.Potential.IxMonad.Writer
+
+data PotentialLabel = PotentialLabel String
+
+-- |Used to record a label
+label (PotentialLabel s) = tell [Label s]
+
+
+data LabelGenState = LabelGenState String Integer
+type LabelGen m = IxStateT LabelGenState m
+
+runLabel :: IxMonad m
+		=> String -> LabelGen m ct x y a -> m ct x y (a, LabelGenState)
+runLabel s m = runIxStateT m (LabelGenState s 0)
+
+incLabel :: IxMonadState LabelGenState m => m Unmodeled x x Integer
+incLabel =
+     do lgs <- get
+	let LabelGenState s n = lgs
+	put (LabelGenState s $ n+1)
+	return n
+
+nmLabel :: IxMonadState LabelGenState m => m Unmodeled x x String
+nmLabel =
+     do lgs <- get
+	let LabelGenState s _ = lgs
+	return s
+
+-- |Used to generate a label
+mkLabel :: IxMonadState LabelGenState m => m Unmodeled x x PotentialLabel
+mkLabel =
+     do n <- incLabel
+	s <- nmLabel
+	return (PotentialLabel $ s ++ "_" ++ show n)
 

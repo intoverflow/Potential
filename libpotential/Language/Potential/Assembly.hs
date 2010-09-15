@@ -48,7 +48,7 @@ import Language.Potential.IxMonad.Writer
 class (IxMonad m, IxMonadWriter [Instr] m) => IxCode m where type Constraints m
 
 class IxCode m => ASMable m where
-  asm :: Constraints m -> m ct x y a -> [Instr]
+  asm :: Constraints m -> String -> m ct x y a -> [Instr]
 
 data Function m assumes returns =
      Fn { fnname   :: String
@@ -64,7 +64,7 @@ funName f = fnname f
 
 getAssembly :: (ASMable m, Constraints m ~ ConstraintsOff) =>
 		Function m assumes returns -> [Instr]
-getAssembly f = asm ConstraintsOff $ body f
+getAssembly f = asm ConstraintsOff (fnname f) (body f)
 
 
 -- deref mem_location (%ebx, %ecx, 4) means [ebx + ecx*4 + mem_location]
