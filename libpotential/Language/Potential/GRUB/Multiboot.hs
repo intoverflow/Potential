@@ -32,6 +32,7 @@
 module Language.Potential.GRUB.Multiboot where
 
 import Language.Potential.Core
+import Language.Potential.Stack
 import Language.Potential.DataStructure
 import Language.Potential.Pointer (assertPtrType, getStruct, isMemRegion)
 import Language.Potential.Functions (defun)
@@ -296,6 +297,12 @@ testAccess = defun "testAccess" $
      do isMemRegion $ isCode
 	raxt <- lift $ get rax
 	assertPtrType assertSymInfo raxt
-	getStruct rax (Sym_info --> Addr) rbx
+	push r10
+	push r11
+	push r12
+	getStruct rax (Sym_info --> Addr) rbx r10 r11 r12
+	pop r12
+	pop r11
+	pop r10
 	ret
 

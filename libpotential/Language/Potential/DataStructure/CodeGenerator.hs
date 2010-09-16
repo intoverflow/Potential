@@ -23,7 +23,7 @@ import Prelude
 import qualified Language.Haskell.TH as TH
 import qualified Language.Haskell.TH.Syntax as THS
 import Data.Char (toUpper)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromJust)
 
 import Language.Potential.THLiftDecls
 import Language.Potential.DataStructure.AbstractSyntax
@@ -168,12 +168,12 @@ reifyFieldRelations us =
 	     do let fa = getFieldAccess us n
 		access' <- if oneConstructor
 			     then [| \_ _ -> OneConstr
-					{ access_params = (snd . head) fa
+					{ access_params =
+					    (fromJust . snd . head) fa
 					, accessor_name = n
 					} |]
 			     else [| \st fl -> ManyConstr
-				      { strategies =
-					    map (\(c, a) -> (rep_by c, a)) fa
+				      { strategies = fa
 				      , accessor_name = n
 				      } |]
 		let lbl      = TH.ConT $ TH.mkName $ fieldLabelName n

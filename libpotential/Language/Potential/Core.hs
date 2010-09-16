@@ -65,6 +65,9 @@ module Language.Potential.Core
 
 	-- stuff that comes from Constraints
 	, ConstraintsOn(..), ConstraintsOff(..)
+
+	-- stuff that comes from Label
+	, mkLabel, label, ljne
 	) where
 
 import Prelude hiding ( return, fail, (>>), (>>=) )
@@ -77,6 +80,7 @@ import Language.Potential.Constraints
 import Language.Potential.Arch.SetGet
 import Language.Potential.Arch.Amd64.Model
 import Language.Potential.Assembly
+import Language.Potential.Label
 
 
 -- Type families evaluate lazily.

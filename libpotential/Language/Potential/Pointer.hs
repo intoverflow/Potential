@@ -39,11 +39,12 @@ module Language.Potential.Pointer
 	, withMemoryRegion, nestMemoryRegion
 	) where
 
-import Prelude( ($) )
+import Prelude( ($), Maybe(..) )
 
 import Language.Potential.Size
 import Language.Potential.Core
 import Language.Potential.Assembly
+import Language.Potential.DataStructure.AbstractSyntax
 import Language.Potential.DataStructure.MetaData
 
 import Language.Potential.IxMonad.Region
@@ -122,16 +123,79 @@ assertPtrType f t = return ()
 
 -- |Takes the given field from 'src' and puts it into 'dst', assuming the field
 -- is small enough to fit into the destination register.
-getStruct src f dst =
-     do -- TODO: generate instrutions!
-	comment "getStruct:"
+getStruct src f dst index constr tmp =
+     do -- get the types
 	structPtr <- get src
 	belongsHere structPtr
 	struct <- fromPtr64 structPtr
-	comment $ show $ deepAccess struct f
+	-- instruction generation
+	let access = deepAccess struct f
+	comment "getStruct:"
+	comment $ show access
+	forget index
+	forget constr
+	forget tmp
+	instr $ Mov (arg src) (arg index)
+	instr $ MovC 0 (arg constr)
+	generateAccess access index constr tmp
+	-- type-level
 	let fieldContents = projField struct f
 	sizeBoundedBy64Bits fieldContents
 	set dst fieldContents
+	comment "end getStruct"
+
+{- TODO:
+  When accessing the final field in the list, do the bit-offset thing
+  Also, make sure we don't do crazy stuff with bit-offset (like accessing a
+  sub-field of someone who isn't byte-aligned)
+  Also, deal with the situation where a constructor doesn't have a given field
+-}
+generateAccess [] index constr tmp = return ()
+generateAccess (a@OneConstr{}:as) index constr tmp =
+     do comment $ "field `" ++ accessor_name a ++ "'"
+	instr $ AddC (fromIntegral $ bytesIn $ access_params a) (arg index)
+	generateAccess as index constr tmp
+generateAccess (a@WithConstr{}:b@ManyConstr{}:as) index constr tmp =
+     do let (ca@OneConstr{}) = constr_access a
+	comment $ "field `" ++ accessor_name a ++ "' via `" ++
+			accessor_name ca ++ "'"
+	-- get the constructor into constr
+	comment $ "loading constructor `" ++ accessor_name ca ++ "'"
+	instr $ Ld (Deref2 (fromIntegral $ bytesIn $ access_params ca)
+			   (arg index))
+		   (arg constr)
+	instr $ MovC (maskIsolate $ access_params ca) (arg tmp)
+	instr $ And (arg tmp) (arg constr)
+	instr $ ShR (bitsIn $ access_params ca) (arg constr)
+	-- now that we know which constructor we're using, we can add to our
+	-- field
+	comment $ "now our field `" ++ accessor_name a ++ "'"
+	instr $ AddC (fromIntegral $ bytesIn $ access_params $ accessor a)
+		     (arg index)
+	-- now list the constructor-dependent strategies
+	comment $ "field `" ++ accessor_name b ++ "'"
+	generateStrategies (strategies b)
+	-- done!
+	generateAccess as index constr tmp
+  where generateStrategies [] = return ()
+	generateStrategies ((c, mfa):ss) =
+	 case mfa of
+	   Just fa ->
+	     do snext <- mkLabel
+		comment $ "constructor `" ++ constr_name c ++
+			  "' has a field named `" ++ accessor_name b ++ "'"
+		instr $ CmpC (rep_by c) (arg constr)
+		ljne snext
+		instr $ AddC (fromIntegral $ bytesIn fa) (arg index)
+		label snext
+		generateStrategies ss
+	   Nothing ->
+	     do comment $ "constructor `" ++ constr_name c ++
+			  "' does not have a field named `" ++
+			  accessor_name b ++ "'"
+		instr $ CmpC (rep_by c) (arg constr)
+		-- sje whatever the escape routine is
+		generateStrategies ss
 
 -- For projecting from Ptr64 r Type to Type_Offset
 -- Types are encoded by the proj function

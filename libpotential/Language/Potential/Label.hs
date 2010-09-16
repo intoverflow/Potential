@@ -24,7 +24,7 @@
 	#-}
 module Language.Potential.Label
 	( PotentialLabel, LabelGen, runLabel
-	, label, mkLabel
+	, mkLabel, label, ljne
 	) where
 
 import Prelude( String, Integer, fromInteger, ($), (+), (++), show )
@@ -39,6 +39,8 @@ data PotentialLabel = PotentialLabel String
 -- |Used to record a label
 label (PotentialLabel s) = tell [Label s]
 
+-- |Used to jump-not-equal to a label
+ljne (PotentialLabel s) = tell [LJne s]
 
 data LabelGenState = LabelGenState String Integer
 type LabelGen m = IxStateT LabelGenState m

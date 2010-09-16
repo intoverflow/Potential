@@ -160,11 +160,11 @@ fieldAccess c = c{ fields = defineAccess (0 :: Integer) (fields c) }
 
 -- |Given the name of a field, returns a list of pairs: the relevant constructor
 -- and the 'FieldAccess' for that constructor/field pair.
-getFieldAccess :: UserStruct -> String -> [(Constructor, FieldAccess)]
-getFieldAccess us fn = catMaybes $ (flip map) (constructors us) $ \c ->
-			     do f <- find (\f -> fn == field_name f) 
-					  (filter isVarField $ fields c)
-				return (c, field_access f)
+getFieldAccess :: UserStruct -> String -> [(Constructor, Maybe FieldAccess)]
+getFieldAccess us fn = (flip map) (constructors us) $ \c ->
+				let f = find (\f -> fn == field_name f) 
+					     (filter isVarField $ fields c)
+				in (c, f >>= return . field_access)
 
 
 instance THS.Lift FieldAccess where

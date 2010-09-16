@@ -7,13 +7,14 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE GADTs #-}
 module Language.Potential.Printing where
@@ -62,7 +63,9 @@ instance Show Instr where
   show (MovC c r)   = "mov $0x" ++ (showHex c "") ++ ", " ++ show r
   show (Push r)    = "push " ++ show r
   show (Pop r)     = "pop " ++ show r
+  show (CmpC c r)  = "cmp 0x" ++ (showHex c "") ++ ", " ++ show r
   show (Cmp r1 r2) = "cmp " ++ show r1 ++ ", " ++ show r2
+  show (LJne l)    = "jne " ++ l
   show (SJe f)     = "je " ++ fnname f
   show (SJne f)    = "jne " ++ fnname f
   show (Jne r)     = "jne " ++ show r
@@ -79,6 +82,7 @@ instance Show Instr where
   show (Add r1 r2) = "add " ++ show r1 ++ ", " ++ show r2
   show (AddC c r2) = "add 0x" ++ (showHex c "") ++ ", " ++ show r2
   show (Sub r1 r2) = "sub " ++ show r1 ++ ", " ++ show r2
+  show (SubC c r2) = "sub 0x" ++ (showHex c "") ++ ", " ++ show r2
   show (Mul r1 r2) = "imul " ++ show r1 ++ ", " ++ show r2
   show (Enter l)   = "enter 0x" ++ (showHex l "")
   show (Leave)     = "leave"

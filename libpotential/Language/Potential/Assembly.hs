@@ -7,13 +7,14 @@
     and/or modify it under the terms of the GNU Lesser General Public License as
     published by the Free Software Foundation, version 3 of the License.
 
-    The Potential Compiler is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    The Potential Standard Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with the Potential Standard Library.  If not, see
+    <http://www.gnu.org/licenses/>.
 -}
 {-# LANGUAGE
 	NoImplicitPrelude,
@@ -83,7 +84,9 @@ data Instr =
  |  MovC Word64 Reg
  |  Push Reg
  |  Pop Reg
+ |  CmpC Word64 Reg
  |  Cmp Reg Reg
+ |  LJne String
  |  forall m assumes returns . IxCode m => SJe (Function m assumes returns)
  |  forall m assumes returns . IxCode m => SJne (Function m assumes returns)
  |  Jne Reg
@@ -100,6 +103,7 @@ data Instr =
  |  Add Reg Reg
  |  AddC Word64 Reg
  |  Sub Reg Reg
+ |  SubC Word64 Reg
  |  Mul Reg Reg
  |  Enter Word16
  |  Leave
