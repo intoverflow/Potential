@@ -86,6 +86,7 @@ data Instr =
  |  Pop Reg
  |  CmpC Word64 Reg
  |  Cmp Reg Reg
+ |  LJmp String
  |  LJne String
  |  forall m assumes returns . IxCode m => SJe (Function m assumes returns)
  |  forall m assumes returns . IxCode m => SJne (Function m assumes returns)

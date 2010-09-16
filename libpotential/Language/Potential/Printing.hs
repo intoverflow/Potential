@@ -65,6 +65,7 @@ instance Show Instr where
   show (Pop r)     = "pop " ++ show r
   show (CmpC c r)  = "cmp 0x" ++ (showHex c "") ++ ", " ++ show r
   show (Cmp r1 r2) = "cmp " ++ show r1 ++ ", " ++ show r2
+  show (LJmp l)    = "jmp " ++ l
   show (LJne l)    = "jne " ++ l
   show (SJe f)     = "je " ++ fnname f
   show (SJne f)    = "jne " ++ fnname f

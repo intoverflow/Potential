@@ -67,7 +67,7 @@ module Language.Potential.Core
 	, ConstraintsOn(..), ConstraintsOff(..)
 
 	-- stuff that comes from Label
-	, mkLabel, label, ljne
+	, mkLabel, label, ljne, ljmp
 	) where
 
 import Prelude hiding ( return, fail, (>>), (>>=) )

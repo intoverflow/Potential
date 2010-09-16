@@ -174,11 +174,13 @@ generateAccess (a@WithConstr{}:b@ManyConstr{}:as) index constr tmp =
 		     (arg index)
 	-- now list the constructor-dependent strategies
 	comment $ "field `" ++ accessor_name b ++ "'"
-	generateStrategies (strategies b)
+	allDone <- mkLabel
+	generateStrategies (strategies b) allDone
+	label allDone
 	-- done!
 	generateAccess as index constr tmp
-  where generateStrategies [] = return ()
-	generateStrategies ((c, mfa):ss) =
+  where generateStrategies [] allDone = return ()
+	generateStrategies ((c, mfa):ss) allDone =
 	 case mfa of
 	   Just fa ->
 	     do snext <- mkLabel
@@ -187,15 +189,16 @@ generateAccess (a@WithConstr{}:b@ManyConstr{}:as) index constr tmp =
 		instr $ CmpC (rep_by c) (arg constr)
 		ljne snext
 		instr $ AddC (fromIntegral $ bytesIn fa) (arg index)
+		ljmp allDone
 		label snext
-		generateStrategies ss
+		generateStrategies ss allDone
 	   Nothing ->
 	     do comment $ "constructor `" ++ constr_name c ++
 			  "' does not have a field named `" ++
 			  accessor_name b ++ "'"
 		instr $ CmpC (rep_by c) (arg constr)
 		-- sje whatever the escape routine is
-		generateStrategies ss
+		generateStrategies ss allDone
 
 -- For projecting from Ptr64 r Type to Type_Offset
 -- Types are encoded by the proj function
